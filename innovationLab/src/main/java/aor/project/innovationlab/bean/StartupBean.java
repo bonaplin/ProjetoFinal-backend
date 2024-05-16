@@ -13,7 +13,14 @@ import jakarta.inject.Inject;
 @Startup
 public class StartupBean {
 
+    @Inject
+    private SkillTypeBean skillTypeBean;
+    @Inject
+    private SkillBean skillBean;
+
     @PostConstruct
     public void init() {
+        skillTypeBean.createInitialData();
+        skillBean.createInitialData();
     }
 }

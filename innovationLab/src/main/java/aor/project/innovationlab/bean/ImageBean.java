@@ -14,8 +14,7 @@ public class ImageBean {
 //    @Inject
 //    UserDao userDao;
 
-
-    private static final String IMAGE_DIRECTORY = "projeto-5/images";
+    private static final String IMAGE_DIRECTORY = "InnovationLab/images";
 
     public String saveImage(InputStream imageData, String originalFileName, int id) throws IOException {
         String fileExtension = getFileExtension(originalFileName);

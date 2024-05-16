@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 @Entity
 @Table(name="skill")
+@NamedQuery(name = "Skill.findSkillByName", query = "SELECT s FROM SkillEntity s WHERE s.name = :name")
 public class SkillEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,6 +42,26 @@ public class SkillEntity implements Serializable {
 
         public String getDescription() {
             return description;
+        }
+
+        public SkillTypeEntity getSkillType() {
+            return skillType;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public void setSkillType(SkillTypeEntity skillType) {
+            this.skillType = skillType;
         }
 
         @Override
