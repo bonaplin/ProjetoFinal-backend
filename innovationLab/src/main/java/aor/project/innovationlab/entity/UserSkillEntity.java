@@ -2,9 +2,11 @@ package aor.project.innovationlab.entity;
 
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name="user_skill")
-public class UserSkillEntity {
+public class UserSkillEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,8 +1,6 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SkillDao;
-import aor.project.innovationlab.dao.SkillTypeDao;
-import aor.project.innovationlab.entity.SkillTypeEntity;
 import aor.project.innovationlab.enums.SkillType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,14 +11,13 @@ import aor.project.innovationlab.entity.SkillEntity;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.UUID;
+
 @ApplicationScoped
 public class SkillBean {
 
     @EJB
     private SkillDao skillDao;
-
-    @EJB
-    private SkillTypeDao skillTypeDao;
 
     /**
      * Convert dto to entity
@@ -29,8 +26,8 @@ public class SkillBean {
      */
     public SkillEntity toEntity(SkillDto dto) {
         SkillEntity entity = new SkillEntity();
-        entity.setId(dto.getId());
         entity.setName(dto.getName());
+        entity.setSkillType(SkillType.valueOf(dto.getType()));
         return entity;
     }
 
@@ -63,18 +60,6 @@ public class SkillBean {
             dto.setType(type.name());
 
             SkillEntity entity = toEntity(dto);
-
-            SkillTypeEntity skillTypeEntity = skillTypeDao.findSkillTypeByName(type);
-
-            // If the SkillTypeEntity does not exist, create it
-            if(skillTypeEntity == null) {
-                skillTypeEntity = new SkillTypeEntity();
-                skillTypeEntity.setName(type);
-                skillTypeDao.persist(skillTypeEntity);
-            }
-
-            entity.setSkillType(skillTypeEntity);
-
             skillDao.persist(entity);
         }
     }

@@ -14,13 +14,22 @@ import jakarta.inject.Inject;
 public class StartupBean {
 
     @Inject
-    private SkillTypeBean skillTypeBean;
-    @Inject
     private SkillBean skillBean;
+
+    @Inject
+    private UserBean userBean;
+
+    @Inject
+    private UserSkillBean userSkillBean;
+
+    @Inject
+    private LabBean labBean;
 
     @PostConstruct
     public void init() {
-        skillTypeBean.createInitialData();
+        labBean.createInitialData();
         skillBean.createInitialData();
+        userBean.createInitialData();
+        userSkillBean.createInitialData();
     }
 }

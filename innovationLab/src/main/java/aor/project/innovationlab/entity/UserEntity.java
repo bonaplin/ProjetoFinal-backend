@@ -9,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name="user")
+@NamedQuery(name = "User.findUserByEmail", query = "SELECT u FROM UserEntity u WHERE u.email = :email")
 public class UserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -45,11 +46,11 @@ public class UserEntity implements Serializable {
     @Column(name="token_verification_expiration", nullable = true, unique = false, updatable = true)
     private Instant token_expiration;
 
-    @Column(name="token_session", nullable = true, unique = true, updatable = true)
-    private String token_session;
-
-    @Column(name="token_session_expiration", nullable = true, unique = false, updatable = true)
-    private Instant token_session_expiration;
+//    @Column(name="token_session", nullable = true, unique = true, updatable = true)
+//    private String token_session;
+//
+//    @Column(name="token_session_expiration", nullable = true, unique = false, updatable = true)
+//    private Instant token_session_expiration;
 
     @Column(name="active", nullable = false, unique = false, updatable = true)
     private Boolean active;
@@ -60,14 +61,20 @@ public class UserEntity implements Serializable {
     @Column(name="confirmed", nullable = false, unique = false, updatable = true)
     private Boolean confirmed = false;
 
-    @Column(name = "profile_image_type", nullable = true)
+    @Column(name = "profile_image_type", nullable = true, updatable = true)
     private String profileImageType;
 
-    @Column(name="profile_image_path", nullable = true)
+    @Column(name="profile_image_path", nullable = true, updatable = true)
     private String profileImagePath;
 
-//    @OneToMany(mappedBy = "user")
-//    private List<SkillEntity> skills;
+    @ManyToOne
+    @JoinColumn(name="lab_id", nullable = false, updatable = true)
+    private LabEntity lab;
+
+    @PrePersist
+    protected void onCreate(){
+        created = Instant.now();
+    }
 
     public UserEntity() {
     }
@@ -76,24 +83,24 @@ public class UserEntity implements Serializable {
         return username;
     }
 
+    public String getRole() {
+        return role;
+    }
+
     public String getToken_verification() {
         return token_verification;
     }
 
-    public Instant getToken_session_expiration() {
-        return token_session_expiration;
-    }
-
-    public String getToken_session() {
-        return token_session;
-    }
+//    public Instant getToken_session_expiration() {
+//        return token_session_expiration;
+//    }
+//
+//    public String getToken_session() {
+//        return token_session;
+//    }
 
     public Instant getToken_expiration() {
         return token_expiration;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     public String getProfileImageType() {
@@ -140,6 +147,10 @@ public class UserEntity implements Serializable {
         return active;
     }
 
+    public LabEntity getLab() {
+        return lab;
+    }
+
     public void setActive(Boolean active) {
         this.active = active;
     }
@@ -180,21 +191,20 @@ public class UserEntity implements Serializable {
         this.profileImageType = profileImageType;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public void setToken_expiration(Instant token_expiration) {
         this.token_expiration = token_expiration;
     }
 
-    public void setToken_session(String token_session) {
-        this.token_session = token_session;
+    public void setRole(String role) {
+        this.role = role;
     }
-
-    public void setToken_session_expiration(Instant token_session_expiration) {
-        this.token_session_expiration = token_session_expiration;
-    }
+//    public void setToken_session(String token_session) {
+//        this.token_session = token_session;
+//    }
+//
+//    public void setToken_session_expiration(Instant token_session_expiration) {
+//        this.token_session_expiration = token_session_expiration;
+//    }
 
     public void setToken_verification(String token_verification) {
         this.token_verification = token_verification;
@@ -202,6 +212,10 @@ public class UserEntity implements Serializable {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public void setLab(LabEntity lab) {
+        this.lab = lab;
     }
 
     @Override
@@ -214,16 +228,17 @@ public class UserEntity implements Serializable {
                 ", firstname='" + firstname + '\'' +
                 ", lastname='" + lastname + '\'' +
                 ", phone='" + phone + '\'' +
-                ", role='" + role + '\'' +
                 ", token_verification='" + token_verification + '\'' +
                 ", token_verification_expiration=" + token_expiration +
-                ", token_session='" + token_session + '\'' +
-                ", token_session_expiration=" + token_session_expiration +
+//                ", token_session='" + token_session + '\'' +
+//                ", token_session_expiration=" + token_session_expiration +
                 ", active=" + active +
                 ", created=" + created +
                 ", confirmed=" + confirmed +
                 ", profileImageType='" + profileImageType + '\'' +
                 ", profileImagePath='" + profileImagePath + '\'' +
+                ", role='" + role + '\'' +
+                ", lab=" + lab.getLocation() +
                 '}';
     }
 }

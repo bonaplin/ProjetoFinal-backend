@@ -1,11 +1,13 @@
 package aor.project.innovationlab.entity;
 
+import aor.project.innovationlab.enums.SkillType;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
 @Entity
 @Table(name="skill")
 @NamedQuery(name = "Skill.findSkillByName", query = "SELECT s FROM SkillEntity s WHERE s.name = :name")
+@NamedQuery(name = "Skill.findSkillById", query = "SELECT s FROM SkillEntity s WHERE s.id = :id")
 public class SkillEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,13 +23,9 @@ public class SkillEntity implements Serializable {
         @Column(name = "description", nullable = true, unique = false, updatable = true)
         private String description;
 
-        @ManyToOne
-        @JoinColumn(name = "skill_type_id", nullable = false)
-        private SkillTypeEntity skillType;
-
-//        @ManyToOne
-//        @JoinColumn(name = "user_id", nullable = false)
-//        private UserEntity user;
+        @Enumerated(EnumType.STRING)
+        @Column(name = "skill_type", nullable = false, unique = false, updatable = true)
+        private SkillType skillType;
 
         public SkillEntity() {
         }
@@ -40,27 +38,23 @@ public class SkillEntity implements Serializable {
             return name;
         }
 
-        public String getDescription() {
-            return description;
-        }
-
-        public SkillTypeEntity getSkillType() {
-            return skillType;
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
         public void setName(String name) {
             this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
         }
 
         public void setDescription(String description) {
             this.description = description;
         }
 
-        public void setSkillType(SkillTypeEntity skillType) {
+        public SkillType getSkillType() {
+            return skillType;
+        }
+
+        public void setSkillType(SkillType skillType) {
             this.skillType = skillType;
         }
 
