@@ -69,7 +69,7 @@ public class UserEntity implements Serializable {
     private String profileImagePath;
 
     //ADD_SKILL_TO_USER
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserSkillEntity> userSkills = new ArrayList<>();
 
     @ManyToOne

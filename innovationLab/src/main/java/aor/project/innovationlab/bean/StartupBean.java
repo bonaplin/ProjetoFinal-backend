@@ -25,11 +25,14 @@ public class StartupBean {
     @Inject
     private LabBean labBean;
 
+    @Inject
+    private SupplierBean supplierBean;
+
     @PostConstruct
     public void init() {
         labBean.createInitialData();
         skillBean.createInitialData();
         userBean.createInitialData();
-//        userSkillBean.createInitialData();
+        supplierBean.createInitialData();
     }
 }
