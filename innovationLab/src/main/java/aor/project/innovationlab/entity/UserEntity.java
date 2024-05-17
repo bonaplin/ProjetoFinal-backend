@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -66,6 +67,10 @@ public class UserEntity implements Serializable {
 
     @Column(name="profile_image_path", nullable = true, updatable = true)
     private String profileImagePath;
+
+    //ADD_SKILL_TO_USER
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserSkillEntity> userSkills = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name="lab_id", nullable = false, updatable = true)
@@ -216,6 +221,29 @@ public class UserEntity implements Serializable {
 
     public void setLab(LabEntity lab) {
         this.lab = lab;
+    }
+
+    public boolean userHasSkill(SkillEntity skill) {
+        for (UserSkillEntity userSkill : userSkills) {
+            if (userSkill.getSkill().equals(skill)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //ADD_SKILL_TO_USER
+    public void addSkill(SkillEntity skill) {
+        UserSkillEntity userSkill = new UserSkillEntity();
+        userSkill.setUser(this);
+        userSkill.setSkill(skill);
+        userSkills.add(userSkill);
+        skill.getUserSkills().add(userSkill);
+    }
+
+    public void removeUserSkill(UserSkillEntity userSkill) {
+        userSkills.remove(userSkill);
+        userSkill.setUser(null);
     }
 
     @Override

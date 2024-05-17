@@ -21,27 +21,27 @@ public class UserSkillBean {
     @EJB
     private SkillDao skillDao;
 
-    public void createInitialData() {
-        UserEntity user = userDao.findUserByEmail("admin@admin");
-        SkillEntity skill = skillDao.findSkillByName("Java");
-        if(user == null || skill == null) {
-            return;
-        }
-        if(userSkillDao.userHasSkill(user, skill)){
-            return;
-        }
-        addSkillToUser(user, skill);
-
-    }
-
-    public void addSkillToUser(UserEntity user, SkillEntity skill) {
-        if(user == null || skill == null) {
-            return;
-        }
-        UserSkillEntity entity = new UserSkillEntity();
-        entity.setUser(user);
-        entity.setSkill(skill);
-        userSkillDao.persist(entity);
-    }
+//    public void createInitialData() {
+//        UserEntity user = userDao.findUserByEmail("admin@admin");
+//        SkillEntity skill = skillDao.findSkillByName("Java");
+//        if(user == null || skill == null) {
+//            return;
+//        }
+//        if(userSkillDao.userHasSkill(user, skill)){
+//            return;
+//        }
+//        addSkillToUser(user, skill);
+//
+//    }
+//
+//    public void addSkillToUser(UserEntity user, SkillEntity skill) {
+//        if(user == null || skill == null) {
+//            return;
+//        }
+//        UserSkillEntity entity = new UserSkillEntity();
+//        entity.setUser(user);
+//        entity.setSkill(skill);
+//        userSkillDao.persist(entity);
+//    }
 
 }
