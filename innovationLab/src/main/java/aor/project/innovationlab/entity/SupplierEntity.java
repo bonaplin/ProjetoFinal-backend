@@ -3,6 +3,8 @@ package aor.project.innovationlab.entity;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "supplier")
@@ -16,7 +18,7 @@ public class SupplierEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true, updatable = false)
-    private int id;
+    private long id;
 
     @Column(name = "name", nullable = false, unique = true, updatable = true)
     private String name;
@@ -24,10 +26,13 @@ public class SupplierEntity implements Serializable {
     @Column(name = "phone", nullable = false, unique = false, updatable = true)
     private String phone;
 
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL)
+    private List<ProductEntity> products = new ArrayList<>();
+
     public SupplierEntity() {
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

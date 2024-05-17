@@ -1,7 +1,5 @@
 package aor.project.innovationlab.dto;
 
-import aor.project.innovationlab.enums.UserType;
-
 public class UserDto {
     private int id;
     private String username;
