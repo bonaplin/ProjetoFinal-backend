@@ -30,6 +30,6 @@ public class StartupBean {
         labBean.createInitialData();
         skillBean.createInitialData();
         userBean.createInitialData();
-        userSkillBean.createInitialData();
+//        userSkillBean.createInitialData();
     }
 }

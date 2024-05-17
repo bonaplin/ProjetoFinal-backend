@@ -4,6 +4,9 @@ import aor.project.innovationlab.enums.SkillType;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name="skill")
 @NamedQuery(name = "Skill.findSkillByName", query = "SELECT s FROM SkillEntity s WHERE s.name = :name")
@@ -22,6 +25,10 @@ public class SkillEntity implements Serializable {
 
         @Column(name = "description", nullable = true, unique = false, updatable = true)
         private String description;
+
+        //ADD_SKILL_TO_USER
+        @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
+        private List<UserSkillEntity> userSkills = new ArrayList<>();
 
         @Enumerated(EnumType.STRING)
         @Column(name = "skill_type", nullable = false, unique = false, updatable = true)
@@ -56,6 +63,11 @@ public class SkillEntity implements Serializable {
 
         public void setSkillType(SkillType skillType) {
             this.skillType = skillType;
+        }
+
+        //ADD_SKILL_TO_USER
+        public List<UserSkillEntity> getUserSkills() {
+            return userSkills;
         }
 
         @Override

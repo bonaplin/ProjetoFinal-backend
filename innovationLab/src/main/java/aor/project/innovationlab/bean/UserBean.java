@@ -1,6 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.LabDao;
+import aor.project.innovationlab.dao.SkillDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dao.UserSkillDao;
 import aor.project.innovationlab.dto.UserDto;
@@ -21,6 +22,12 @@ public class UserBean {
 
     @EJB
     LabDao labDao;
+
+    @EJB
+    SkillDao skillDao;
+
+    @EJB
+    UserSkillDao userSkillDao;
 
     //convert dto to entity
     public UserEntity toEntity(UserDto userDto) {
@@ -75,8 +82,21 @@ public class UserBean {
         userDto.setConfirmed("true");
         userDto.setRole(UserType.ADMIN.name());
         userDto.setLablocation("Coimbra");
-        UserEntity entity = toEntity(userDto);
-        userDao.persist(entity);
+        UserEntity user = toEntity(userDto);
+
+        SkillEntity skill = skillDao.findSkillByName("Java");
+        if(skill == null){
+            System.out.println("Skill not found");
+            skill = new SkillEntity(); // Use 'skill' instead of 'skillEntity'
+            skill.setName("Java");
+            skill.setSkillType(SkillType.KNOWLEDGE);
+            skillDao.persist(skill); // Persist the new skill in the database
+            System.out.println("Skill created");
+        }
+
+        //ADD_SKILL_TO_USER
+        user.addSkill(skill);
+        userDao.persist(user);
     }
 
     public boolean addUser(UserDto userDto) {
