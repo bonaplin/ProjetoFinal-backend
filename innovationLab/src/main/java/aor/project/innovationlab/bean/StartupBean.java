@@ -31,6 +31,9 @@ public class StartupBean {
     @Inject
     private ProductBean productBean;
 
+    @Inject
+    private TaskBean taskBean;
+
     @PostConstruct
     public void init() {
         labBean.createInitialData();
@@ -38,5 +41,6 @@ public class StartupBean {
         skillBean.createInitialData();
         userBean.createInitialData();
         productBean.createInitialData();
+        taskBean.createInitialData();
     }
 }
