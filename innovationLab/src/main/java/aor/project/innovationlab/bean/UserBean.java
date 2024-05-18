@@ -8,7 +8,6 @@ import aor.project.innovationlab.dto.UserDto;
 import aor.project.innovationlab.entity.LabEntity;
 import aor.project.innovationlab.entity.SkillEntity;
 import aor.project.innovationlab.entity.UserEntity;
-import aor.project.innovationlab.entity.UserSkillEntity;
 import aor.project.innovationlab.enums.SkillType;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.EJB;
@@ -25,9 +24,6 @@ public class UserBean {
 
     @EJB
     SkillDao skillDao;
-
-    @EJB
-    UserSkillDao userSkillDao;
 
     //convert dto to entity
     public UserEntity toEntity(UserDto userDto) {

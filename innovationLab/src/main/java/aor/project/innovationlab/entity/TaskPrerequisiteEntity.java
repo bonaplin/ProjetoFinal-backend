@@ -5,8 +5,9 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "task_additional_executor")
-public class AdditionalTaskExecutorEntity implements Serializable {
+@Table(name = "task_prerequisite")
+@NamedQuery(name = "PrerequisiteTask.findPrerequisiteTaskById", query = "SELECT pt FROM TaskPrerequisiteEntity pt WHERE pt.id = :id")
+public class TaskPrerequisiteEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -15,17 +16,18 @@ public class AdditionalTaskExecutorEntity implements Serializable {
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
-    @Column(name="name", nullable = false, unique = false, updatable = true)
-    private String name;
-
     @ManyToOne
     @JoinColumn(name = "task_id", nullable = false)
     private TaskEntity task;
 
+    @ManyToOne
+    @JoinColumn(name = "prerequisite_id", nullable = false)
+    private TaskEntity prerequisite;
+
     @Column(name = "active", nullable = false)
     private boolean active;
 
-    public AdditionalTaskExecutorEntity() {
+    public TaskPrerequisiteEntity() {
     }
 
     public Long getId() {
@@ -44,6 +46,14 @@ public class AdditionalTaskExecutorEntity implements Serializable {
         this.task = task;
     }
 
+    public TaskEntity getPrerequisite() {
+        return prerequisite;
+    }
+
+    public void setPrerequisite(TaskEntity prerequisite) {
+        this.prerequisite = prerequisite;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -52,11 +62,14 @@ public class AdditionalTaskExecutorEntity implements Serializable {
         this.active = active;
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public String toString() {
+        return "PrerequisiteTaskEntity{" +
+                "id=" + id +
+                ", task=" + task +
+                ", prerequisite=" + prerequisite +
+                ", active=" + active +
+                '}';
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 }

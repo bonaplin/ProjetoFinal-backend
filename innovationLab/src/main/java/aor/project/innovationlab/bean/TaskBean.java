@@ -1,7 +1,6 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.TaskDao;
-import aor.project.innovationlab.dao.TaskExecutorDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dto.TaskDto;
 import aor.project.innovationlab.entity.*;
@@ -37,9 +36,9 @@ public class TaskBean {
         taskEntity.setCreator(creator);
 
         // Adiciona os executores adicionais à tarefa se existirem
-        Set<AdditionalTaskExecutorEntity> additionalExecutors = new HashSet<>();
+        Set<TaskExecutorAdditionalEntity> additionalExecutors = new HashSet<>();
         for (String additionalExecutorName : taskDto.getAdditionalExecutors()) {
-            AdditionalTaskExecutorEntity additionalExecutor = new AdditionalTaskExecutorEntity();
+            TaskExecutorAdditionalEntity additionalExecutor = new TaskExecutorAdditionalEntity();
             additionalExecutor.setName(additionalExecutorName);
             additionalExecutor.setTask(taskEntity);
             additionalExecutor.setActive(true);
@@ -81,8 +80,8 @@ public class TaskBean {
         taskDto.setCreator(taskEntity.getCreator().getEmail());
 
         Set<String> additionalExecutors = taskEntity.getAdditionalExecutors().stream()
-                .filter(AdditionalTaskExecutorEntity::isActive)
-                .map(AdditionalTaskExecutorEntity::getName)
+                .filter(TaskExecutorAdditionalEntity::isActive)
+                .map(TaskExecutorAdditionalEntity::getName)
                 .collect(Collectors.toSet());
         taskDto.setAdditionalExecutors(additionalExecutors);
 
@@ -189,9 +188,9 @@ public class TaskBean {
     }
 
     private Set<TaskDto> convertPrerequisiteTasksToDto(TaskEntity taskEntity) {
-        Set<PrerequisiteTaskEntity> prerequisiteTaskEntities = taskEntity.getPrerequisiteForTasks();
+        Set<TaskPrerequisiteEntity> prerequisiteTaskEntities = taskEntity.getPrerequisiteForTasks();
         Set<TaskEntity> prerequisiteTasks = prerequisiteTaskEntities.stream()
-                .map(PrerequisiteTaskEntity::getTask)
+                .map(TaskPrerequisiteEntity::getTask)
                 .collect(Collectors.toSet());
         return prerequisiteTasks.stream()
                 .map(this::toDto)
@@ -272,7 +271,7 @@ public class TaskBean {
     public void addAdditionalExecutorToTask(Long taskId, String additionalExecutorName) {
         TaskEntity task = taskDao.findTaskById(taskId);
         if (task != null) {
-            AdditionalTaskExecutorEntity additionalExecutor = new AdditionalTaskExecutorEntity();
+            TaskExecutorAdditionalEntity additionalExecutor = new TaskExecutorAdditionalEntity();
             additionalExecutor.setName(additionalExecutorName);
             additionalExecutor.setTask(task);
             additionalExecutor.setActive(true);
@@ -285,7 +284,7 @@ public class TaskBean {
     public void removeAdditionalExecutorFromTask(Long taskId, String additionalExecutorName) {
         TaskEntity task = taskDao.findTaskById(taskId);
         if (task != null) {
-            AdditionalTaskExecutorEntity additionalExecutor = task.getAdditionalExecutors().stream()
+            TaskExecutorAdditionalEntity additionalExecutor = task.getAdditionalExecutors().stream()
                     .filter(executor -> executor.getName().equals(additionalExecutorName) && executor.isActive())
                     .findFirst()
                     .orElse(null);
