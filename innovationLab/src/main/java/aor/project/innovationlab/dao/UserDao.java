@@ -28,5 +28,14 @@ public class UserDao extends AbstractDao<UserEntity> {
         }
     }
 
+    public UserEntity findUserById(Long additionalExecutorId) {
+        try {
+            return (UserEntity) em.createNamedQuery("User.findUserById").setParameter("id", additionalExecutorId)
+                    .getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
 

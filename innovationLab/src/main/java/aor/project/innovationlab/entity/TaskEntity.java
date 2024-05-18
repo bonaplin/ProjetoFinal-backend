@@ -6,9 +6,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -37,20 +35,21 @@ public class TaskEntity implements Serializable {
     private Duration duration;
 
     @ManyToOne
+    @JoinColumn(name = "creator", nullable = false, unique = false, updatable = true)
+    private UserEntity creator;
+
+    @ManyToOne
     @JoinColumn(name = "responsible", nullable = false, unique = false, updatable = true)
     private UserEntity responsible;
 
-    @OneToMany(mappedBy = "task")
-    @Column(name = "executors")
-    private Set<TaskExecutor> executors = new HashSet<>();
-
-    @ElementCollection
-    @CollectionTable(name = "task_additional_executors")
-    private Set<String> additionalExecutors = new HashSet<>();
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TaskExecutorEntity> executors = new HashSet<>();
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JoinColumn(name = "prerequisite_id")
-    private Set<PrerequisiteTaskEntity> prerequisites  = new HashSet<>();
+    private Set<AdditionalTaskExecutorEntity> additionalExecutors = new HashSet<>();
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PrerequisiteTaskEntity> prerequisites = new HashSet<>();
 
     @OneToMany(mappedBy = "prerequisite")
     private Set<PrerequisiteTaskEntity> prerequisiteForTasks = new HashSet<>();
@@ -59,19 +58,20 @@ public class TaskEntity implements Serializable {
     @Column(name = "status", nullable = false, unique = false, updatable = true)
     private TaskStatus status = TaskStatus.PLANNED;
 
-    public TaskEntity() {
-    }
+    @Column(name="active", nullable = false)
+    private boolean active = true;
+
+    // Construtor padrão
+    public TaskEntity() {}
+
+    // Getters e Setters
 
     public Long getId() {
         return id;
     }
 
-    public Set<String> getAdditionalExecutors() {
-        return additionalExecutors;
-    }
-
-    public void setAdditionalExecutors(Set<String> additionalExecutors) {
-        this.additionalExecutors = additionalExecutors;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -82,44 +82,12 @@ public class TaskEntity implements Serializable {
         this.title = title;
     }
 
-    public TaskStatus getStatus() {
-        return status;
+    public String getDescription() {
+        return description;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
-    }
-
-    public UserEntity getResponsible() {
-        return responsible;
-    }
-
-    public void setResponsible(UserEntity responsible) {
-        this.responsible = responsible;
-    }
-
-    public Set<TaskEntity> getPrerequisites() {
-        Set<TaskEntity> tasks = new HashSet<>();
-        for (PrerequisiteTaskEntity prerequisite : prerequisites) {
-            tasks.add(prerequisite.getPrerequisite());
-        }
-        return tasks;
-    }
-
-    public Set<TaskEntity> getPrerequisiteForTasks() {
-        Set<TaskEntity> tasks = new HashSet<>();
-        for (PrerequisiteTaskEntity prerequisite : prerequisiteForTasks) {
-            tasks.add(prerequisite.getTask());
-        }
-        return tasks;
-    }
-
-    public void setPrerequisiteForTasks(Set<PrerequisiteTaskEntity> prerequisiteForTasks) {
-        this.prerequisiteForTasks = prerequisiteForTasks;
-    }
-
-    public void setPrerequisites(Set<PrerequisiteTaskEntity> prerequisites) {
-        this.prerequisites = prerequisites;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDate getInitialDate() {
@@ -130,10 +98,6 @@ public class TaskEntity implements Serializable {
         this.initialDate = initialDate;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Duration getDuration() {
         return duration;
     }
@@ -142,40 +106,186 @@ public class TaskEntity implements Serializable {
         this.duration = duration;
     }
 
-    public String getDescription() {
-        return description;
+    public UserEntity getResponsible() {
+        return responsible;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setResponsible(UserEntity responsible) {
+        this.responsible = responsible;
     }
 
-    public Set<TaskExecutor> getExecutors() {
+    public Set<TaskExecutorEntity> getExecutors() {
         return executors;
     }
 
-    public void setExecutors(Set<TaskExecutor> executors) {
+    public void setExecutors(Set<TaskExecutorEntity> executors) {
         this.executors = executors;
     }
 
-    public void removePrerequisite(TaskEntity prerequisite) {
-        prerequisites.remove(prerequisite);
+    public TaskStatus getStatus() {
+        return status;
     }
 
-    public void addAdditionalExecutor(String additionalExecutor) {
-        additionalExecutors.add(additionalExecutor);
+    public void setStatus(TaskStatus status) {
+        this.status = status;
     }
 
-    public void removeAdditionalExecutor(String additionalExecutor) {
-        additionalExecutors.remove(additionalExecutor);
+    public boolean isActive() {
+        return active;
     }
 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Set<TaskEntity> getPrerequisites() {
+        Set<TaskEntity> tasks = new HashSet<>();
+        for (PrerequisiteTaskEntity prerequisite : prerequisites) {
+            tasks.add(prerequisite.getPrerequisite());
+        }
+        return tasks;
+    }
+
+    public void setPrerequisites(Set<PrerequisiteTaskEntity> prerequisites) {
+        this.prerequisites = prerequisites;
+    }
+
+    public Set<PrerequisiteTaskEntity> getPrerequisiteForTasks() {
+        return prerequisiteForTasks;
+    }
+
+    public void setPrerequisiteForTasks(Set<PrerequisiteTaskEntity> prerequisiteForTasks) {
+        this.prerequisiteForTasks = prerequisiteForTasks;
+    }
+
+    public UserEntity getCreator() {
+        return creator;
+    }
+
+    public void setCreator(UserEntity creator) {
+        this.creator = creator;
+    }
+
+    public Set<AdditionalTaskExecutorEntity> getAdditionalExecutors() {
+        return additionalExecutors;
+    }
+
+    public void setAdditionalExecutors(Set<AdditionalTaskExecutorEntity> additionalExecutors) {
+        this.additionalExecutors = additionalExecutors;
+    }
+
+    // METODOS EXTRA
+
+    /**
+     * Adiciona um pré-requisito associado a esta tarefa.
+     * @param prerequisite - Tarefa que será adicionada como pré-requisito
+     */
     public void addPrerequisite(TaskEntity prerequisite) {
+        for (PrerequisiteTaskEntity existingPrerequisite : prerequisites) {
+            if (existingPrerequisite.getPrerequisite().equals(prerequisite)) {
+                return; // O pré-requisito já está no array, então retorna imeadiatamente
+            }
+        }
         PrerequisiteTaskEntity prerequisiteTaskEntity = new PrerequisiteTaskEntity();
         prerequisiteTaskEntity.setTask(this);
         prerequisiteTaskEntity.setPrerequisite(prerequisite);
+        prerequisiteTaskEntity.setActive(true);
         prerequisites.add(prerequisiteTaskEntity);
+        prerequisite.getPrerequisiteForTasks().add(prerequisiteTaskEntity);
     }
+
+    /**
+     * Remove um pré-requisito associado a esta tarefa. Com ajuda do método findPrerequisiteTaskEntityByPrerequisite,
+     * encontramos a entidade de pré-requisito associada a um pré-requisito específico e desativamos a mesma.
+     * Tudo isto será feito em Taskentity.
+     * @param prerequisite - Tarefa que será removida como pré-requisito
+     */
+    public void removePrerequisite(TaskEntity prerequisite) {
+        PrerequisiteTaskEntity prerequisiteTaskEntity = findPrerequisiteTaskEntityByPrerequisite(prerequisite);
+        if (prerequisiteTaskEntity != null) {
+            prerequisiteTaskEntity.setActive(false);
+        }
+    }
+
+    /**
+     * Encontra a entidade de pré-requisito associada a um pré-requisito específico.
+     * @param prerequisite - Tarefa que será usada para encontrar a entidade de pré-requisito
+     * @return
+     */
+    private PrerequisiteTaskEntity findPrerequisiteTaskEntityByPrerequisite(TaskEntity prerequisite) {
+        for (PrerequisiteTaskEntity prerequisiteTaskEntity : prerequisites) {
+            if (prerequisiteTaskEntity.getPrerequisite().equals(prerequisite) && prerequisiteTaskEntity.isActive()) {
+                return prerequisiteTaskEntity;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Adiciona um executor a esta tarefa.
+     * @param executor - Executor que será adicionado a esta tarefa
+     */
+    public void addExecutor(UserEntity executor) {
+        TaskExecutorEntity taskExecutorEntity = new TaskExecutorEntity();
+        taskExecutorEntity.setTask(this);
+        taskExecutorEntity.setExecutor(executor);
+        taskExecutorEntity.setActive(true);
+        this.getExecutors().add(taskExecutorEntity);
+    }
+
+    /**
+     * Remove um executor desta tarefa.
+     * @param executor - Executor que será removido desta tarefa
+     */
+    public void removeExecutor(TaskExecutorEntity executor) {
+        this.executors.remove(executor);
+        executor.setTask(null);
+        executor.setActive(false);
+    }
+
+
+    public void removeExecutor(UserEntity executor) {
+        TaskExecutorEntity taskExecutorEntity = findTaskExecutorByExecutor(executor);
+        if (taskExecutorEntity != null) {
+            taskExecutorEntity.setActive(false);
+        }
+    }
+
+    private TaskExecutorEntity findTaskExecutorByExecutor(UserEntity executor) {
+        for (TaskExecutorEntity taskExecutorEntity : this.getExecutors()) {
+            if (taskExecutorEntity.getExecutor().equals(executor) && taskExecutorEntity.isActive()) {
+                return taskExecutorEntity;
+            }
+        }
+        return null;
+    }
+
+    public void addAdditionalExecutor(String additionalExecutorName) {
+        AdditionalTaskExecutorEntity additionalExecutor = new AdditionalTaskExecutorEntity();
+        additionalExecutor.setName(additionalExecutorName);
+        additionalExecutor.setTask(this);
+        additionalExecutor.setActive(true);
+        this.additionalExecutors.add(additionalExecutor);
+    }
+
+    public void removeAdditionalExecutor(String additionalExecutorName) {
+        AdditionalTaskExecutorEntity additionalExecutor = findAdditionalExecutorByName(additionalExecutorName);
+        if (additionalExecutor != null) {
+            additionalExecutor.setActive(false);
+        }
+    }
+
+    private AdditionalTaskExecutorEntity findAdditionalExecutorByName(String name) {
+        for (AdditionalTaskExecutorEntity additionalExecutor : this.additionalExecutors) {
+            if (additionalExecutor.getName().equals(name) && additionalExecutor.isActive()) {
+                return additionalExecutor;
+            }
+        }
+        return null;
+    }
+
+
 
     @Override
     public String toString() {
@@ -191,6 +301,7 @@ public class TaskEntity implements Serializable {
                 ", prerequisites=" + prerequisites +
                 ", prerequisiteForTasks=" + prerequisiteForTasks +
                 ", status=" + status +
+                ", active=" + active +
                 '}';
     }
 }

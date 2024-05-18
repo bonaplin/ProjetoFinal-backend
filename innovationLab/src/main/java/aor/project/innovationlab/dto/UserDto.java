@@ -1,7 +1,7 @@
 package aor.project.innovationlab.dto;
 
 public class UserDto {
-    private int id;
+    private long id;
     private String username;
     private String password;
     private String email;
@@ -40,7 +40,7 @@ public class UserDto {
         return username;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -64,7 +64,7 @@ public class UserDto {
         this.lablocation = lablocation;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 

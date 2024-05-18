@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "task_executor")
-public class TaskExecutor implements Serializable {
+public class TaskExecutorEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -21,7 +21,11 @@ public class TaskExecutor implements Serializable {
     @ManyToOne
     private UserEntity executor;
 
-    public TaskExecutor() {
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
+
+    public TaskExecutorEntity() {
     }
 
     public UserEntity getExecutor() {
@@ -42,5 +46,13 @@ public class TaskExecutor implements Serializable {
 
     public void setExecutor(UserEntity executor) {
         this.executor = executor;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

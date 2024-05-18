@@ -15,6 +15,8 @@ public class TaskDto {
     private LocalDate initialDate;
     private Duration duration;
     private String responsible;
+    private String creator;
+    private Set<String> executors;
     private Set<String> additionalExecutors;
     private Set<Long> prerequisiteIds = new HashSet<>();
     private TaskStatus status;
@@ -92,5 +94,21 @@ public class TaskDto {
 
     public void setAdditionalExecutors(Set<String> additionalExecutors) {
         this.additionalExecutors = additionalExecutors;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
+    }
+
+    public Set<String> getExecutors() {
+        return executors;
+    }
+
+    public void setExecutors(Set<String> executors) {
+        this.executors = executors;
     }
 }

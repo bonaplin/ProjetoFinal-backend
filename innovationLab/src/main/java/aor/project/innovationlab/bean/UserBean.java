@@ -64,20 +64,22 @@ public class UserBean {
     }
 
     public void createInitialData() {
-        createUserIfNotExists("admin@admin");
+        createUserIfNotExists("admin@admin","admin");
+        createUserIfNotExists("ricardo@ricardo","ricardo");
+        createUserIfNotExists("joao@joao","joao");
     }
 
-    public void createUserIfNotExists(String email){
+    public void createUserIfNotExists(String email, String username){
         if(userDao.findUserByEmail(email) != null){
             return;
         }
         UserDto userDto = new UserDto();
         userDto.setEmail(email);
-        userDto.setUsername("admin");
-        userDto.setPassword("admin");
-        userDto.setFirstname("admin");
-        userDto.setLastname("admin");
-        userDto.setPhone("123456789");
+        userDto.setUsername(username);
+        userDto.setPassword(username);
+        userDto.setFirstname(username);
+        userDto.setLastname(username);
+        userDto.setPhone(username);
         userDto.setActive("true");
         userDto.setConfirmed("true");
         userDto.setRole(UserType.ADMIN.name());

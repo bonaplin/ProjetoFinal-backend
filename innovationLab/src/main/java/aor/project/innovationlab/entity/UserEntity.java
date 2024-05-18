@@ -11,6 +11,7 @@ import java.util.List;
 @Entity
 @Table(name="user")
 @NamedQuery(name = "User.findUserByEmail", query = "SELECT u FROM UserEntity u WHERE u.email = :email")
+@NamedQuery(name = "User.findUserById", query = "SELECT u FROM UserEntity u WHERE u.id = :id")
 public class UserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -18,7 +19,7 @@ public class UserEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id", nullable = false, unique = true, updatable = false)
-    private int id;
+    private long id;
 
     @Column(name="username", nullable = false, unique = true, updatable = false)
     private String username;
@@ -128,7 +129,7 @@ public class UserEntity implements Serializable {
         return password;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
