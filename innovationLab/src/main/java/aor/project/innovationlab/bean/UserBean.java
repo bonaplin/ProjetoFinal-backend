@@ -1,17 +1,13 @@
 package aor.project.innovationlab.bean;
 
-import aor.project.innovationlab.dao.LabDao;
-import aor.project.innovationlab.dao.SkillDao;
-import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.dao.UserSkillDao;
+import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.UserDto;
-import aor.project.innovationlab.entity.LabEntity;
-import aor.project.innovationlab.entity.SkillEntity;
-import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.SkillType;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class UserBean {
@@ -24,6 +20,15 @@ public class UserBean {
 
     @EJB
     SkillDao skillDao;
+
+    @EJB
+    UserInterestDao userInterestDao;
+
+    @EJB
+    InterestDao interestDao;
+
+    @Inject
+    SkillBean skillBean;
 
     //convert dto to entity
     public UserEntity toEntity(UserDto userDto) {
@@ -81,20 +86,12 @@ public class UserBean {
         userDto.setRole(UserType.ADMIN.name());
         userDto.setLablocation("Coimbra");
         UserEntity user = toEntity(userDto);
-
-        SkillEntity skill = skillDao.findSkillByName("Java");
-        if(skill == null){
-            System.out.println("Skill not found");
-            skill = new SkillEntity(); // Use 'skill' instead of 'skillEntity'
-            skill.setName("Java");
-            skill.setSkillType(SkillType.KNOWLEDGE);
-            skillDao.persist(skill); // Persist the new skill in the database
-            System.out.println("Skill created");
-        }
+        userDao.persist(user);
 
         //ADD_SKILL_TO_USER
-        user.addSkill(skill);
-        userDao.persist(user);
+        skillBean.addSkillToUser(email, "Java");
+        skillBean.addSkillToUser(email, "Assembly");
+        skillBean.addSkillToUser(email, "macOS");
     }
 
     public boolean addUser(UserDto userDto) {
@@ -102,5 +99,6 @@ public class UserBean {
         userDao.persist(userEntity);
         return true;
     }
+
 
 }

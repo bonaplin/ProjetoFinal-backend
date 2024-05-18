@@ -33,4 +33,5 @@ public class InterestDao extends AbstractDao<InterestEntity> {
             return null;
         }
     }
+
 }

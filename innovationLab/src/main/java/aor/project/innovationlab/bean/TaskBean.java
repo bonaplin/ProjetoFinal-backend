@@ -62,8 +62,7 @@ public class TaskBean {
         // Adiciona os pré-requisitos à tarefa se existirem
         if (taskDto.getPrerequisiteIds() != null) {
             for (Long prerequisiteId : taskDto.getPrerequisiteIds()) {
-                TaskEntity prerequisiteTask = getTaskById(prerequisiteId);
-                taskEntity.addPrerequisite(prerequisiteTask);
+                addPrerequisite(taskDto.getId(),prerequisiteId);
             }
         }
         return taskEntity;
@@ -93,11 +92,6 @@ public class TaskBean {
                 .collect(Collectors.toSet());
         taskDto.setExecutors(executors);
 
-        // Adiciona os IDs dos pré-requisitos à tarefa se existirem
-        Set<Long> prerequisiteIds = taskEntity.getPrerequisites().stream()
-                .map(TaskEntity::getId)
-                .collect(Collectors.toSet());
-        taskDto.setPrerequisiteIds(prerequisiteIds);
         return taskDto;
     }
 
@@ -143,7 +137,7 @@ public class TaskBean {
             if (prerequisiteIds != null) {
                 for (Long prerequisiteId : prerequisiteIds) {
                     TaskEntity prerequisiteTask = taskDao.findTaskById(prerequisiteId);
-                    taskEntity.addPrerequisite(prerequisiteTask);
+                    addPrerequisite(id, prerequisiteTask.getId());
                 }
             }
 
@@ -167,13 +161,13 @@ public class TaskBean {
         taskDao.merge(taskEntity);
     }
 
-    public Set<TaskEntity> getPrerequisiteTasksForTask(long taskId) {
-        TaskEntity taskEntity = taskDao.findTaskById(taskId);
-        if (taskEntity != null) {
-            return taskEntity.getPrerequisites();
-        }
-        return null;
-    }
+//    public Set<TaskEntity> getPrerequisiteTasksForTask(long taskId) {
+//        TaskEntity taskEntity = taskDao.findTaskById(taskId);
+//        if (taskEntity != null) {
+//            return taskEntity.getPrerequisites();
+//        }
+//        return null;
+//    }
 
     public Set<TaskDto> getTasksForWhichTaskIsPrerequisite(long taskId) {
         TaskEntity taskEntity = findTaskById(taskId);
@@ -199,35 +193,52 @@ public class TaskBean {
 
     //testado
     public void addPrerequisite(long taskId, long prerequisiteId) {
-        TaskEntity taskEntity = taskDao.findTaskById(taskId);
-        TaskEntity prerequisiteTask = taskDao.findTaskById(prerequisiteId);
-        if(taskEntity == null || prerequisiteTask == null) {
+        TaskEntity task = taskDao.findTaskById(taskId);
+        if(task == null) {
             return;
         }
-        taskEntity.addPrerequisite(prerequisiteTask);
-        taskDao.merge(taskEntity);
+        TaskEntity prerequisite = taskDao.findTaskById(prerequisiteId);
+        if(prerequisite == null) {
+            return;
+        }
+        for (TaskPrerequisiteEntity existingPrerequisite : task.getPrerequisites()) {
+            if (existingPrerequisite.getPrerequisite().equals(prerequisite)) {
+                return; // O pré-requisito já está no array, então retorna imeadiatamente
+            }
+        }
+        TaskPrerequisiteEntity taskPrerequisiteEntity = new TaskPrerequisiteEntity();
+        taskPrerequisiteEntity.setTask(task);
+        taskPrerequisiteEntity.setPrerequisite(prerequisite);
+        taskPrerequisiteEntity.setActive(true);
+        task.getPrerequisites().add(taskPrerequisiteEntity);
+        prerequisite.getPrerequisiteForTasks().add(taskPrerequisiteEntity);
+        taskDao.merge(task);
     }
 
-    //testado
+
     public void removePrerequisite(long taskId, long prerequisiteId) {
-        TaskEntity taskEntity = taskDao.findTaskById(taskId);
-        TaskEntity prerequisiteTask = taskDao.findTaskById(prerequisiteId);
-        if(taskEntity == null || prerequisiteTask == null) {
+        TaskEntity task = taskDao.findTaskById(taskId);
+        TaskEntity prerequisite = taskDao.findTaskById(prerequisiteId);
+        if(task == null || prerequisite == null) {
             return;
         }
-        taskEntity.removePrerequisite(prerequisiteTask);
-        taskDao.merge(taskEntity);
+        TaskPrerequisiteEntity taskPrerequisiteEntity = findPrerequisiteTaskEntityByPrerequisite(task, prerequisite);
+        if (taskPrerequisiteEntity != null) {
+            taskPrerequisiteEntity.setActive(false);
+            task.getPrerequisites().remove(taskPrerequisiteEntity);
+            taskDao.merge(task);
+        }
     }
 
-//    //testado
-//    public void addExecutorToTask(Long taskId, Long executorId) {
-//        TaskEntity task = taskDao.findTaskById(taskId);
-//        UserEntity executor = userDao.findUserById(executorId);
-//        if (task != null && executor != null) {
-//            task.addExecutor(executor);
-//            taskDao.merge(task);
-//        }
-//    }
+    private TaskPrerequisiteEntity findPrerequisiteTaskEntityByPrerequisite(TaskEntity task, TaskEntity prerequisite) {
+        for (TaskPrerequisiteEntity taskPrerequisiteEntity : task.getPrerequisites()) {
+            if (taskPrerequisiteEntity.getPrerequisite().equals(prerequisite) && taskPrerequisiteEntity.isActive()) {
+                return taskPrerequisiteEntity;
+            }
+        }
+        return null;
+    }
+
     //testado
     public void addExecutorToTask(Long taskId, String executorEmail) {
         TaskEntity task = taskDao.findTaskById(taskId);
@@ -242,15 +253,6 @@ public class TaskBean {
         }
     }
 
-//    //testado
-//    public void removeExecutorFromTask(Long taskId, Long executorId) {
-//        TaskEntity task = taskDao.findTaskById(taskId);
-//        UserEntity executor = userDao.findUserById(executorId);
-//        if (task != null && executor != null) {
-//            task.removeExecutor(executor);
-//            taskDao.merge(task);
-//        }
-//    }
     //testado
     public void removeExecutorFromTask(Long taskId, String executorEmail) {
         TaskEntity task = taskDao.findTaskById(taskId);

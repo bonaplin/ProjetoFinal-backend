@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Entity
@@ -70,8 +72,11 @@ public class UserEntity implements Serializable {
     private String profileImagePath;
 
     //ADD_SKILL_TO_USER
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserSkillEntity> userSkills = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UserSkillEntity> userSkills = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UserInterestEntity> interests = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="lab_id", nullable = false, updatable = true)
@@ -224,27 +229,20 @@ public class UserEntity implements Serializable {
         this.lab = lab;
     }
 
-    public boolean userHasSkill(SkillEntity skill) {
-        for (UserSkillEntity userSkill : userSkills) {
-            if (userSkill.getSkill().equals(skill)) {
-                return true;
-            }
-        }
-        return false;
+    public Set<UserInterestEntity> getInterests() {
+        return interests;
     }
 
-    //ADD_SKILL_TO_USER
-    public void addSkill(SkillEntity skill) {
-        UserSkillEntity userSkill = new UserSkillEntity();
-        userSkill.setUser(this);
-        userSkill.setSkill(skill);
-        userSkills.add(userSkill);
-        skill.getUserSkills().add(userSkill);
+    public void setInterests(Set<UserInterestEntity> interests) {
+        this.interests = interests;
     }
 
-    public void removeUserSkill(UserSkillEntity userSkill) {
-        userSkills.remove(userSkill);
-        userSkill.setUser(null);
+    public Set<UserSkillEntity> getUserSkills() {
+        return userSkills;
+    }
+
+    public void setUserSkills(Set<UserSkillEntity> userSkills) {
+        this.userSkills = userSkills;
     }
 
     @Override

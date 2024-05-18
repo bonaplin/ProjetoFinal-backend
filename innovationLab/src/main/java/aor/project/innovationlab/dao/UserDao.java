@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.entity.UserSkillEntity;
 import jakarta.ejb.Schedule;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
@@ -34,6 +35,17 @@ public class UserDao extends AbstractDao<UserEntity> {
                     .getSingleResult();
 
         } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public UserSkillEntity findUserSkillIds(long id, int id1) {
+        try {
+            return (UserSkillEntity) em.createNamedQuery("UserSkill.findUserSkillIds")
+                    .setParameter("user", id)
+                    .setParameter("skill", id1)
+                    .getSingleResult();
+        } catch (Exception e) {
             return null;
         }
     }

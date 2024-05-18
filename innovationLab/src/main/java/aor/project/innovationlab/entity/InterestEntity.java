@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import jdk.jfr.Name;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name="interest")
-@NamedQueries({
-        @NamedQuery(name = "Interest.findInterestByName", query = "SELECT i FROM InterestEntity i WHERE i.name = :name")
-})
+
+@NamedQuery(name = "Interest.findInterestByName", query = "SELECT i FROM InterestEntity i WHERE i.name = :name")
 public class InterestEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -24,6 +26,12 @@ public class InterestEntity implements Serializable {
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
+
+    @OneToMany(mappedBy = "interest")
+    private Set<UserInterestEntity> userInterestEntities = new HashSet<>();
+
+    @OneToMany(mappedBy = "interest")
+    private Set<ProjectInterestEntity> projectInterestEntities = new HashSet<>();
 
     public InterestEntity() {
     }
@@ -48,4 +56,27 @@ public class InterestEntity implements Serializable {
         this.active = active;
     }
 
+    public Set<UserInterestEntity> getUserInterests() {
+        return userInterestEntities;
+    }
+
+    public void setUserInterests(Set<UserInterestEntity> userInterestEntities) {
+        this.userInterestEntities = userInterestEntities;
+    }
+
+    public Set<UserInterestEntity> getUserInterestEntities() {
+        return userInterestEntities;
+    }
+
+    public void setUserInterestEntities(Set<UserInterestEntity> userInterestEntities) {
+        this.userInterestEntities = userInterestEntities;
+    }
+
+    public Set<ProjectInterestEntity> getProjectInterests() {
+        return projectInterestEntities;
+    }
+
+    public void setProjectInterests(Set<ProjectInterestEntity> projectInterestEntities) {
+        this.projectInterestEntities = projectInterestEntities;
+    }
 }

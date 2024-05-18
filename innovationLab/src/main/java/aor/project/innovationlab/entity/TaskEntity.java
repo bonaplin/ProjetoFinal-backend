@@ -42,13 +42,17 @@ public class TaskEntity implements Serializable {
     @JoinColumn(name = "responsible", nullable = false, unique = false, updatable = true)
     private UserEntity responsible;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @ManyToOne
+//    @JoinColumn(name = "project_id")
+//    private ProjectEntity project;
+
+    @OneToMany(mappedBy = "task")
     private Set<TaskExecutorEntity> executors = new HashSet<>();
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskExecutorAdditionalEntity> additionalExecutors = new HashSet<>();
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskPrerequisiteEntity> prerequisites = new HashSet<>();
 
     @OneToMany(mappedBy = "prerequisite")
@@ -138,12 +142,8 @@ public class TaskEntity implements Serializable {
         this.active = active;
     }
 
-    public Set<TaskEntity> getPrerequisites() {
-        Set<TaskEntity> tasks = new HashSet<>();
-        for (TaskPrerequisiteEntity prerequisite : prerequisites) {
-            tasks.add(prerequisite.getPrerequisite());
-        }
-        return tasks;
+    public Set<TaskPrerequisiteEntity> getPrerequisites() {
+        return prerequisites;
     }
 
     public void setPrerequisites(Set<TaskPrerequisiteEntity> prerequisites) {
@@ -173,119 +173,6 @@ public class TaskEntity implements Serializable {
     public void setAdditionalExecutors(Set<TaskExecutorAdditionalEntity> additionalExecutors) {
         this.additionalExecutors = additionalExecutors;
     }
-
-    // METODOS EXTRA
-
-    /**
-     * Adiciona um pré-requisito associado a esta tarefa.
-     * @param prerequisite - Tarefa que será adicionada como pré-requisito
-     */
-    public void addPrerequisite(TaskEntity prerequisite) {
-        for (TaskPrerequisiteEntity existingPrerequisite : prerequisites) {
-            if (existingPrerequisite.getPrerequisite().equals(prerequisite)) {
-                return; // O pré-requisito já está no array, então retorna imeadiatamente
-            }
-        }
-        TaskPrerequisiteEntity taskPrerequisiteEntity = new TaskPrerequisiteEntity();
-        taskPrerequisiteEntity.setTask(this);
-        taskPrerequisiteEntity.setPrerequisite(prerequisite);
-        taskPrerequisiteEntity.setActive(true);
-        prerequisites.add(taskPrerequisiteEntity);
-        prerequisite.getPrerequisiteForTasks().add(taskPrerequisiteEntity);
-    }
-
-    /**
-     * Remove um pré-requisito associado a esta tarefa. Com ajuda do método findPrerequisiteTaskEntityByPrerequisite,
-     * encontramos a entidade de pré-requisito associada a um pré-requisito específico e desativamos a mesma.
-     * Tudo isto será feito em Taskentity.
-     * @param prerequisite - Tarefa que será removida como pré-requisito
-     */
-    public void removePrerequisite(TaskEntity prerequisite) {
-        TaskPrerequisiteEntity taskPrerequisiteEntity = findPrerequisiteTaskEntityByPrerequisite(prerequisite);
-        if (taskPrerequisiteEntity != null) {
-            taskPrerequisiteEntity.setActive(false);
-        }
-    }
-
-    /**
-     * Encontra a entidade de pré-requisito associada a um pré-requisito específico.
-     * @param prerequisite - Tarefa que será usada para encontrar a entidade de pré-requisito
-     * @return
-     */
-    private TaskPrerequisiteEntity findPrerequisiteTaskEntityByPrerequisite(TaskEntity prerequisite) {
-        for (TaskPrerequisiteEntity taskPrerequisiteEntity : prerequisites) {
-            if (taskPrerequisiteEntity.getPrerequisite().equals(prerequisite) && taskPrerequisiteEntity.isActive()) {
-                return taskPrerequisiteEntity;
-            }
-        }
-        return null;
-    }
-
-
-    /**
-     * Adiciona um executor a esta tarefa.
-     * @param executor - Executor que será adicionado a esta tarefa
-     */
-    public void addExecutor(UserEntity executor) {
-        TaskExecutorEntity taskExecutorEntity = new TaskExecutorEntity();
-        taskExecutorEntity.setTask(this);
-        taskExecutorEntity.setExecutor(executor);
-        taskExecutorEntity.setActive(true);
-        this.getExecutors().add(taskExecutorEntity);
-    }
-
-    /**
-     * Remove um executor desta tarefa.
-     * @param executor - Executor que será removido desta tarefa
-     */
-    public void removeExecutor(TaskExecutorEntity executor) {
-        this.executors.remove(executor);
-        executor.setTask(null);
-        executor.setActive(false);
-    }
-
-
-    public void removeExecutor(UserEntity executor) {
-        TaskExecutorEntity taskExecutorEntity = findTaskExecutorByExecutor(executor);
-        if (taskExecutorEntity != null) {
-            taskExecutorEntity.setActive(false);
-        }
-    }
-
-    private TaskExecutorEntity findTaskExecutorByExecutor(UserEntity executor) {
-        for (TaskExecutorEntity taskExecutorEntity : this.getExecutors()) {
-            if (taskExecutorEntity.getExecutor().equals(executor) && taskExecutorEntity.isActive()) {
-                return taskExecutorEntity;
-            }
-        }
-        return null;
-    }
-
-    public void addAdditionalExecutor(String additionalExecutorName) {
-        TaskExecutorAdditionalEntity additionalExecutor = new TaskExecutorAdditionalEntity();
-        additionalExecutor.setName(additionalExecutorName);
-        additionalExecutor.setTask(this);
-        additionalExecutor.setActive(true);
-        this.additionalExecutors.add(additionalExecutor);
-    }
-
-    public void removeAdditionalExecutor(String additionalExecutorName) {
-        TaskExecutorAdditionalEntity additionalExecutor = findAdditionalExecutorByName(additionalExecutorName);
-        if (additionalExecutor != null) {
-            additionalExecutor.setActive(false);
-        }
-    }
-
-    private TaskExecutorAdditionalEntity findAdditionalExecutorByName(String name) {
-        for (TaskExecutorAdditionalEntity additionalExecutor : this.additionalExecutors) {
-            if (additionalExecutor.getName().equals(name) && additionalExecutor.isActive()) {
-                return additionalExecutor;
-            }
-        }
-        return null;
-    }
-
-
 
     @Override
     public String toString() {

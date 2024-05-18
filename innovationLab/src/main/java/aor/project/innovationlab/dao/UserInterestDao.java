@@ -23,4 +23,15 @@ public class UserInterestDao extends AbstractDao<UserInterestEntity> {
             return null;
         }
     }
+
+    public UserInterestEntity findUserInterestIds(long id, long id1) {
+        try {
+            return (UserInterestEntity) em.createNamedQuery("UserInterest.findUserInterestIds")
+                    .setParameter("user", id)
+                    .setParameter("interest", id1)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

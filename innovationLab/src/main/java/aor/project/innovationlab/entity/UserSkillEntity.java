@@ -6,6 +6,8 @@ import java.io.Serializable;
 
 @Entity
 @Table(name="user_skill")
+@NamedQuery(name = "UserSkill.findUserSkillByName", query = "SELECT us FROM UserSkillEntity us JOIN us.skill s WHERE s.name = :name")
+@NamedQuery(name = "UserSkill.findUserSkillIds", query = "SELECT us FROM UserSkillEntity us WHERE us.user = :user AND us.skill = :skill")
 public class UserSkillEntity implements Serializable {
 
     @Id
@@ -44,6 +46,14 @@ public class UserSkillEntity implements Serializable {
 
     public void setSkill(SkillEntity skill) {
         this.skill = skill;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override

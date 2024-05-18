@@ -1,6 +1,10 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SkillDao;
+import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.dao.UserSkillDao;
+import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.entity.UserSkillEntity;
 import aor.project.innovationlab.enums.SkillType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,6 +14,7 @@ import aor.project.innovationlab.dto.SkillDto;
 import aor.project.innovationlab.entity.SkillEntity;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.UUID;
 
@@ -18,6 +23,12 @@ public class SkillBean {
 
     @EJB
     private SkillDao skillDao;
+
+    @EJB
+    private UserDao userDao;
+
+    @EJB
+    private UserSkillDao userSkillDao;
 
     /**
      * Convert dto to entity
@@ -51,7 +62,9 @@ public class SkillBean {
         createSkillIfNotExists("Assembly", SkillType.HARDWARE);
         createSkillIfNotExists("macOS", SkillType.SOFTWARE);
         createSkillIfNotExists("IntelIJ", SkillType.TOOLS);
+
         System.out.println("Initial skills created");
+
     }
 
     private void createSkillIfNotExists(String name, SkillType type) {
@@ -63,5 +76,63 @@ public class SkillBean {
             SkillEntity entity = toEntity(dto);
             skillDao.persist(entity);
         }
+    }
+
+    /**
+     * Adiciona uma habilidade a um user
+     * @param email - email do user
+     * @param skillName - nome da habilidade
+     */
+    public void addSkillToUser(String email, String skillName) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if(user == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            // Cria uma nova habilidade se ela não existir
+            skill = new SkillEntity();
+            skill.setName(skillName);
+            skillDao.persist(skill);
+        }
+        // Cria a relação entre o user e a habilidade
+        UserSkillEntity userSkill = new UserSkillEntity();
+        userSkill.setUser(user);
+        userSkill.setSkill(skill);
+        userSkillDao.persist(userSkill);
+
+        // Adiciona a habilidade ao array de habilidades do user
+        user.getUserSkills().add(userSkill);
+        skill.getUserSkills().add(userSkill); // Adiciona o user à habilidade
+        userDao.merge(user);
+        skillDao.merge(skill);
+    }
+
+    /**
+     * Remove uma habilidade de um user
+     * @param email - email do user
+     * @param skillName - nome da habilidade a remover
+     */
+    public void removeSkillFromUser(String email, String skillName) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if(user == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            return;
+        }
+        UserSkillEntity userSkill = userDao.findUserSkillIds(user.getId(), skill.getId());
+        if(userSkill == null) {
+            return;
+        }
+        userSkill.setActive(false);
+        userSkillDao.merge(userSkill);
+
+        // Remove a habilidade do array de habilidades do user
+        user.getUserSkills().remove(userSkill);
+        skill.getUserSkills().remove(userSkill); // Remove o user da habilidade
+        userDao.merge(user);
+        skillDao.merge(skill);
     }
 }
