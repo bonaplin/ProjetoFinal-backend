@@ -7,7 +7,9 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "task")
@@ -40,18 +42,18 @@ public class TaskEntity implements Serializable {
 
     @OneToMany(mappedBy = "task")
     @Column(name = "executors")
-    private List<TaskExecutor> executors = new ArrayList<>();
+    private Set<TaskExecutor> executors = new HashSet<>();
 
     @ElementCollection
     @CollectionTable(name = "task_additional_executors")
-    private List<String> additionalExecutors = new ArrayList<>();
+    private Set<String> additionalExecutors = new HashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "prerequisite_id")
-    private TaskEntity prerequisite;
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "prerequisite_id")
+    private Set<PrerequisiteTaskEntity> prerequisites  = new HashSet<>();
 
     @OneToMany(mappedBy = "prerequisite")
-    private List<TaskEntity> prerequisiteForTasks = new ArrayList<>();
+    private Set<PrerequisiteTaskEntity> prerequisiteForTasks = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, unique = false, updatable = true)
@@ -60,76 +62,16 @@ public class TaskEntity implements Serializable {
     public TaskEntity() {
     }
 
-    public List<String> getAdditionalExecutors() {
-        return additionalExecutors;
-    }
-
-    public void setAdditionalExecutors(List<String> additionalExecutors) {
-        this.additionalExecutors = additionalExecutors;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public List<TaskExecutor> getExecutors() {
-        return executors;
-    }
-
     public Long getId() {
         return id;
     }
 
-    public TaskEntity getPrerequisite() {
-        return prerequisite;
+    public Set<String> getAdditionalExecutors() {
+        return additionalExecutors;
     }
 
-    public void setPrerequisite(TaskEntity prerequisite) {
-        this.prerequisite = prerequisite;
-    }
-
-    public UserEntity getResponsible() {
-        return responsible;
-    }
-
-    public void setResponsible(UserEntity responsible) {
-        this.responsible = responsible;
-    }
-
-    public TaskStatus getStatus() {
-        return status;
-    }
-
-    public LocalDate getInitialDate() {
-        return initialDate;
-    }
-
-    public Duration getDuration() {
-        return duration;
-    }
-
-    public List<TaskEntity> getPrerequisiteForTasks() {
-        return prerequisiteForTasks;
-    }
-
-    public void setPrerequisiteForTasks(List<TaskEntity> prerequisiteForTasks) {
-        this.prerequisiteForTasks = prerequisiteForTasks;
-    }
-
-    public void setInitialDate(LocalDate initialDate) {
-        this.initialDate = initialDate;
-    }
-
-    public void setDuration(Duration duration) {
-        this.duration = duration;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public void setAdditionalExecutors(Set<String> additionalExecutors) {
+        this.additionalExecutors = additionalExecutors;
     }
 
     public String getTitle() {
@@ -140,53 +82,115 @@ public class TaskEntity implements Serializable {
         this.title = title;
     }
 
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
+    public UserEntity getResponsible() {
+        return responsible;
+    }
+
+    public void setResponsible(UserEntity responsible) {
+        this.responsible = responsible;
+    }
+
+    public Set<TaskEntity> getPrerequisites() {
+        Set<TaskEntity> tasks = new HashSet<>();
+        for (PrerequisiteTaskEntity prerequisite : prerequisites) {
+            tasks.add(prerequisite.getPrerequisite());
+        }
+        return tasks;
+    }
+
+    public Set<TaskEntity> getPrerequisiteForTasks() {
+        Set<TaskEntity> tasks = new HashSet<>();
+        for (PrerequisiteTaskEntity prerequisite : prerequisiteForTasks) {
+            tasks.add(prerequisite.getTask());
+        }
+        return tasks;
+    }
+
+    public void setPrerequisiteForTasks(Set<PrerequisiteTaskEntity> prerequisiteForTasks) {
+        this.prerequisiteForTasks = prerequisiteForTasks;
+    }
+
+    public void setPrerequisites(Set<PrerequisiteTaskEntity> prerequisites) {
+        this.prerequisites = prerequisites;
+    }
+
+    public LocalDate getInitialDate() {
+        return initialDate;
+    }
+
+    public void setInitialDate(LocalDate initialDate) {
+        this.initialDate = initialDate;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
 
-    public void setStatus(String status) {
-        this.status = TaskStatus.valueOf(status);
+    public Duration getDuration() {
+        return duration;
     }
 
-    public String getStatusString() {
-        return status.toString();
+    public void setDuration(Duration duration) {
+        this.duration = duration;
     }
 
-    public void setStatusString(String status) {
-        this.status = TaskStatus.valueOf(status);
+    public String getDescription() {
+        return description;
     }
 
-    public void setResponsible(String responsible) {
-        this.responsible = new UserEntity();
-        this.responsible.setUsername(responsible);
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public void setExecutors(List<TaskExecutor> executors) {
+    public Set<TaskExecutor> getExecutors() {
+        return executors;
+    }
+
+    public void setExecutors(Set<TaskExecutor> executors) {
         this.executors = executors;
     }
 
-    //ADD_EXECUTOR ADD_ADDITIONAL_EXECUTOR
-    public void addExecutor(TaskExecutor executor) {
-        executors.add(executor);
+    public void removePrerequisite(TaskEntity prerequisite) {
+        prerequisites.remove(prerequisite);
     }
 
-    public void addAdditionalExecutor(String executor) {
-        additionalExecutors.add(executor);
+    public void addAdditionalExecutor(String additionalExecutor) {
+        additionalExecutors.add(additionalExecutor);
     }
 
-    public void removeAdditionalExecutor(String executor) {
-        additionalExecutors.remove(executor);
+    public void removeAdditionalExecutor(String additionalExecutor) {
+        additionalExecutors.remove(additionalExecutor);
     }
 
-    public void addExecutor(UserEntity executor) {
-        additionalExecutors.add(executor.getUsername());
+    public void addPrerequisite(TaskEntity prerequisite) {
+        PrerequisiteTaskEntity prerequisiteTaskEntity = new PrerequisiteTaskEntity();
+        prerequisiteTaskEntity.setTask(this);
+        prerequisiteTaskEntity.setPrerequisite(prerequisite);
+        prerequisites.add(prerequisiteTaskEntity);
     }
 
-    public void removeExecutor(UserEntity executor) {
-        executors.removeIf(taskExecutor -> taskExecutor.getExecutor().equals(executor));
-    }
-
-    public Long getPrerequisiteId() {
-        return prerequisite.getId();
+    @Override
+    public String toString() {
+        return "TaskEntity{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", initialDate=" + initialDate +
+                ", duration=" + duration +
+                ", responsible=" + responsible +
+                ", executors=" + executors +
+                ", additionalExecutors=" + additionalExecutors +
+                ", prerequisites=" + prerequisites +
+                ", prerequisiteForTasks=" + prerequisiteForTasks +
+                ", status=" + status +
+                '}';
     }
 }

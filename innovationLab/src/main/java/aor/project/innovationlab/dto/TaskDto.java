@@ -4,7 +4,9 @@ import aor.project.innovationlab.enums.TaskStatus;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TaskDto {
     private Long id;
@@ -13,8 +15,8 @@ public class TaskDto {
     private LocalDate initialDate;
     private Duration duration;
     private String responsible;
-    private List<String> additionalExecutors;
-    private Long prerequisiteId;
+    private Set<String> additionalExecutors;
+    private Set<Long> prerequisiteIds = new HashSet<>();
     private TaskStatus status;
 
     public TaskDto() {
@@ -44,12 +46,12 @@ public class TaskDto {
         this.status = status;
     }
 
-    public Long getPrerequisiteId() {
-        return prerequisiteId;
+    public Set<Long> getPrerequisiteIds() {
+        return prerequisiteIds;
     }
 
-    public void setPrerequisiteId(Long prerequisiteId) {
-        this.prerequisiteId = prerequisiteId;
+    public void setPrerequisiteIds(Set<Long> prerequisiteIds) {
+        this.prerequisiteIds = prerequisiteIds;
     }
 
     public LocalDate getInitialDate() {
@@ -84,11 +86,11 @@ public class TaskDto {
         this.duration = duration;
     }
 
-    public List<String> getAdditionalExecutors() {
+    public Set<String> getAdditionalExecutors() {
         return additionalExecutors;
     }
 
-    public void setAdditionalExecutors(List<String> additionalExecutors) {
+    public void setAdditionalExecutors(Set<String> additionalExecutors) {
         this.additionalExecutors = additionalExecutors;
     }
 }
