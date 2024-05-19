@@ -28,6 +28,11 @@ public class UserSkillEntity implements Serializable {
     public UserSkillEntity() {
     }
 
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
+    }
+
     public int getId() {
         return id;
     }

@@ -2,9 +2,9 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.ProjectDto;
-import aor.project.innovationlab.entity.InterestEntity;
-import aor.project.innovationlab.entity.ProjectEntity;
-import aor.project.innovationlab.entity.ProjectInterestEntity;
+import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.ProductStatus;
+import aor.project.innovationlab.enums.ProjectUserType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -12,8 +12,6 @@ import java.time.LocalDate;
 
 @ApplicationScoped
 public class ProjectBean {
-
-    private static final long serialVersionUID = 1L;
 
     @EJB
     private ProjectDao projectDao;
@@ -25,10 +23,19 @@ public class ProjectBean {
     private ProjectInterestDao projectInterestDao;
 
     @EJB
-    UserDao userDao;
+    private UserDao userDao;
 
     @EJB
-    LabDao labDao;
+    private LabDao labDao;
+
+    @EJB
+    private ProductDao productDao;
+
+    @EJB
+    private ProjectUserDao projectUserDao;
+
+    @EJB
+    private ProjectProductDao projectProductDao;
 
     public ProjectBean() {
     }
@@ -103,8 +110,110 @@ public class ProjectBean {
             project.setEndDate(LocalDate.now().plusDays(20));
             project.setFinishDate(LocalDate.now().plusDays(30));
             project.setLab(labDao.findLabByLocation(location));
-
             projectDao.persist(project);
+            addResourceToProjectByNames(name, "Product 6");
+            addResourceToProjectByNames(name, "Product 2");
+            addResourceToProjectByNames(name, "Product 3");
+            removeResourceFromProject(name, "123456788");
+            addUserToProject(name, "admin@admin", ProjectUserType.MANAGER);
+            addUserToProject(name, "ricardo@ricardo", ProjectUserType.NORMAL);
+            addUserToProject(name, "joao@joao", ProjectUserType.INVITED);
+            addInterestToProject(name, "Interest 1");
+            addInterestToProject(name, "Interest 2");
         }
+    }
+
+    /**
+     * Adiciona um recurso a um projeto
+     * @param projectName - nome do projeto
+     * @param productIdentifier - identificador do recurso
+     */
+    public void addResourceToProject(String projectName, String productIdentifier) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        ProductEntity product = productDao.findProductByIdentifier(productIdentifier);
+        if(product == null) {
+            return;
+        }
+        ProjectProductEntity projectProduct = new ProjectProductEntity();
+        projectProduct.setProject(project);
+        projectProduct.setProduct(product);
+        projectProduct.setStatus(ProductStatus.STOCK);
+        projectProduct.setQuantity(1);
+        projectProductDao.persist(projectProduct);
+
+        // Adiciona o recurso ao array de recursos do projeto
+        project.getProjectProducts().add(projectProduct);
+        projectDao.merge(project);
+    }
+
+    public void addResourceToProjectByNames(String projectName, String productName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        ProductEntity product = productDao.findProductByName(productName);
+        if(product == null) {
+            return;
+        }
+        ProjectProductEntity projectProduct = new ProjectProductEntity();
+        projectProduct.setProject(project);
+        projectProduct.setProduct(product);
+        projectProduct.setStatus(ProductStatus.STOCK);
+        projectProduct.setQuantity(1);
+        projectProductDao.persist(projectProduct);
+
+        // Adiciona o recurso ao array de recursos do projeto
+        project.getProjectProducts().add(projectProduct);
+        projectDao.merge(project);
+    }
+
+    /**
+     * Remove um recurso de um projeto
+     * @param projectName - nome do projeto
+     * @param productIdentifier - identificador do recurso
+     */
+    public void removeResourceFromProject(String projectName, String productIdentifier) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        ProductEntity product = productDao.findProductByIdentifier(productIdentifier);
+        if(product == null) {
+            return;
+        }
+        ProjectProductEntity projectProduct = projectProductDao.findProjectProductIds(project.getId(), product.getId());
+        if(projectProduct == null) {
+            return;
+        }
+        projectProduct.setActive(false);
+        projectProductDao.merge(projectProduct);
+
+        // Remove o recurso do array de recursos do projeto
+        project.getProjectProducts().remove(projectProduct);
+        projectDao.merge(project);
+    }
+
+    public void addUserToProject(String projectName, String userEmail, ProjectUserType role) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        UserEntity user = userDao.findUserByEmail(userEmail);
+        if(user == null) {
+            return;
+        }
+        ProjectUserEntity projectUser = new ProjectUserEntity();
+        projectUser.setProject(project);
+        projectUser.setUser(user);
+        projectUser.setRole(role);
+        projectUser.setActive(true);
+        projectUserDao.persist(projectUser);
+
+        // Adiciona o usuário ao array de usuários do projeto
+        project.getProjectUsers().add(projectUser);
+        projectDao.merge(project);
     }
 }

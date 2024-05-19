@@ -27,7 +27,7 @@ public class InterestEntity implements Serializable {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    @OneToMany(mappedBy = "interest", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserInterestEntity> userInterestEntities = new HashSet<>();
 
     @OneToMany(mappedBy = "interest", fetch = FetchType.LAZY)

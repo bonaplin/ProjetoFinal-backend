@@ -82,12 +82,12 @@ public class UserEntity implements Serializable {
     @JoinColumn(name="lab_id", nullable = false, updatable = true)
     private LabEntity lab;
 
+    public UserEntity() {
+    }
+
     @PrePersist
     protected void onCreate(){
         created = Instant.now();
-    }
-
-    public UserEntity() {
     }
 
     public String getUsername() {

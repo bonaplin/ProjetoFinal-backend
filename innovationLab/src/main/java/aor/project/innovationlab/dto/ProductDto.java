@@ -1,5 +1,7 @@
 package aor.project.innovationlab.dto;
 
+import aor.project.innovationlab.enums.ProjectStatus;
+
 public class ProductDto {
     private long id;
     private String name;
@@ -10,6 +12,7 @@ public class ProductDto {
     private String brand;
     private String identifier;
     private int quantity;
+    private int status;
 
     public ProductDto() {
     }
@@ -84,6 +87,14 @@ public class ProductDto {
 
     public void setBrand(String brand) {
         this.brand = brand;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     @Override

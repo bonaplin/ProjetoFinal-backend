@@ -29,7 +29,15 @@ public class SupplierEntity implements Serializable {
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProductEntity> products = new ArrayList<>();
 
+    @Column(name = "active", nullable = false, unique = false, updatable = true)
+    private boolean active = true;
+
     public SupplierEntity() {
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
     }
 
     public long getId() {
@@ -54,6 +62,22 @@ public class SupplierEntity implements Serializable {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public List<ProductEntity> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<ProductEntity> products) {
+        this.products = products;
     }
 
     @Override

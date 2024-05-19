@@ -4,49 +4,62 @@ import aor.project.innovationlab.enums.ProductType;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "product")
 @NamedQuery(name = "Product.findProductByName", query = "SELECT p FROM ProductEntity p WHERE p.name = :name")
 @NamedQuery(name = "Product.findProductById", query = "SELECT p FROM ProductEntity p WHERE p.id = :id")
+@NamedQuery(name = "Product.findProductByIdentifier", query = "SELECT p FROM ProductEntity p WHERE p.identifier = :identifier")
 public class ProductEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @Column(name = "id", nullable = false, unique = true, updatable = false)
-        private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private long id;
 
-        @Column(name = "name", nullable = false, unique = true, updatable = true)
-        private String name;
+    @Column(name = "name", nullable = false, unique = true, updatable = true)
+    private String name;
 
-        @Column(name = "brand", nullable = false, unique = false, updatable = true)
-        private String brand;
+    @Column(name = "brand", nullable = false, unique = false, updatable = true)
+    private String brand;
 
-        @Enumerated(EnumType.STRING)
-        @Column(name = "type", nullable = false, unique = false, updatable = true)
-        private ProductType type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, unique = false, updatable = true)
+    private ProductType type;
 
-        @Column(name = "description", nullable = true, unique = false, updatable = true)
-        private String description;
+    @Column(name = "description", nullable = true, unique = false, updatable = true)
+    private String description;
 
-        @Column(name = "identifier", nullable = false, unique = true, updatable = true)
-        private String identifier;
+    @Column(name = "identifier", nullable = false, unique = true, updatable = true)
+    private String identifier;
 
-        @ManyToOne
-        @JoinColumn(name = "supplier_id", nullable = false, unique = false, updatable = true)
-        private SupplierEntity supplier;
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false, unique = false, updatable = true)
+    private SupplierEntity supplier;
 
-        @Column(name = "quantity", nullable = false, unique = false, updatable = true)
-        private int quantity;
+    @Column(name = "quantity", nullable = false, unique = false, updatable = true)
+    private int quantity;
 
-        @Column(name = "notes", nullable = true, unique = false, updatable = true)
-        private String notes;
+    @Column(name = "notes", nullable = true, unique = false, updatable = true)
+    private String notes;
+
+    @Column(name = "active", nullable = false, unique = false, updatable = true)
+    private boolean active = true;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ProjectProductEntity> projectProducts = new HashSet<>();
 
     public ProductEntity() {
-        }
-//
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
+    }
 
     public long getId() {
         return id;
@@ -114,5 +127,13 @@ public class ProductEntity implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

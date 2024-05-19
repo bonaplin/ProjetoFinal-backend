@@ -43,8 +43,8 @@ public class StartupBean {
         supplierBean.createInitialData();
         skillBean.createInitialData();
         userBean.createInitialData();
-        projectBean.createInitialData();
         productBean.createInitialData();
+        projectBean.createInitialData();
         taskBean.createInitialData();
         interestBean.createInitialData();
     }

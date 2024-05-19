@@ -1,13 +1,12 @@
 package aor.project.innovationlab.enums;
 
-public enum TaskStatus {
-    PLANNED(10),
-    IN_PROGRESS(30),
-    FINISHED(50);
+public enum ProductStatus {
+    REQUESTED(10),
+    STOCK(20);
 
     private final int value;
 
-    TaskStatus(int value) {
+    ProductStatus(int value) {
         this.value = value;
     }
 
@@ -15,12 +14,13 @@ public enum TaskStatus {
         return value;
     }
 
-    public static TaskStatus fromValue(int value) {
-        for (TaskStatus status : TaskStatus.values()) {
+    public static ProductStatus fromValue(int value) {
+        for (ProductStatus status : ProductStatus.values()) {
             if (status.getValue() == value) {
                 return status;
             }
         }
         return null;
     }
+
 }

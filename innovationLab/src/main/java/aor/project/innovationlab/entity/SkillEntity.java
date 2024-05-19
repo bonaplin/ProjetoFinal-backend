@@ -15,67 +15,87 @@ public class SkillEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @Column(name = "id", nullable = false, unique = true, updatable = false)
-        private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    private int id;
 
-        @Column(name = "name", nullable = false, unique = true, updatable = true)
-        private String name;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
-        @Column(name = "description", nullable = true, unique = false, updatable = true)
-        private String description;
+    @Column(name = "description")
+    private String description;
 
-        //ADD_SKILL_TO_USER
-        @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-        private List<UserSkillEntity> userSkills = new ArrayList<>();
+    //ADD_SKILL_TO_USER
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<UserSkillEntity> userSkills = new ArrayList<>();
 
-        @Enumerated(EnumType.STRING)
-        @Column(name = "skill_type", nullable = false, unique = false, updatable = true)
-        private SkillType skillType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "skill_type", nullable = false)
+    private SkillType skillType;
 
-        public SkillEntity() {
-        }
+    @Column(name = "active", nullable = false, unique = false)
+    private boolean active = true;
 
-        public int getId() {
+    public SkillEntity() {
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public void setUserSkills(List<UserSkillEntity> userSkills) {
+        this.userSkills = userSkills;
+    }
+
+    public int getId() {
             return id;
         }
 
-        public String getName() {
-            return name;
-        }
+    public String getName() {
+        return name;
+    }
 
-        public void setName(String name) {
-            this.name = name;
-        }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-        public String getDescription() {
-            return description;
-        }
+    public String getDescription() {
+        return description;
+    }
 
-        public void setDescription(String description) {
-            this.description = description;
-        }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-        public SkillType getSkillType() {
-            return skillType;
-        }
+    public SkillType getSkillType() {
+        return skillType;
+    }
 
-        public void setSkillType(SkillType skillType) {
-            this.skillType = skillType;
-        }
+    public void setSkillType(SkillType skillType) {
+        this.skillType = skillType;
+    }
 
-        //ADD_SKILL_TO_USER
-        public List<UserSkillEntity> getUserSkills() {
-            return userSkills;
-        }
+    //ADD_SKILL_TO_USER
+    public List<UserSkillEntity> getUserSkills() {
+        return userSkills;
+    }
 
-        @Override
-        public String toString() {
-            return "SkillEntity{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", description='" + description + '\'' +
-                    '}';
-        }
+    @Override
+    public String toString() {
+        return "SkillEntity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

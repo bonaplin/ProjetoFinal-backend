@@ -33,4 +33,14 @@ public class ProductDao extends AbstractDao<ProductEntity> {
                 return null;
             }
         }
+
+    public ProductEntity findProductByIdentifier(String productIdentifier) {
+        try {
+            return (ProductEntity) em.createNamedQuery("Product.findProductByIdentifier").setParameter("identifier", productIdentifier)
+                    .getSingleResult();
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

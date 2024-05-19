@@ -31,6 +31,11 @@ public class ProjectInterestEntity implements Serializable {
         return project;
     }
 
+    @PrePersist
+    public void prePersist() {
+        active = true;
+    }
+
     public void setProject(ProjectEntity project) {
         this.project = project;
     }

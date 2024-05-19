@@ -31,6 +31,11 @@ public class TaskBean {
     TaskExecutorDao taskExecutorDao;
 
 
+    /**
+     * Converte um DTO numa entidade.
+     * @param taskDto
+     * @return
+     */
     public TaskEntity toEntity(TaskDto taskDto) {
         TaskEntity taskEntity = new TaskEntity();
         taskEntity.setId(taskDto.getId());
@@ -76,6 +81,11 @@ public class TaskBean {
         return taskEntity;
     }
 
+    /**
+     * Converte uma entidade num DTO.
+     * @param taskEntity
+     * @return
+     */
     public TaskDto toDto(TaskEntity taskEntity) {
         TaskDto taskDto = new TaskDto();
         taskDto.setId(taskEntity.getId());
@@ -107,9 +117,12 @@ public class TaskBean {
         return taskDao.findTaskById(taskId);
     }
 
+    /**
+     * Cria tarefas iniciais.
+     */
     public void createInitialData() {
-        createTaskIfNotExists(1,"Task 1", "Description 1", "admin@admin", TaskStatus.IN_PROGRESS, "2021-01-01", "PT1H",null, "Project 1");
-        createTaskIfNotExists(2,"Task 2", "Description 1", "admin@admin", TaskStatus.FINISHED, "2021-01-01", "PT1H",null, "Project 1");
+        createTaskIfNotExists(1,"Task 1", "Description 1", "admin@admin", TaskStatus.fromValue(50), "2021-01-01", "PT1H",null, "Project 1");
+        createTaskIfNotExists(2,"Task 2", "Description 1", "admin@admin", TaskStatus.IN_PROGRESS, "2021-01-01", "PT1H",null, "Project 1");
         createTaskIfNotExists(3,"Task 3", "Description 3", "admin@admin", TaskStatus.PLANNED, "2021-01-01", "PT1H", null, "Project 1");
         addPrerequisite(3, 1);
         addPrerequisite(3, 2);
@@ -179,6 +192,11 @@ public class TaskBean {
 //        return null;
 //    }
 
+    /**
+     * Retorna as tarefas que têm a tarefa com taskId como pré-requisito.
+     * @param taskId - id da tarefa que é pré-requisito
+     * @return
+     */
     public Set<TaskDto> getTasksForWhichTaskIsPrerequisite(long taskId) {
         TaskEntity taskEntity = findTaskById(taskId);
         if (taskEntity == null) {
@@ -191,6 +209,11 @@ public class TaskBean {
         return taskDao.findTaskById(taskId);
     }
 
+    /**
+     * Converte as tarefas de pré-requisito em DTO.
+     * @param taskEntity
+     * @return
+     */
     private Set<TaskDto> convertPrerequisiteTasksToDto(TaskEntity taskEntity) {
         Set<TaskPrerequisiteEntity> prerequisiteTaskEntities = taskEntity.getPrerequisiteForTasks();
         Set<TaskEntity> prerequisiteTasks = prerequisiteTaskEntities.stream()
@@ -201,7 +224,11 @@ public class TaskBean {
                 .collect(Collectors.toSet());
     }
 
-    //testado
+    /**
+     * Adiciona um pré-requisito a uma tarefa.
+     * @param taskId - id da tarefa
+     * @param prerequisiteId - id do pré-requisito
+     */
     public void addPrerequisite(long taskId, long prerequisiteId) {
         TaskEntity task = taskDao.findTaskById(taskId);
         if(task == null) {
@@ -226,6 +253,11 @@ public class TaskBean {
     }
 
 
+    /**
+     * Remove um pré-requisito de uma tarefa.
+     * @param taskId - id da tarefa
+     * @param prerequisiteId - id do pré-requisito
+     */
     public void removePrerequisite(long taskId, long prerequisiteId) {
         TaskEntity task = taskDao.findTaskById(taskId);
         TaskEntity prerequisite = taskDao.findTaskById(prerequisiteId);
@@ -249,7 +281,11 @@ public class TaskBean {
         return null;
     }
 
-    //testado
+    /**
+     * Adiciona um executor a uma tarefa.
+     * @param taskId - id da tarefa
+     * @param executorEmail - email do executor
+     */
     public void addExecutorToTask(long taskId, String executorEmail) {
         TaskEntity task = taskDao.findTaskById(taskId);
         UserEntity executor = userDao.findUserByEmail(executorEmail);
@@ -264,7 +300,11 @@ public class TaskBean {
         }
     }
 
-    //testado
+    /**
+     * Remove um executor de uma tarefa.
+     * @param taskId - id da tarefa
+     * @param executorEmail - email do executor
+     */
     public void removeExecutorFromTask(Long taskId, String executorEmail) {
         TaskEntity task = taskDao.findTaskById(taskId);
         UserEntity executor = userDao.findUserByEmail(executorEmail);
@@ -281,7 +321,11 @@ public class TaskBean {
         }
     }
 
-    //testado
+    /**
+     * Adiciona um executor adicional a uma tarefa.
+     * @param taskId - id da tarefa
+     * @param additionalExecutorName - nome do executor adicional
+     */
     public void addAdditionalExecutorToTask(Long taskId, String additionalExecutorName) {
         TaskEntity task = taskDao.findTaskById(taskId);
         if (task != null) {
@@ -294,7 +338,11 @@ public class TaskBean {
         }
     }
 
-    //testado
+    /**
+     * Remove um executor adicional de uma tarefa.
+     * @param taskId - id da tarefa
+     * @param additionalExecutorName - nome do executor adicional
+     */
     public void removeAdditionalExecutorFromTask(Long taskId, String additionalExecutorName) {
         TaskEntity task = taskDao.findTaskById(taskId);
         if (task != null) {

@@ -23,7 +23,15 @@ public class LabEntity implements Serializable {
     @Column(name="location", nullable = false, unique = true, updatable = true)
     private String location;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     public LabEntity() {
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
     }
 
     public int getId() {

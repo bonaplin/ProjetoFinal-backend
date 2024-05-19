@@ -8,8 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class InterestBean {
 
-    private static final long serialVersionUID = 1L;
-
     @EJB
     private InterestDao interestDao;
 
@@ -34,7 +32,8 @@ public class InterestBean {
         addInterestToUser("joao@ajoao","Fallowing Interest");
         addInterestToUser("admin@admin","Interest");
         addInterestToUser("ricardo@ricardo","Bob Interest");
-
+        addInterestToProject("Project 1", "Interest 1 project");
+        addInterestToProject("Project 2", "Interest 2 project");
     }
 
     /**

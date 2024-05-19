@@ -1,5 +1,6 @@
 package aor.project.innovationlab.entity;
 
+import aor.project.innovationlab.enums.ProjectStatus;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -41,7 +42,10 @@ public class ProjectEntity implements Serializable {
     @JoinColumn(name = "creator_id", nullable = false)
     private  UserEntity creator;
 
-    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ProjectUserEntity> projectUsers = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectInterestEntity> interests = new HashSet<>();
 
     @ManyToOne
@@ -51,6 +55,19 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskEntity> tasks = new HashSet<>();
 
+    @Column(name = "active", nullable = false, unique = false)
+    private boolean active = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, unique = false)
+    private ProjectStatus status;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ProjectProductEntity> projectProducts = new HashSet<>();
+
+    public ProjectEntity() {
+    }
+
     public LocalDate getCreatedDate() {
         return createdDate;
     }
@@ -58,6 +75,7 @@ public class ProjectEntity implements Serializable {
     @PrePersist
     public void prePersist() {
         createdDate = LocalDate.now();
+        status = ProjectStatus.PLANNING;
     }
 
 //    public Set<TaskEntity> getTasks() {
@@ -142,5 +160,37 @@ public class ProjectEntity implements Serializable {
 
     public void setTasks(Set<TaskEntity> tasks) {
         this.tasks = tasks;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public ProjectStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProjectStatus status) {
+        this.status = status;
+    }
+
+    public Set<ProjectProductEntity> getProjectProducts() {
+        return projectProducts;
+    }
+
+    public void setProjectProducts(Set<ProjectProductEntity> projectProducts) {
+        this.projectProducts = projectProducts;
+    }
+
+    public Set<ProjectUserEntity> getProjectUsers() {
+        return projectUsers;
+    }
+
+    public void setProjectUsers(Set<ProjectUserEntity> projectUsers) {
+        this.projectUsers = projectUsers;
     }
 }
