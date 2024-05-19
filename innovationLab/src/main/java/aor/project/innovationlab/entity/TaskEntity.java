@@ -42,20 +42,20 @@ public class TaskEntity implements Serializable {
     @JoinColumn(name = "responsible", nullable = false, unique = false, updatable = true)
     private UserEntity responsible;
 
-//    @ManyToOne
-//    @JoinColumn(name = "project_id")
-//    private ProjectEntity project;
+    @ManyToOne
+    @JoinColumn(name = "project_id", nullable = false)
+    private ProjectEntity project;
 
-    @OneToMany(mappedBy = "task")
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY)
     private Set<TaskExecutorEntity> executors = new HashSet<>();
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskExecutorAdditionalEntity> additionalExecutors = new HashSet<>();
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskPrerequisiteEntity> prerequisites = new HashSet<>();
 
-    @OneToMany(mappedBy = "prerequisite")
+    @OneToMany(mappedBy = "prerequisite", fetch = FetchType.LAZY)
     private Set<TaskPrerequisiteEntity> prerequisiteForTasks = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
@@ -172,6 +172,14 @@ public class TaskEntity implements Serializable {
 
     public void setAdditionalExecutors(Set<TaskExecutorAdditionalEntity> additionalExecutors) {
         this.additionalExecutors = additionalExecutors;
+    }
+
+    public ProjectEntity getProject() {
+        return project;
+    }
+
+    public void setProject(ProjectEntity project) {
+        this.project = project;
     }
 
     @Override

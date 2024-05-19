@@ -34,15 +34,18 @@ public class StartupBean {
     @Inject
     private InterestBean interestBean;
 
+    @Inject
+    private ProjectBean projectBean;
+
     @PostConstruct
     public void init() {
         labBean.createInitialData();
         supplierBean.createInitialData();
         skillBean.createInitialData();
         userBean.createInitialData();
+        projectBean.createInitialData();
         productBean.createInitialData();
         taskBean.createInitialData();
         interestBean.createInitialData();
-
     }
 }

@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,22 +41,23 @@ public class ProjectEntity implements Serializable {
     @JoinColumn(name = "creator_id", nullable = false)
     private  UserEntity creator;
 
-    @OneToMany(mappedBy = "project")
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private Set<ProjectInterestEntity> interests = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "lab_id", nullable = false)
     private LabEntity lab;
-//
-//    @OneToMany(mappedBy = "project")
-//    private Set<TaskEntity> tasks = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TaskEntity> tasks = new HashSet<>();
 
     public LocalDate getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(LocalDate createdDate) {
-        this.createdDate = createdDate;
+    @PrePersist
+    public void prePersist() {
+        createdDate = LocalDate.now();
     }
 
 //    public Set<TaskEntity> getTasks() {
@@ -135,5 +134,13 @@ public class ProjectEntity implements Serializable {
 
     public void setCreator(UserEntity creator) {
         this.creator = creator;
+    }
+
+    public Set<TaskEntity> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<TaskEntity> tasks) {
+        this.tasks = tasks;
     }
 }

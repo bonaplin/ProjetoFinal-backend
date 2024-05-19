@@ -72,10 +72,10 @@ public class UserEntity implements Serializable {
     private String profileImagePath;
 
     //ADD_SKILL_TO_USER
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserSkillEntity> userSkills = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserInterestEntity> interests = new HashSet<>();
 
     @ManyToOne

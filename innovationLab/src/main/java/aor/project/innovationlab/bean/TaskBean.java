@@ -1,6 +1,8 @@
 package aor.project.innovationlab.bean;
 
+import aor.project.innovationlab.dao.ProjectDao;
 import aor.project.innovationlab.dao.TaskDao;
+import aor.project.innovationlab.dao.TaskExecutorDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dto.TaskDto;
 import aor.project.innovationlab.entity.*;
@@ -21,6 +23,12 @@ public class TaskBean {
 
     @EJB
     UserDao userDao;
+
+    @EJB
+    ProjectDao projectDao;
+
+    @EJB
+    TaskExecutorDao taskExecutorDao;
 
 
     public TaskEntity toEntity(TaskDto taskDto) {
@@ -100,9 +108,9 @@ public class TaskBean {
     }
 
     public void createInitialData() {
-        createTaskIfNotExists(1,"Task 1", "Description 1", "admin@admin", TaskStatus.IN_PROGRESS, "2021-01-01", "PT1H",null);
-        createTaskIfNotExists(2,"Task 2", "Description 1", "admin@admin", TaskStatus.FINISHED, "2021-01-01", "PT1H",null);
-        createTaskIfNotExists(3,"Task 3", "Description 3", "admin@admin", TaskStatus.PLANNED, "2021-01-01", "PT1H", null);
+        createTaskIfNotExists(1,"Task 1", "Description 1", "admin@admin", TaskStatus.IN_PROGRESS, "2021-01-01", "PT1H",null, "Project 1");
+        createTaskIfNotExists(2,"Task 2", "Description 1", "admin@admin", TaskStatus.FINISHED, "2021-01-01", "PT1H",null, "Project 1");
+        createTaskIfNotExists(3,"Task 3", "Description 3", "admin@admin", TaskStatus.PLANNED, "2021-01-01", "PT1H", null, "Project 1");
         addPrerequisite(3, 1);
         addPrerequisite(3, 2);
         addPrerequisite(2,1);
@@ -122,7 +130,7 @@ public class TaskBean {
     public void createTaskIfNotExists(long id, String name,
                                       String description, String responsible,
                                       TaskStatus status, String initialDate,
-                                      String duration, Set<Long> prerequisiteIds) {
+                                      String duration, Set<Long> prerequisiteIds, String project) {
         TaskEntity taskEntity = taskDao.findTaskById(id);
         if (taskEntity == null) {
             taskEntity = new TaskEntity();
@@ -133,6 +141,8 @@ public class TaskBean {
             taskEntity.setInitialDate(java.time.LocalDate.parse(initialDate));
             taskEntity.setDuration(java.time.Duration.parse(duration));
             taskEntity.setCreator(userDao.findUserByEmail(responsible));
+            taskEntity.setActive(true);
+            taskEntity.setProject(projectDao.findProjectByName(project));
 
             if (prerequisiteIds != null) {
                 for (Long prerequisiteId : prerequisiteIds) {
@@ -240,7 +250,7 @@ public class TaskBean {
     }
 
     //testado
-    public void addExecutorToTask(Long taskId, String executorEmail) {
+    public void addExecutorToTask(long taskId, String executorEmail) {
         TaskEntity task = taskDao.findTaskById(taskId);
         UserEntity executor = userDao.findUserByEmail(executorEmail);
         if (task != null && executor != null) {
@@ -248,6 +258,7 @@ public class TaskBean {
             taskExecutor.setTask(task);
             taskExecutor.setExecutor(executor);
             taskExecutor.setActive(true);
+            taskExecutorDao.merge(taskExecutor);
             task.getExecutors().add(taskExecutor);
             taskDao.merge(task);
         }
@@ -264,6 +275,7 @@ public class TaskBean {
                     .orElse(null);
             if (taskExecutor != null) {
                 taskExecutor.setActive(false);
+                taskExecutorDao.merge(taskExecutor);
                 taskDao.merge(task);
             }
         }

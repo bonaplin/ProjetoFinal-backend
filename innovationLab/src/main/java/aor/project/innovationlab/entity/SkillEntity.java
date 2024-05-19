@@ -27,7 +27,7 @@ public class SkillEntity implements Serializable {
         private String description;
 
         //ADD_SKILL_TO_USER
-        @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL)
+        @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private List<UserSkillEntity> userSkills = new ArrayList<>();
 
         @Enumerated(EnumType.STRING)

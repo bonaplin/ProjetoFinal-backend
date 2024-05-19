@@ -26,7 +26,7 @@ public class SupplierEntity implements Serializable {
     @Column(name = "phone", nullable = false, unique = false, updatable = true)
     private String phone;
 
-    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProductEntity> products = new ArrayList<>();
 
     public SupplierEntity() {

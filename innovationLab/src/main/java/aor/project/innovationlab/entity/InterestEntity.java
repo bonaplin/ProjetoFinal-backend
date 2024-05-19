@@ -27,10 +27,10 @@ public class InterestEntity implements Serializable {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    @OneToMany(mappedBy = "interest")
+    @OneToMany(mappedBy = "interest", fetch = FetchType.LAZY)
     private Set<UserInterestEntity> userInterestEntities = new HashSet<>();
 
-    @OneToMany(mappedBy = "interest")
+    @OneToMany(mappedBy = "interest", fetch = FetchType.LAZY)
     private Set<ProjectInterestEntity> projectInterestEntities = new HashSet<>();
 
     public InterestEntity() {
