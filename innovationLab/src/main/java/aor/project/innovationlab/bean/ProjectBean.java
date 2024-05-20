@@ -3,10 +3,13 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.ProjectDto;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.LogType;
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.enums.ProductStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.time.LocalDate;
 
@@ -36,6 +39,15 @@ public class ProjectBean {
 
     @EJB
     private ProjectProductDao projectProductDao;
+
+    @Inject
+    private MessageBean messageBean;
+
+    @Inject
+    private NotificationBean notificationBean;
+
+    @Inject
+    private LogBean logBean;
 
     public ProjectBean() {
     }
@@ -120,6 +132,16 @@ public class ProjectBean {
             addUserToProject(name, "joao@joao", ProjectUserType.INVITED);
             addInterestToProject(name, "Interest 1");
             addInterestToProject(name, "Interest 2");
+            addResourceToProject(name,"123456788");
+
+            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
+            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
+
+            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Hello, this is a notification by Admin", NotificationType.MESSAGE, name);
+            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Olá ric",NotificationType.INVITE,null);
+
+            //TESTE - add log ao add user
+            logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId(), LogType.USER_JOIN);
         }
     }
 

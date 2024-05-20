@@ -11,6 +11,7 @@ import java.util.Set;
 @Entity
 @Table(name = "project")
 @NamedQuery(name = "Project.findProjectByName", query = "SELECT p FROM ProjectEntity p WHERE p.name = :name")
+@NamedQuery(name = "Project.findProjectById", query = "SELECT p FROM ProjectEntity p WHERE p.id = :projectId")
 public class ProjectEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -47,6 +48,9 @@ public class ProjectEntity implements Serializable {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectInterestEntity> interests = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<MessageEntity> messages = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "lab_id", nullable = false)
@@ -192,5 +196,13 @@ public class ProjectEntity implements Serializable {
 
     public void setProjectUsers(Set<ProjectUserEntity> projectUsers) {
         this.projectUsers = projectUsers;
+    }
+
+    public Set<MessageEntity> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Set<MessageEntity> messages) {
+        this.messages = messages;
     }
 }

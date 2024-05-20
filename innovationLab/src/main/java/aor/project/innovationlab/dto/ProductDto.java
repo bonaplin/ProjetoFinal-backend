@@ -1,7 +1,5 @@
 package aor.project.innovationlab.dto;
 
-import aor.project.innovationlab.enums.ProjectStatus;
-
 public class ProductDto {
     private long id;
     private String name;

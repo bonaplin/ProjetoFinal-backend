@@ -21,4 +21,14 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                 return null;
             }
         }
+
+    public ProjectEntity findProjectById(long projectId) {
+        try {
+            return (ProjectEntity) em.createNamedQuery("Project.findProjectById").setParameter("projectId", projectId)
+                    .getSingleResult();
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

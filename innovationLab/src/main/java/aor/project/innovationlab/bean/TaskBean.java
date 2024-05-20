@@ -6,9 +6,11 @@ import aor.project.innovationlab.dao.TaskExecutorDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dto.TaskDto;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,6 +31,9 @@ public class TaskBean {
 
     @EJB
     TaskExecutorDao taskExecutorDao;
+
+    @Inject
+    LogBean logBean;
 
 
     /**
@@ -170,6 +175,9 @@ public class TaskBean {
             addAdditionalExecutorToTask(id, "Executor 3");
             addAdditionalExecutorToTask(id, "Executor 4");
             taskDao.merge(taskEntity);
+
+            //TESTE - adicionar log de criação de tarefa
+            logBean.addNewTask(projectDao.findProjectByName(project).getId(), userDao.findUserByEmail("admin@admin").getId(), id, LogType.TASK_CREATE);
         }
     }
 

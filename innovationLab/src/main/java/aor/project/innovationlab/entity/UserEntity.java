@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -77,6 +75,9 @@ public class UserEntity implements Serializable {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserInterestEntity> interests = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<MessageEntity> messages = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="lab_id", nullable = false, updatable = true)
@@ -209,6 +210,7 @@ public class UserEntity implements Serializable {
     public void setRole(String role) {
         this.role = role;
     }
+
 //    public void setToken_session(String token_session) {
 //        this.token_session = token_session;
 //    }
@@ -245,27 +247,11 @@ public class UserEntity implements Serializable {
         this.userSkills = userSkills;
     }
 
-    @Override
-    public String toString() {
-        return "UserEntity{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                ", firstname='" + firstname + '\'' +
-                ", lastname='" + lastname + '\'' +
-                ", phone='" + phone + '\'' +
-                ", token_verification='" + token_verification + '\'' +
-                ", token_verification_expiration=" + token_expiration +
-//                ", token_session='" + token_session + '\'' +
-//                ", token_session_expiration=" + token_session_expiration +
-                ", active=" + active +
-                ", created=" + created +
-                ", confirmed=" + confirmed +
-                ", profileImageType='" + profileImageType + '\'' +
-                ", profileImagePath='" + profileImagePath + '\'' +
-                ", role='" + role + '\'' +
-                ", lab=" + lab.getLocation() +
-                '}';
+    public Set<MessageEntity> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Set<MessageEntity> messages) {
+        this.messages = messages;
     }
 }
