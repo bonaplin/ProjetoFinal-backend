@@ -4,7 +4,7 @@ import aor.project.innovationlab.dao.ProjectDao;
 import aor.project.innovationlab.dao.TaskDao;
 import aor.project.innovationlab.dao.TaskExecutorDao;
 import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.dto.TaskDto;
+import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;

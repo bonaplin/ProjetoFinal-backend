@@ -170,6 +170,8 @@ public class LogEntity implements Serializable {
         this.instant = Instant.now();
     }
 
+//    @PrePersist
+//    @PreUpdate
     @AssertTrue(message = "invalid log entity")
     public boolean isValid() {
         if(type == null || user == null) return false;

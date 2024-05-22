@@ -1,10 +1,10 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.UserDto;
+import aor.project.innovationlab.dto.user.UserDto;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.SkillType;
 import aor.project.innovationlab.enums.UserType;
+import aor.project.innovationlab.utils.PasswordUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,15 +17,6 @@ public class UserBean {
 
     @EJB
     LabDao labDao;
-
-    @EJB
-    SkillDao skillDao;
-
-    @EJB
-    UserInterestDao userInterestDao;
-
-    @EJB
-    InterestDao interestDao;
 
     @Inject
     SkillBean skillBean;
@@ -86,6 +77,7 @@ public class UserBean {
         userDto.setRole(UserType.ADMIN.name());
         userDto.setLablocation("Coimbra");
         UserEntity user = toEntity(userDto);
+        user.setPassword(PasswordUtil.hashPassword(username));
         userDao.persist(user);
 
         //ADD_SKILL_TO_USER

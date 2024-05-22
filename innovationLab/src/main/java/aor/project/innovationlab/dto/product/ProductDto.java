@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.product;
 
 public class ProductDto {
     private long id;

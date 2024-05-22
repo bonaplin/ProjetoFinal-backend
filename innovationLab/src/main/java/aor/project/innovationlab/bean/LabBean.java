@@ -1,7 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.LabDao;
-import aor.project.innovationlab.dto.LabDto;
+import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.entity.LabEntity;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;

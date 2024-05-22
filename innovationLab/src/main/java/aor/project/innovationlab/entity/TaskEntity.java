@@ -65,10 +65,12 @@ public class TaskEntity implements Serializable {
     @Column(name="active", nullable = false)
     private boolean active = true;
 
-    // Construtor padrão
     public TaskEntity() {}
 
-    // Getters e Setters
+    @PrePersist
+    public void prePersist() {
+        this.active = true;
+    }
 
     public Long getId() {
         return id;

@@ -2,9 +2,8 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.ProductDao;
 import aor.project.innovationlab.dao.SupplierDao;
-import aor.project.innovationlab.dto.ProductDto;
+import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.entity.ProductEntity;
-import aor.project.innovationlab.entity.SupplierEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;

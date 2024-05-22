@@ -1,8 +1,6 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.ProductDto;
 import aor.project.innovationlab.entity.ProductEntity;
-import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
 
 @Stateless

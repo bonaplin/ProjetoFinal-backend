@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.skill;
 
 public class SkillDto {
     private int id;

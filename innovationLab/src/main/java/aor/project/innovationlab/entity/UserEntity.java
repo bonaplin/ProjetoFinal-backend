@@ -24,10 +24,10 @@ public class UserEntity implements Serializable {
     @Column(name="username", nullable = false, unique = true, updatable = false)
     private String username;
 
-    @Column(name="password", nullable = false, unique = false, updatable = true)
+    @Column(name="password", nullable = false)
     private String password;
 
-    @Column(name="email", nullable = false, unique = true, updatable = true)
+    @Column(name="email", nullable = false, unique = true)
     private String email;
 
     @Column(name="firstname", nullable = false, unique = false, updatable = true)
@@ -43,16 +43,10 @@ public class UserEntity implements Serializable {
     private String role;
 
     @Column(name="token_verification", nullable = true, unique = true, updatable = true)
-    private String token_verification;
+    private String tokenVerification;
 
     @Column(name="token_verification_expiration", nullable = true, unique = false, updatable = true)
-    private Instant token_expiration;
-
-//    @Column(name="token_session", nullable = true, unique = true, updatable = true)
-//    private String token_session;
-//
-//    @Column(name="token_session_expiration", nullable = true, unique = false, updatable = true)
-//    private Instant token_session_expiration;
+    private Instant tokenExpiration;
 
     @Column(name="active", nullable = false, unique = false, updatable = true)
     private Boolean active;
@@ -91,36 +85,28 @@ public class UserEntity implements Serializable {
         created = Instant.now();
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public String getToken_verification() {
-        return token_verification;
-    }
-
-//    public Instant getToken_session_expiration() {
-//        return token_session_expiration;
-//    }
-//
-//    public String getToken_session() {
-//        return token_session;
-//    }
-
-    public Instant getToken_expiration() {
-        return token_expiration;
-    }
-
     public String getProfileImageType() {
         return profileImageType;
     }
 
     public String getProfileImagePath() {
         return profileImagePath;
+    }
+
+    public void setProfileImagePath(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
+    }
+
+    public void setProfileImageType(String profileImageType) {
+        this.profileImageType = profileImageType;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getRole() {
+        return role;
     }
 
     public String getPhone() {
@@ -175,10 +161,6 @@ public class UserEntity implements Serializable {
         this.email = email;
     }
 
-    public void setCreated(Instant created) {
-        this.created = created;
-    }
-
     public void setConfirmed(Boolean confirmed) {
         this.confirmed = confirmed;
     }
@@ -195,32 +177,8 @@ public class UserEntity implements Serializable {
         this.phone = phone;
     }
 
-    public void setProfileImagePath(String profileImagePath) {
-        this.profileImagePath = profileImagePath;
-    }
-
-    public void setProfileImageType(String profileImageType) {
-        this.profileImageType = profileImageType;
-    }
-
-    public void setToken_expiration(Instant token_expiration) {
-        this.token_expiration = token_expiration;
-    }
-
     public void setRole(String role) {
         this.role = role;
-    }
-
-//    public void setToken_session(String token_session) {
-//        this.token_session = token_session;
-//    }
-//
-//    public void setToken_session_expiration(Instant token_session_expiration) {
-//        this.token_session_expiration = token_session_expiration;
-//    }
-
-    public void setToken_verification(String token_verification) {
-        this.token_verification = token_verification;
     }
 
     public void setUsername(String username) {
@@ -253,5 +211,21 @@ public class UserEntity implements Serializable {
 
     public void setMessages(Set<MessageEntity> messages) {
         this.messages = messages;
+    }
+
+    public Instant getTokenExpiration() {
+        return tokenExpiration;
+    }
+
+    public void setTokenExpiration(Instant tokenExpiration) {
+        this.tokenExpiration = tokenExpiration;
+    }
+
+    public String getTokenVerification() {
+        return tokenVerification;
+    }
+
+    public void setTokenVerification(String tokenVerification) {
+        this.tokenVerification = tokenVerification;
     }
 }

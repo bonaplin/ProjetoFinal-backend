@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.lab;
 
 public class LabDto {
     private int id;

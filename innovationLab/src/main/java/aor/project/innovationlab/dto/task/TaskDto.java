@@ -1,11 +1,10 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.task;
 
 import aor.project.innovationlab.enums.TaskStatus;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class TaskDto {

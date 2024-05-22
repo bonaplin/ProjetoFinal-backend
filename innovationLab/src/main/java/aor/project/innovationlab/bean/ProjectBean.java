@@ -1,7 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.ProjectDto;
+import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.NotificationType;

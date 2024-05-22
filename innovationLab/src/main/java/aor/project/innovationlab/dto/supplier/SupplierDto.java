@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.supplier;
 
 public class SupplierDto {
     private int id;

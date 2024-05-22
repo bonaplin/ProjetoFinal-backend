@@ -9,14 +9,8 @@ import aor.project.innovationlab.enums.SkillType;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import aor.project.innovationlab.dao.SkillDao;
-import aor.project.innovationlab.dto.SkillDto;
+import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.entity.SkillEntity;
-import jakarta.ejb.EJB;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import java.util.UUID;
 
 @ApplicationScoped
 public class SkillBean {
