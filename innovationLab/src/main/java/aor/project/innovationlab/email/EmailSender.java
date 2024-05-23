@@ -57,23 +57,35 @@ public class EmailSender {
         }
     }
     public static void sendVerificationEmail(String to, String token) {
-        String subject = "Verificação de conta";
-        String content = "<h1>Olá, " + "!</h1>" +
-                "<p>Para verificar a sua conta, clique no link abaixo:</p>" +
-                "<p><a href=\"" + registrationLink+token + "\">Verificar conta</a></p>"+
-                "<p>Este link apenas é válido por 1 hora.</p>"+
-                "<p>Se você não se registou, por favor ignore este email.</p>";
+        String subject = "Account Verification";
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; padding: 20px; border-radius: 10px;\">" +
+                "<h1 style=\"color: #445566;\">Dear User,</h1>" +
+                "<p>We have received a request to verify your account. If you made this request, please click the button below:</p>" +
+                "<div style=\"margin: 20px 0;\">" +
+                "<a href=\"" + registrationLink+token + "\" style=\"background-color: #008CBA; color: white; text-decoration: none; padding: 15px 32px; text-align: center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border: none;\">Verify Account</a>" +
+                "</div>" +
+                "<p>Please note that this link will expire in 1 hour.</p>"+
+                "<p>If you did not make this request, please ignore this email.</p>" +
+                "<p>Best Regards,</p>" +
+                "<p>InnovationLab</p>" +
+                "</div>";
 
         sendEmail(to, subject, content);
     }
 
     public static void sendPasswordResetEmail(String to, String token) {
-        String subject = "Redefinição de senha";
-        String content = "<h1>Olá, " + "!</h1>" +
-                "<p>Para redefinir sua senha, clique no link abaixo:</p>" +
-                "<p><a href=\"" + resetPasswordLink+token + "\">Redefinir senha</a></p>"+
-                "<p>Este link apenas é válido por 1 hora.</p>"+
-                "<p>Se você não pretende restaurar a sua palavra-passe, por favor ignore este email.</p>";
+        String subject = "Password Reset";
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; padding: 20px; border-radius: 10px;\">" +
+                "<h1 style=\"color: #445566;\">Dear User,</h1>" +
+                "<p>We have received a request to reset your password. If you made this request, please click the button below:</p>" +
+                "<div style=\"margin: 20px 0;\">" +
+                "<a href=\"" + resetPasswordLink+token + "\" style=\"background-color: #008CBA; color: white; text-decoration: none; padding: 15px 32px; text-align: center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border: none;\">Reset Password</a>" +
+                "</div>" +
+                "<p>Please note that this link will expire in 1 hour.</p>"+
+                "<p>If you did not make this request, please ignore this email.</p>" +
+                "<p>Best Regards,</p>" +
+                "<p>InnovationLab</p>" +
+                "</div>";
         sendEmail(to, subject, content);
     }
 }

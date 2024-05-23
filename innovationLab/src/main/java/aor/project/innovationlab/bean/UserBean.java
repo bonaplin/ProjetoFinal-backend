@@ -174,7 +174,7 @@ public class UserBean {
      * @param email
      * @return
      */
-    private boolean sendPasswordResetEmail(String email) {
+    public boolean sendPasswordResetEmail(String email) {
         UserEntity userEntity = userDao.findUserByEmail(email);
         if (userEntity != null) {
             generateVerificationToken(userEntity);
