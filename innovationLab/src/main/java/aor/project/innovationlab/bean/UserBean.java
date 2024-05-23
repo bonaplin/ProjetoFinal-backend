@@ -1,11 +1,13 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.user.UserChangePasswordDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.exception.UserCreationException;
 import aor.project.innovationlab.utils.PasswordUtil;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
@@ -201,11 +203,71 @@ public class UserBean {
      * Generates a new verification token for the user
      * @param userEntity - the user to generate the token for
      */
-    public void generateVerificationToken(UserEntity userEntity) {
+    private void generateVerificationToken(UserEntity userEntity) {
         String newToken = TokenUtil.generateToken();
         userEntity.setTokenVerification(newToken);
         userEntity.setTokenExpiration(generateExpirationDate());
         userDao.merge(userEntity);
+        System.out.println("Token: "+ Color.GREEN +newToken+ Color.GREEN);
+    }
+
+    /**
+     * Verify the user and change the password
+     * @param token
+     * @param dto - the dto with the password and confirm password
+     * @return
+     */
+    public boolean changePassword(String token, UserChangePasswordDto dto) {
+        UserEntity userEntity = userDao.findUserByToken(token);
+        if (userEntity == null) return false;
+        if(!verifyToken(token)) return false;
+
+        if(!dto.getPassword().equals(dto.getConfirmPassword())) {
+            throw new UserCreationException("Passwords do not match");
+        }
+
+        String password = dto.getPassword();
+        System.out.println("Password: " + password);
+        if(!UserValidator.validatePassword(password)) {
+            throw new UserCreationException("Invalid password format");
+        }
+
+        userEntity.setPassword(PasswordUtil.hashPassword(password));
+        userDao.merge(userEntity);
+        try{
+            cleanToken(userEntity);
+        }
+        catch (Exception e) {
+            throw new UserCreationException("Error changing password: " + e.getMessage());
+        }
+        return true;
+    }
+
+    /**
+     * Verifies the token
+     * @param token
+     * @return
+     */
+    private boolean verifyToken(String token) {
+        UserEntity userEntity = userDao.findUserByToken(token);
+        if (userEntity == null) return false;
+        if (userEntity.getTokenExpiration().isBefore(Instant.now())) return false;
+        return true;
+    }
+
+    /**
+     * Cleans the token and the expiration date from the user
+     * @param userEntity
+     */
+    private void cleanToken(UserEntity userEntity) {
+        System.out.println("Cleaning token");
+        userEntity.setTokenVerification(null);
+        userEntity.setTokenExpiration(null);
+        try{
+            userDao.merge(userEntity);
+        } catch (Exception e) {
+            throw new UserCreationException("Error cleaning token: " + e.getMessage());
+        }
     }
 
 

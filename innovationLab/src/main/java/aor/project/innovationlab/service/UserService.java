@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
+import aor.project.innovationlab.dto.user.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.exception.UserCreationException;
 import aor.project.innovationlab.utils.JsonUtils;
@@ -84,6 +85,19 @@ public class UserService {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
         return Response.status(200).build();
+    }
+
+    @POST
+    @Path("/change-password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response changePassword(@HeaderParam("token") String token, UserChangePasswordDto dto) {
+        try {
+            userBean.changePassword(token, dto);
+            return Response.status(200).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 
 
