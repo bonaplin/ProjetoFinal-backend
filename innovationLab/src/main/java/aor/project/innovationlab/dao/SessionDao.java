@@ -23,9 +23,19 @@ public class SessionDao extends AbstractDao<SessionEntity> {
         }
     }
 
-    public SessionEntity findSessionByUser(String email) {
+    public SessionEntity findSessionByEmail(String email) {
         try {
             return (SessionEntity) em.createNamedQuery("Session.findSessionByEmail").setParameter("email", email)
+                    .getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public SessionEntity findSessionByUserId(long userId) {
+        try {
+            return (SessionEntity) em.createNamedQuery("Session.findSessionByUserId").setParameter("userId", userId)
                     .getSingleResult();
 
         } catch (NoResultException e) {

@@ -2,6 +2,8 @@ package aor.project.innovationlab.utils;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.security.MessageDigest;
+
 public class PasswordUtil {
 
     public static String hashPassword(String password) {

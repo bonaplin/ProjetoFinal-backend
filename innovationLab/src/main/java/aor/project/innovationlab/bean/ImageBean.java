@@ -2,6 +2,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.entity.UserEntity;
+import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -16,10 +17,10 @@ import java.nio.file.StandardCopyOption;
 @ApplicationScoped
 public class ImageBean {
 
-    @Inject
+    @EJB
     UserDao userDao;
 
-    @Inject
+    @EJB
     SessionDao sessionDao;
 
     @Inject

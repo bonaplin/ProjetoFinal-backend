@@ -1,5 +1,6 @@
 package aor.project.innovationlab.entity;
 
+import aor.project.innovationlab.enums.UserType;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -21,26 +22,27 @@ public class UserEntity implements Serializable {
     @Column(name="id", nullable = false, unique = true, updatable = false)
     private long id;
 
-    @Column(name="username", nullable = false, unique = true, updatable = false)
+    @Column(name="username", nullable = true, unique = true, updatable = true)
     private String username;
 
     @Column(name="password", nullable = false)
     private String password;
 
-    @Column(name="email", nullable = false, unique = true)
+    @Column(name="email", nullable = false, unique = true, updatable = false)
     private String email;
 
-    @Column(name="firstname", nullable = false, unique = false, updatable = true)
+    @Column(name="firstname", nullable = true, unique = false, updatable = true)
     private String firstname;
 
-    @Column(name="lastname", nullable = false, unique = false, updatable = true)
+    @Column(name="lastname", nullable = true, unique = false, updatable = true)
     private String lastname;
 
-    @Column(name="phone", nullable = false, unique = false, updatable = true)
+    @Column(name="phone", nullable = true, unique = false, updatable = true)
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     @Column(name="role", nullable = false, unique = false, updatable = true)
-    private String role;
+    private UserType role;
 
     @Column(name="token_verification", nullable = true, unique = true, updatable = true)
     private String tokenVerification;
@@ -63,7 +65,13 @@ public class UserEntity implements Serializable {
     @Column(name="profile_image_path", nullable = true, updatable = true)
     private String profileImagePath;
 
-    //ADD_SKILL_TO_USER
+    @Column(name="private_profile", nullable = false, updatable = true)
+    private Boolean privateProfile = true;
+
+    /**
+     * User skills
+     * This is a set of skills that the user has and can be used to search for users with specific skills
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserSkillEntity> userSkills = new HashSet<>();
 
@@ -74,15 +82,10 @@ public class UserEntity implements Serializable {
     private Set<MessageEntity> messages = new HashSet<>();
 
     @ManyToOne
-    @JoinColumn(name="lab_id", nullable = false, updatable = true)
+    @JoinColumn(name="lab_id", updatable = true)
     private LabEntity lab;
 
     public UserEntity() {
-    }
-
-    @PrePersist
-    protected void onCreate(){
-        created = Instant.now();
     }
 
     public String getProfileImageType() {
@@ -105,7 +108,7 @@ public class UserEntity implements Serializable {
         return username;
     }
 
-    public String getRole() {
+    public UserType getRole() {
         return role;
     }
 
@@ -177,7 +180,7 @@ public class UserEntity implements Serializable {
         this.phone = phone;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserType role) {
         this.role = role;
     }
 
@@ -187,6 +190,14 @@ public class UserEntity implements Serializable {
 
     public void setLab(LabEntity lab) {
         this.lab = lab;
+    }
+
+    public Boolean getPrivateProfile() {
+        return privateProfile;
+    }
+
+    public void setPrivateProfile(Boolean privateProfile) {
+        this.privateProfile = privateProfile;
     }
 
     public Set<UserInterestEntity> getInterests() {
@@ -227,5 +238,31 @@ public class UserEntity implements Serializable {
 
     public void setTokenVerification(String tokenVerification) {
         this.tokenVerification = tokenVerification;
+    }
+
+    @PreUpdate
+    @PrePersist
+    protected void onCreate() {
+        this.created = Instant.now();
+
+        if (!isValid()) {
+            throw new IllegalStateException("Invalid log entity");
+        }
+    }
+
+    public boolean isValid() {
+        if (this.email == null || this.password == null) {
+                return false;
+        }
+        if (this.confirmed) {
+            if (this.firstname == null || this.lastname == null || this.lab == null) {
+                return false;
+            }
+        } else {
+            if (this.firstname != null || this.lastname != null || this.lab != null) {
+                return false;
+            }
+        }
+        return true;
     }
 }

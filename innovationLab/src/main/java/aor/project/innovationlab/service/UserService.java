@@ -1,8 +1,10 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.SessionBean;
+import aor.project.innovationlab.bean.UserBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
+import aor.project.innovationlab.exception.UserCreationException;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -13,7 +15,10 @@ import jakarta.ws.rs.core.Response;
 public class UserService {
 
     @Inject
-    SessionBean sessionBean;
+    private SessionBean sessionBean;
+
+    @Inject
+    private UserBean userBean;
 
     public UserService() {
     }
@@ -30,10 +35,16 @@ public class UserService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(UserLogInDto userLogInDto) {
-        String token = sessionBean.login(userLogInDto);
-        if(token != null){
-            return Response.status(200).entity(JsonUtils.convertObjectToJson(
-                    new SessionLoginDto(token))).build();
+        SessionLoginDto sessionLoginDto = null;
+        if(userLogInDto == null){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        if(userLogInDto.getEmail() == null || userLogInDto.getPassword() == null){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        sessionLoginDto = sessionBean.login(userLogInDto);
+        if(sessionLoginDto != null){
+            return Response.status(200).entity(JsonUtils.convertObjectToJson(sessionLoginDto)).build();
         }
         return Response.status(Response.Status.UNAUTHORIZED).build();
     }
@@ -47,6 +58,34 @@ public class UserService {
         }
         return Response.status(Response.Status.UNAUTHORIZED).build();
     }
+
+    @POST
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createUser(UserLogInDto userLogInDto) {
+        try {
+            userBean.createNewUser(userLogInDto.getEmail(),userLogInDto.getPassword());
+            return Response.status(201).build();
+        } catch (UserCreationException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/reset-password/{email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response resetPassword(@PathParam("email") String email) {
+        try {
+            userBean.sendPasswordResetEmail(email);
+        }
+        catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+        return Response.status(200).build();
+    }
+
 
 
 }
