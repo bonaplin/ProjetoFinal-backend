@@ -2,6 +2,7 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.entity.LogEntity;
 import aor.project.innovationlab.entity.SessionEntity;
@@ -49,7 +50,7 @@ public class SessionBean  {
             return TokenStatus.EXPIRED;
         }
         else{
-            sessionEntity.setExpirationDate(Instant.now().plus(Duration.ofMinutes(DEFAULT_TOKEN_EXPIRATION_MINUTES)));
+            sessionEntity.setExpirationDate(generateExpirationDate());
             sessionDao.merge(sessionEntity);
         }
         return sessionEntity.isActive() ? TokenStatus.VALID : TokenStatus.EXPIRED;
@@ -63,7 +64,8 @@ public class SessionBean  {
      * @param userLogInDto - dto with the user email and password
      * @return - true if the user exists and the password is correct, false otherwise
      */
-    public String login(UserLogInDto userLogInDto) {
+    public SessionLoginDto login(UserLogInDto userLogInDto) {
+        SessionLoginDto sessionLoginDto = new SessionLoginDto();
         if(userLogInDto == null) return null;
 
         String email = userLogInDto.getEmail();
@@ -74,7 +76,8 @@ public class SessionBean  {
         if (userEntity == null) return null;
 
         if (PasswordUtil.checkPassword(password, userEntity.getPassword())) {
-            return createSession(userEntity);
+            sessionLoginDto.setToken(createSession(userEntity));
+            return sessionLoginDto;
         }
         return null;
     }
@@ -126,6 +129,15 @@ public class SessionBean  {
      */
     private Instant generateExpirationDate() {
         return Instant.now().plus(Duration.ofMinutes(DEFAULT_TOKEN_EXPIRATION_MINUTES));
+    }
+
+    public void generateSessionToken(UserEntity userEntity) {
+        String newToken = TokenUtil.generateToken();
+        SessionEntity sessionEntity = new SessionEntity();
+        sessionEntity.setUser(userEntity);
+        sessionEntity.setToken(newToken);
+        sessionEntity.setExpirationDate(generateExpirationDate());
+        sessionDao.merge(sessionEntity);
     }
 
     /**

@@ -5,8 +5,6 @@ import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.TaskStatus;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.persistence.*;
-import jakarta.validation.Constraint;
-import jakarta.validation.constraints.AssertTrue;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -165,14 +163,16 @@ public class LogEntity implements Serializable {
         this.newTaskStatus = newTaskStatus;
     }
 
+
     @PrePersist
-    public void prePersist() {
+    @PreUpdate
+    public void validate() {
         this.instant = Instant.now();
+        if(!isValid()) {
+            throw new IllegalStateException("Invalid log entity");
+        }
     }
 
-//    @PrePersist
-//    @PreUpdate
-    @AssertTrue(message = "invalid log entity")
     public boolean isValid() {
         if(type == null || user == null) return false;
 
@@ -182,17 +182,12 @@ public class LogEntity implements Serializable {
             case PROJECT_STATE_CHANGE:
                 return isProjectStateChangeValid();
             case TASK_CREATE:
-                return isTaskAffected();
             case TASK_CHANGE:
-                return isTaskAffected();
             case TASK_DELETE:
-                return isTaskAffected();
             case TASK_COMPLETE:
-                return isTaskAffected();
             case TASK_STATE_CHANGE:
-                return isTaskChangeValid();
+                return isTaskAffected();
             case USER_JOIN:
-                return isUserAffected();
             case USER_LEAVE:
                 return isUserAffected();
             case USER_CHANGE:
