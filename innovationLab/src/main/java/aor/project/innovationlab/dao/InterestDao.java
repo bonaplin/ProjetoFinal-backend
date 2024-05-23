@@ -4,6 +4,8 @@ import aor.project.innovationlab.entity.InterestEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
 
+import java.util.List;
+
 @Stateless
 public class InterestDao extends AbstractDao<InterestEntity> {
 
@@ -32,6 +34,12 @@ public class InterestDao extends AbstractDao<InterestEntity> {
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    public List<InterestEntity> getUserInterests(long userId) {
+        return em.createNamedQuery("Interest.getUserInterests")
+                .setParameter("id", userId)
+                .getResultList();
     }
 
 }

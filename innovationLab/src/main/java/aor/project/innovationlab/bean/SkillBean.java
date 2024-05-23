@@ -12,6 +12,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.entity.SkillEntity;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @ApplicationScoped
 public class SkillBean {
 
@@ -44,6 +47,7 @@ public class SkillBean {
     public SkillDto toDto(SkillEntity entity) {
         SkillDto dto = new SkillDto();
         dto.setId(entity.getId());
+        dto.setType(entity.getSkillType().name());
         dto.setName(entity.getName());
         return dto;
     }
@@ -129,4 +133,21 @@ public class SkillBean {
         userDao.merge(user);
         skillDao.merge(skill);
     }
+
+    /**
+     * Return a list of skills for a user in dto format
+     * @param email - user email
+     * @return
+     */
+    public List<SkillDto> getUserSkills(String email) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if(user == null) {
+            return null;
+        }
+        List<SkillEntity> skillEntities = skillDao.getUserSkills(user.getId());
+
+        return skillEntities.stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+
 }

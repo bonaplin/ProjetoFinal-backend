@@ -1,9 +1,13 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.entity.*;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class InterestBean {
@@ -24,6 +28,13 @@ public class InterestBean {
     private ProjectInterestDao projectInterestDao;
 
     public InterestBean() {
+    }
+
+    public InterestDto toDto(InterestEntity interestEntity) {
+        InterestDto interestDto = new InterestDto();
+        interestDto.setId(interestEntity.getId());
+        interestDto.setName(interestEntity.getName());
+        return interestDto;
     }
 
     public void createInitialData() {
@@ -150,6 +161,14 @@ public class InterestBean {
         interest.getProjectInterests().remove(projectInterest); // Remove o projeto do interesse
         projectDao.merge(project);
         interestDao.merge(interest);
+    }
+
+    public List<InterestDto> getUserInterests(String email) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if(user == null) {
+            return null;
+        }
+        return interestDao.getUserInterests(user.getId()).stream().map(this::toDto).collect(Collectors.toList());
     }
 
 }

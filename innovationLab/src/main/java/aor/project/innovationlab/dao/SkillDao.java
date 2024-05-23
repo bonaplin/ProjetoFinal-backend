@@ -1,8 +1,11 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.entity.SkillEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
+
+import java.util.List;
 
 @Stateless
 public class SkillDao extends AbstractDao<SkillEntity>{
@@ -21,6 +24,12 @@ public class SkillDao extends AbstractDao<SkillEntity>{
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    public List<SkillEntity> getUserSkills(long userId) {
+        return em.createNamedQuery("Skill.getUserSkills", SkillEntity.class)
+                .setParameter("id", userId)
+                .getResultList();
     }
 
 //    public SkillEntity findSkillById(int id) {

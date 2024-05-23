@@ -2,6 +2,7 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.user.UserChangePasswordDto;
+import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
@@ -31,6 +32,9 @@ public class UserBean {
 
     @Inject
     SkillBean skillBean;
+
+    @Inject
+    InterestBean interestBean;
 
     @Inject
     SessionBean sessionBean;
@@ -268,6 +272,37 @@ public class UserBean {
         } catch (Exception e) {
             throw new UserCreationException("Error cleaning token: " + e.getMessage());
         }
+    }
+
+    public UserOwnerProfileDto getUserProfile(String token, String email) {
+        UserEntity userEntity = userDao.findUserByEmail(email);
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if (userEntity == null){
+            throw new UserCreationException("User not found");
+        }
+        if(sessionEntity == null){
+            throw new UserCreationException("Session not found");
+        }
+
+        long userId = sessionEntity.getUser().getId();
+
+        UserOwnerProfileDto userOwnerProfileDto = new UserOwnerProfileDto();
+
+        userOwnerProfileDto.setUsername(userEntity.getUsername());
+        userOwnerProfileDto.setEmail(userEntity.getEmail());
+        userOwnerProfileDto.setFirstname(userEntity.getFirstname());
+        userOwnerProfileDto.setLastname(userEntity.getLastname());
+        userOwnerProfileDto.setPhone(userEntity.getPhone());
+        userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
+        if(userEntity.getPrivateProfile() || userId == userEntity.getId()){
+            userOwnerProfileDto.setRole(userEntity.getRole().getValue());
+            userOwnerProfileDto.setSkills(skillBean.getUserSkills(email));
+            userOwnerProfileDto.setLab(userEntity.getLab().getLocation());
+            userOwnerProfileDto.setInterests(interestBean.getUserInterests(email));
+        }
+
+        System.out.println(userOwnerProfileDto);
+        return userOwnerProfileDto;
     }
 
 

@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name="interest")
-
+@NamedQuery(name = "Interest.getUserInterests", query = "SELECT i FROM InterestEntity i JOIN i.userInterestEntities ui WHERE ui.user.id = :id AND i.active = true")
 @NamedQuery(name = "Interest.findInterestByName", query = "SELECT i FROM InterestEntity i WHERE i.name = :name")
 public class InterestEntity implements Serializable {
 

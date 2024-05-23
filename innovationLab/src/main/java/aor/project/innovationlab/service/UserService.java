@@ -5,6 +5,7 @@ import aor.project.innovationlab.bean.UserBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
+import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
 import aor.project.innovationlab.exception.UserCreationException;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
@@ -95,6 +96,18 @@ public class UserService {
         try {
             userBean.changePassword(token, dto);
             return Response.status(200).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUser(@HeaderParam("token") String token, @QueryParam("email") String email) {
+        try {
+            UserOwnerProfileDto dto = userBean.getUserProfile(token, email);
+            return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
