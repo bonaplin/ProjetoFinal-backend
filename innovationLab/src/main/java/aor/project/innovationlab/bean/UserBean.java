@@ -145,6 +145,8 @@ public class UserBean {
             throw new UserCreationException("Email already exists.");
         }
 
+        validateUserInput(email, password);
+
         UserEntity user = createUserEntity(email, password);
 
         try {
