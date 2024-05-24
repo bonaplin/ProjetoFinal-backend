@@ -64,6 +64,8 @@ public class SessionBean  {
      * @param userLogInDto - dto with the user email and password
      * @return - true if the user exists and the password is correct, false otherwise
      */
+
+
     public SessionLoginDto login(UserLogInDto userLogInDto) {
         SessionLoginDto sessionLoginDto = new SessionLoginDto();
         if(userLogInDto == null) return null;

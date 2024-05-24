@@ -24,7 +24,7 @@ public class EmailService {
     @Produces(MediaType.TEXT_PLAIN)
     public Response sendActivationEmail(EmailDto prop) {
         emailSender.sendVerificationEmail(prop.getTo(), prop.getToken());
-        return Response.ok("Activation email sent successfully").build();
+        return Response.status(200).entity("Activation email sent successfully. Check your inbox.").build();
     }
 
     @Path("/password")
@@ -33,6 +33,6 @@ public class EmailService {
     @Produces(MediaType.TEXT_PLAIN)
     public Response sendPasswordResetEmail(EmailDto prop) {
         emailSender.sendPasswordResetEmail(prop.getTo(), prop.getToken());
-        return Response.ok("Password reset email sent successfully").build();
+        return Response.status(200).entity("Password reset email sent successfully. Check your inbox.").build();
     }
 }

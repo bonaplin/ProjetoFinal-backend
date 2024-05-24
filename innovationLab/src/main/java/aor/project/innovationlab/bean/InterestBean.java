@@ -6,6 +6,7 @@ import aor.project.innovationlab.entity.*;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -166,9 +167,10 @@ public class InterestBean {
     public List<InterestDto> getUserInterests(String email) {
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
-            return null;
+            return new ArrayList<>();
         }
-        return interestDao.getUserInterests(user.getId()).stream().map(this::toDto).collect(Collectors.toList());
+        List<InterestEntity> interestEntities = interestDao.getUserInterests(user.getId());
+        return interestEntities.stream().map(this::toDto).collect(Collectors.toList());
     }
 
 }
