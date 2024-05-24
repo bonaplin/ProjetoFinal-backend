@@ -6,6 +6,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name="lab")
+@NamedQuery(name = "Lab.findAllLabs", query = "SELECT l FROM LabEntity l WHERE l.active = true")
 @NamedQuery(name = "Lab.findLabById", query = "SELECT l FROM LabEntity l WHERE l.id = :id")
 @NamedQuery(name = "Lab.findLabByLocation", query = "SELECT l FROM LabEntity l WHERE l.location = :location")
 public class LabEntity implements Serializable {

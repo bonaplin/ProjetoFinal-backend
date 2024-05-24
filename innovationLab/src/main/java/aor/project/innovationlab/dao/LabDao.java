@@ -4,6 +4,8 @@ import aor.project.innovationlab.entity.LabEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
 
+import java.util.List;
+
 @Stateless
 public class LabDao extends AbstractDao<LabEntity>{
 
@@ -27,6 +29,16 @@ public class LabDao extends AbstractDao<LabEntity>{
         try {
             return (LabEntity) em.createNamedQuery("Lab.findLabByLocation").setParameter("location", location)
                     .getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<LabEntity> findAllLabs() {
+        try {
+            return em.createNamedQuery("Lab.findAllLabs")
+                    .getResultList();
 
         } catch (NoResultException e) {
             return null;

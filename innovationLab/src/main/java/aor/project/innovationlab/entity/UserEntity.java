@@ -70,6 +70,9 @@ public class UserEntity implements Serializable {
     @Column(name="private_profile", nullable = false, updatable = true)
     private Boolean privateProfile = true;
 
+    @Column(name = "about", nullable = true, updatable = true)
+    private String about;
+
     /**
      * User skills
      * This is a set of skills that the user has and can be used to search for users with specific skills
@@ -240,6 +243,14 @@ public class UserEntity implements Serializable {
 
     public void setTokenVerification(String tokenVerification) {
         this.tokenVerification = tokenVerification;
+    }
+
+    public String getAbout() {
+        return about;
+    }
+
+    public void setAbout(String about) {
+        this.about = about;
     }
 
     @PreUpdate

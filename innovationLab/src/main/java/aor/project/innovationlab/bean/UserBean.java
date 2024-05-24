@@ -1,7 +1,10 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserChangePasswordDto;
+import aor.project.innovationlab.dto.user.UserConfirmAccountDto;
+import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
@@ -119,15 +122,27 @@ public class UserBean {
      * Creates a new user with the given email and password
      * Try to persist the user in the database
      * If the email already exists, throws an exception
-     * @param email
-     * @param password
+
      * @return
      */
-    public boolean createNewUser(String email, String password) {
-        validateUserInput(email, password);
+    public boolean createNewUser(UserLogInDto userLogInDto) {
+        if(userLogInDto == null) {
+            throw new IllegalArgumentException("Please fill all the fields.");
+        }
+        String email = userLogInDto.getEmail();
+        String password = userLogInDto.getPassword();
+        String confirmPassword = userLogInDto.getConfirmPassword();
+
+        if(!password.equals(confirmPassword)){
+            throw new UserCreationException("Passwords do not match.");
+        }
+
+        if (email == null || password == null) {
+            throw new IllegalArgumentException("Email, password and confirmPassword cannot be null!");
+        }
 
         if(userDao.findUserByEmail(email) != null){
-            throw new UserCreationException("Email already exists");
+            throw new UserCreationException("Email already exists.");
         }
 
         UserEntity user = createUserEntity(email, password);
@@ -137,6 +152,7 @@ public class UserBean {
         } catch (Exception e) {
             throw new UserCreationException("Error creating user: " + e.getMessage());
         }
+        
         generateVerificationToken(user);
         EmailSender.sendVerificationEmail(email, user.getTokenVerification());
         return true;
@@ -149,13 +165,13 @@ public class UserBean {
      */
     private void validateUserInput(String email, String password) {
         if(email == null || password == null) {
-            throw new UserCreationException("Email or password cannot be null");
+            throw new UserCreationException("Email or password cannot be null!");
         }
         if(!UserValidator.validateEmail(email)) {
-            throw new UserCreationException("Invalid email format");
+            throw new UserCreationException("Invalid email format!");
         }
         if(!UserValidator.validatePassword(password)) {
-            throw new UserCreationException("Invalid password format");
+            throw new UserCreationException("Invalid password format!");
         }
     }
 
@@ -181,18 +197,22 @@ public class UserBean {
      * @return
      */
     public boolean sendPasswordResetEmail(String email) {
-        UserEntity userEntity = userDao.findUserByEmail(email);
-        if (userEntity != null) {
-            generateVerificationToken(userEntity);
-            try{
-            userDao.merge(userEntity);
-            } catch (Exception e) {
-                throw new UserCreationException("Error sending email: " + e.getMessage());
-            }
-            EmailSender.sendPasswordResetEmail(email, userEntity.getTokenVerification());
-            return true;
+        boolean validEmail = UserValidator.validateEmail(email);
+        if (!validEmail) {
+            throw new UserCreationException("Invalid email format.");
         }
-        return false;
+        UserEntity userEntity = userDao.findUserByEmail(email);
+        if (userEntity == null) {
+            throw new UserCreationException("Email not found.");
+        }
+        generateVerificationToken(userEntity);
+        try{
+            userDao.merge(userEntity);
+        } catch (Exception e) {
+            throw new UserCreationException("Error sending email: " + e.getMessage());
+        }
+        EmailSender.sendPasswordResetEmail(email, userEntity.getTokenVerification());
+        return true;
     }
 
     /**
@@ -306,4 +326,42 @@ public class UserBean {
     }
 
 
+    public void confirmAccount(String token, UserConfirmAccountDto dto) {
+        UserEntity userToConfirm = userDao.findUserByToken(token);
+        if (userToConfirm == null) {
+            System.out.println("User not found");
+            throw new UserCreationException("User not found");
+        }
+        if(!verifyToken(token)) {
+            System.out.println("Token expired");
+            throw new UserCreationException("Token expired");
+        }
+        LabEntity lab = labDao.findLabById(dto.getLabId());
+        if(lab == null) {
+            throw new UserCreationException("Lab not found");
+        }
+        userToConfirm.setConfirmed(true);
+        userToConfirm.setFirstname(dto.getFirstName());
+        userToConfirm.setLastname(dto.getLastName());
+        userToConfirm.setAbout(dto.getAbout());
+        userToConfirm.setUsername(dto.getUsername());
+        userToConfirm.setLab(lab);
+
+        userDao.merge(userToConfirm);
+        cleanToken(userToConfirm);
+    }
+
+    public SessionLoginDto loginWithValidation(UserLogInDto userLogInDto) throws Exception {
+        if(userLogInDto == null){
+            throw new Exception("Check the fields.");
+        }
+        if(userLogInDto.getEmail() == null || userLogInDto.getPassword() == null){
+            throw new Exception("Email or password is null. Check the fields.");
+        }
+        SessionLoginDto sessionLoginDto = sessionBean.login(userLogInDto);
+        if(sessionLoginDto == null){
+            throw new Exception("Email and password do not match. Check the fields.");
+        }
+        return sessionLoginDto;
+    }
 }

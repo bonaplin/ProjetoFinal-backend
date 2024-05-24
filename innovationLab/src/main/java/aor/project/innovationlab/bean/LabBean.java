@@ -6,6 +6,10 @@ import aor.project.innovationlab.entity.LabEntity;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @ApplicationScoped
 public class LabBean {
 
@@ -25,10 +29,7 @@ public class LabBean {
     public LabDto toDto(LabEntity entity) {
         LabDto dto = new LabDto();
         dto.setId(entity.getId());
-//        dto.setName(entity.getName());
-
         dto.setLocation(entity.getLocation());
-
         return dto;
     }
 
@@ -43,11 +44,19 @@ public class LabBean {
     private void createLabIfNotExists(String location) {
         if (labDao.findLabByLocation(location) == null) {
             LabDto dto = new LabDto();
-            dto.setName(location);
+            dto.setLocation(location);
 
             dto.setLocation(location);
 
             labDao.persist(toEntity(dto));
         }
     }
+
+    public List<LabDto> findAllLabs() {
+        List<LabEntity> labs = labDao.findAllLabs();
+        if(labs == null) return new ArrayList<>();
+
+        return labs.stream().map(this::toDto).collect(Collectors.toList());
+    }
+
 }
