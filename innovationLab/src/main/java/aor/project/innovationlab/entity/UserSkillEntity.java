@@ -8,14 +8,15 @@ import java.io.Serializable;
 @Table(name="user_skill")
 @NamedQuery(name = "UserSkill.findUserSkillByName", query = "SELECT us FROM UserSkillEntity us JOIN us.skill s WHERE s.name = :name")
 @NamedQuery(name = "UserSkill.findUserSkillIds", query = "SELECT us FROM UserSkillEntity us WHERE us.user = :user AND us.skill = :skill")
+@NamedQuery(name = "UserSkill.getUserSkills", query = "SELECT us.skill FROM UserSkillEntity us WHERE us.user.id = :id AND us.active = true")
 public class UserSkillEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
+    @Column(name = "active", nullable = false, updatable = true)
+    private boolean active = true;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

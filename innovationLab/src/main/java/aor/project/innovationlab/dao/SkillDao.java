@@ -26,9 +26,14 @@ public class SkillDao extends AbstractDao<SkillEntity>{
         }
     }
 
-    public List<SkillEntity> getUserSkills(long userId) {
-        return em.createNamedQuery("Skill.getUserSkills", SkillEntity.class)
-                .setParameter("id", userId)
+//    public List<SkillEntity> getUserSkills(long userId) {
+//        return em.createNamedQuery("Skill.getUserSkills", SkillEntity.class)
+//                .setParameter("id", userId)
+//                .getResultList();
+//    }
+
+    public List<String> getAllSkillType() {
+        return em.createNamedQuery("Skill.getAllSkillType", String.class)
                 .getResultList();
     }
 

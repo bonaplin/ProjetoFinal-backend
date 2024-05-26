@@ -112,10 +112,7 @@ public class UserBean {
         user.setLab(labEntity);
         userDao.persist(user);
 
-        //ADD_SKILL_TO_USER
-        skillBean.addSkillToUser(email, "Java");
-        skillBean.addSkillToUser(email, "Assembly");
-        skillBean.addSkillToUser(email, "macOS");
+
     }
 
     /**
@@ -274,7 +271,7 @@ public class UserBean {
      * @param token
      * @return
      */
-    private boolean verifyToken(String token) {
+    public boolean verifyToken(String token) {
         UserEntity userEntity = userDao.findUserByToken(token);
         if (userEntity == null) return false;
         if (userEntity.getTokenExpiration().isBefore(Instant.now())) return false;
@@ -297,8 +294,10 @@ public class UserBean {
     }
 
     public UserOwnerProfileDto getUserProfile(String token, String email) {
+        System.out.println("Getting user profile");
         UserEntity userEntity = userDao.findUserByEmail(email);
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        sessionBean.validateUserToken(token);
         if (userEntity == null){
             throw new UserCreationException("User not found");
         }

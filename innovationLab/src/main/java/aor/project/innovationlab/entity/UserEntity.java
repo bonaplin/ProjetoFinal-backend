@@ -77,7 +77,7 @@ public class UserEntity implements Serializable {
      * User skills
      * This is a set of skills that the user has and can be used to search for users with specific skills
      */
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserSkillEntity> userSkills = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

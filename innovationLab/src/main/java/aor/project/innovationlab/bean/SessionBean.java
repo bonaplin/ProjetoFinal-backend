@@ -56,6 +56,32 @@ public class SessionBean  {
         return sessionEntity.isActive() ? TokenStatus.VALID : TokenStatus.EXPIRED;
     }
 
+    public void validateUserToken(String token) {
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null) {
+            // Log the event
+            System.out.println("Token not found: " + token);
+            throw new IllegalArgumentException("Token not found");
+        }
+        if(sessionEntity.getExpirationDate().isBefore(Instant.now())) {
+            // Log the event
+            System.out.println("Token expired: " + token);
+            throw new IllegalArgumentException("Token expired");
+        }
+        if(!sessionEntity.isActive()) {
+            // Log the event
+            System.out.println("Token not active: " + token);
+            throw new IllegalArgumentException("Token not active");
+        }
+        // If the token is valid, update its expiration date
+        updateTokenExpiration(sessionEntity);
+    }
+
+    private void updateTokenExpiration(SessionEntity sessionEntity) {
+        sessionEntity.setExpirationDate(generateExpirationDate());
+        sessionDao.merge(sessionEntity);
+    }
+
     /**
      * Method to login a user
      * It checks if the user exists and if the password is correct

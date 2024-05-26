@@ -2,6 +2,7 @@ package aor.project.innovationlab.entity;
 
 import aor.project.innovationlab.enums.SkillType;
 import jakarta.persistence.*;
+import jdk.jfr.Name;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.List;
 @NamedQuery(name = "Skill.findSkillByName", query = "SELECT s FROM SkillEntity s WHERE s.name = :name")
 @NamedQuery(name = "Skill.findSkillById", query = "SELECT s FROM SkillEntity s WHERE s.id = :id")
 @NamedQuery(name = "Skill.getUserSkills", query = "SELECT s FROM SkillEntity s JOIN s.userSkills us WHERE us.user.id = :id AND s.active = true")
-
+@NamedQuery(name = "Skill.getAllSkillType", query = "SELECT DISTINCT s.skillType FROM SkillEntity s")
 public class SkillEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -29,7 +30,7 @@ public class SkillEntity implements Serializable {
     private String description;
 
     //ADD_SKILL_TO_USER
-    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<UserSkillEntity> userSkills = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)

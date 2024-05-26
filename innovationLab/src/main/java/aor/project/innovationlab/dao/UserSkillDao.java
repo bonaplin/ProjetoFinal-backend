@@ -8,6 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
+import java.util.List;
+
 @Stateless
 public class UserSkillDao extends AbstractDao<UserSkillEntity> {
     private static final long serialVersionUID = 1L;
@@ -17,17 +19,24 @@ public class UserSkillDao extends AbstractDao<UserSkillEntity> {
     }
 
     // Não sei se é necessário fazer um método para adicionar uma skill ao user
-    public boolean userHasSkill(UserEntity user, SkillEntity skill) {
+    public UserSkillEntity userHasSkill(UserEntity user, SkillEntity skill) {
         TypedQuery<UserSkillEntity> query = em.createQuery(
                 "SELECT us FROM UserSkillEntity us WHERE us.user = :user AND us.skill = :skill",
                 UserSkillEntity.class);
         query.setParameter("user", user);
         query.setParameter("skill", skill);
         try {
-            query.getSingleResult();
-            return true;
+            return query.getSingleResult();
         } catch (NoResultException e) {
-            return false;
+            return null;
         }
+    }
+
+    public List<SkillEntity> getUserSkills(long id) {
+        TypedQuery<SkillEntity> query = em.createQuery(
+                "SELECT us.skill FROM UserSkillEntity us WHERE us.user.id = :id AND us.active = true",
+                SkillEntity.class);
+        query.setParameter("id", id);
+        return query.getResultList();
     }
 }
