@@ -12,6 +12,7 @@ import java.util.Set;
 @Table(name="interest")
 @NamedQuery(name = "Interest.getUserInterests", query = "SELECT i FROM InterestEntity i JOIN i.userInterestEntities ui WHERE ui.user.id = :id AND i.active = true")
 @NamedQuery(name = "Interest.findInterestByName", query = "SELECT i FROM InterestEntity i WHERE i.name = :name")
+@NamedQuery(name = "Interest.getAllInterests", query = "SELECT i FROM InterestEntity i WHERE i.active = true")
 public class InterestEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,7 +28,7 @@ public class InterestEntity implements Serializable {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserInterestEntity> userInterestEntities = new HashSet<>();
 
     @OneToMany(mappedBy = "interest", fetch = FetchType.LAZY)

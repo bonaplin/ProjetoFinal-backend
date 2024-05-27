@@ -46,6 +46,6 @@ public class StartupBean {
         productBean.createInitialData();
         projectBean.createInitialData();
         taskBean.createInitialData();
-        interestBean.createInitialData();
+//        interestBean.createInitialData();
     }
 }

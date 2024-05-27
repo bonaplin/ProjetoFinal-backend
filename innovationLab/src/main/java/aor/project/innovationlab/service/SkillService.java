@@ -21,10 +21,8 @@ public class SkillService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response addSkill(@HeaderParam("token") String token, SkillDto skillDto) {
         try {
-            System.out.println(Color.GREEN + "Add skill" + Color.GREEN);
-            skillBean.addSkill(token,skillDto);
-            System.out.println(Color.GREEN + "Skill added successfully" + Color.GREEN);
-            return Response.status(200).entity("Skill added successfully").build();
+            SkillDto skill = skillBean.addSkill(token,skillDto);
+            return Response.status(200).entity(skill).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
@@ -35,10 +33,9 @@ public class SkillService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteSkill(@HeaderParam("token") String token, SkillDto skillDto) {
+        System.out.println(Color.GREEN + skillDto + Color.GREEN);
         try {
-            System.out.println(Color.GREEN + "Delete skill" + Color.GREEN);
             skillBean.deleteSkill(token,skillDto);
-            System.out.println(Color.GREEN + "Skill deleted successfully" + Color.GREEN);
             return Response.status(200).entity("Skill deleted successfully").build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();

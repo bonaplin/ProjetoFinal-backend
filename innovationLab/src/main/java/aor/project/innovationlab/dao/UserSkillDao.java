@@ -18,7 +18,12 @@ public class UserSkillDao extends AbstractDao<UserSkillEntity> {
         super(UserSkillEntity.class);
     }
 
-    // Não sei se é necessário fazer um método para adicionar uma skill ao user
+    /**
+     * Verify if user has skill
+     * @param user
+     * @param skill
+     * @return
+     */
     public UserSkillEntity userHasSkill(UserEntity user, SkillEntity skill) {
         TypedQuery<UserSkillEntity> query = em.createQuery(
                 "SELECT us FROM UserSkillEntity us WHERE us.user = :user AND us.skill = :skill",

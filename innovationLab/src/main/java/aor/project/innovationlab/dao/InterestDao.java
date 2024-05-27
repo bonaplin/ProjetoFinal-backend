@@ -42,4 +42,8 @@ public class InterestDao extends AbstractDao<InterestEntity> {
                 .getResultList();
     }
 
+    public List<InterestEntity> getAllInterests() {
+        return em.createNamedQuery("Interest.getAllInterests")
+                .getResultList();
+    }
 }

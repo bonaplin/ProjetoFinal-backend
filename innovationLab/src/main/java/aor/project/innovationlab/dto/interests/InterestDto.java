@@ -22,4 +22,12 @@ public class InterestDto {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public String toString() {
+        return "InterestDto{" +
+                "name='" + name + '\'' +
+                ", id=" + id +
+                '}';
+    }
 }
