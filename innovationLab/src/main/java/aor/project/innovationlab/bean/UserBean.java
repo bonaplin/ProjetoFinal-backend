@@ -157,8 +157,8 @@ public class UserBean {
 
         persistUser(user);
         
-        generateVerificationToken(user);
-        EmailSender.sendVerificationEmail(email, user.getTokenVerification());
+        String newToken = generateVerificationToken(user);
+        EmailSender.sendVerificationEmail(email, newToken);
         return true;
     }
 
@@ -262,13 +262,14 @@ public class UserBean {
      * Generates a new verification token for the user
      * @param userEntity - the user to generate the token for
      */
-    private void generateVerificationToken(UserEntity userEntity) {
+    private String generateVerificationToken(UserEntity userEntity) {
         String log = "Attempt to generate verification token";
         String newToken = TokenUtil.generateToken();
         userEntity.setTokenVerification(newToken);
         userEntity.setTokenExpiration(generateExpirationDate());
         userDao.merge(userEntity);
         LoggerUtil.logInfo(log,"Token generated",userEntity.getEmail(),newToken);
+        return newToken;
     }
 
     /**
