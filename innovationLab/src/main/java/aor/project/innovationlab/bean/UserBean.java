@@ -416,7 +416,7 @@ public class UserBean {
         userToConfirm.setAbout(dto.getAbout());
         userToConfirm.setUsername(dto.getUsername());
         userToConfirm.setLab(lab);
-        
+
         userDao.merge(userToConfirm);
         LoggerUtil.logInfo(log,"User account confirmed",userToConfirm.getEmail(),token);
         cleanToken(userToConfirm);

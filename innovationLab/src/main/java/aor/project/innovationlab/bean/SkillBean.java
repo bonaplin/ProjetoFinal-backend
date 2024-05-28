@@ -10,6 +10,7 @@ import aor.project.innovationlab.entity.UserSkillEntity;
 import aor.project.innovationlab.enums.SkillType;
 
 import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -94,16 +95,16 @@ public class SkillBean {
      * @param skillName - nome da habilidade
      */
     public SkillDto addSkillToUser(String email, String skillName, SkillType type) {
-        System.out.println(email + " " + skillName + " " + type);
+        String log = "Adding skill to user";
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
+            LoggerUtil.logError(log, "User not found", email, null);
             throw new IllegalArgumentException("User not found");
         }
-        System.out.println("User found");
+
         SkillEntity skill = skillDao.findSkillByName(skillName);
 
         if(skill == null) {
-            // Cria a skill se ela não existir
             createSkillIfNotExists(skillName, type);
         }
         // Verifica se já existe uma associação entre o user e a habilidade
@@ -113,6 +114,7 @@ public class SkillBean {
             userSkill = new UserSkillEntity();
             userSkill.setUser(user);
             userSkill.setSkill(skill);
+            LoggerUtil.logInfo(log, "Creating new user skill", email, null);
             userSkillDao.persist(userSkill);
 
             // Adiciona a habilidade ao array de habilidades do user
@@ -121,11 +123,12 @@ public class SkillBean {
         } else {
             // Se a associação já existir, apenas altera o active para true
             userSkill.setActive(true);
+            LoggerUtil.logInfo(log, "User already have this skill, just turn active", email, null);
         }
         userDao.merge(user);
         skillDao.merge(skill);
         userSkillDao.merge(userSkill);
-
+        LoggerUtil.logInfo(log, "Skill: "+ skillName +"added to user", email, null);
         return toDto(skill);
     }
 
@@ -135,16 +138,20 @@ public class SkillBean {
      * @param skillName - nome da habilidade a remover
      */
     public void removeSkillFromUser(String email, String skillName) {
+        String log = "Removing skill from user";
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
+            LoggerUtil.logError(log, "User not found", email, null);
             throw new IllegalArgumentException("User not found");
         }
         SkillEntity skill = skillDao.findSkillByName(skillName);
         if(skill == null) {
+            LoggerUtil.logError(log, "Skill not found", email, null);
             throw new IllegalArgumentException("Skill not found");
         }
         UserSkillEntity userSkill = userSkillDao.userHasSkill(user, skill);
         if(userSkill == null) {
+            LoggerUtil.logError(log, "User dont have this skill", email, null);
             throw new IllegalArgumentException("User dont have this skill");
         }
         userSkill.setActive(false);
@@ -155,6 +162,7 @@ public class SkillBean {
         skillDao.merge(skill);
 
         userSkillDao.merge(userSkill); // Atualiza a userSkill no banco de dados
+        LoggerUtil.logInfo(log, "Skill: "+ skillName +"removed from user", email, null);
     }
 
     /**
@@ -182,14 +190,18 @@ public class SkillBean {
      * @param skillDto
      */
     public SkillDto addSkill(String token, SkillDto skillDto) {
+        String log = "Adding skill to user";
         if(token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
             throw new IllegalArgumentException("Token is required");
         }
         if(skillDto == null) {
+            LoggerUtil.logError(log, "Skill is required", null, null);
             throw new IllegalArgumentException("Skill is required");
         }
         sessionBean.validateUserToken(token);
         if(skillDto.getName() == null|| skillDto.getType() == null  ){
+            LoggerUtil.logError(log, "Skill name and type are required", null, null);
             throw new IllegalArgumentException("Skill name and type are required");
         }
         SkillEntity skill = skillDao.findSkillByName(skillDto.getName());
@@ -198,13 +210,15 @@ public class SkillBean {
         }
         SessionEntity session = sessionDao.findSessionByToken(token);
         if(session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
         UserEntity user = session.getUser();
         if(user == null) {
+            LoggerUtil.logError(log, "User not found", null, token);
             throw new IllegalArgumentException("User not found");
         }
-        System.out.println("Adding skill to user");
+        LoggerUtil.logInfo(log, "Adding skill to user", user.getEmail(), token);
         return addSkillToUser(user.getEmail(), skillDto.getName(), SkillType.valueOf(skillDto.getType()));
     }
 
@@ -238,23 +252,27 @@ public class SkillBean {
      * @param skillDto
      */
     public void deleteSkill(String token, SkillDto skillDto) {
+        String log = "Deleting skill from user";
         if(token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
             throw new IllegalArgumentException("Token is required");
         }
         if(skillDto == null) {
+            LoggerUtil.logError(log, "Skill is required", null, token);
             throw new IllegalArgumentException("Skill is required");
         }
         sessionBean.validateUserToken(token);
         if(skillDto.getName() == null || skillDto.getType() == null){
+            LoggerUtil.logError(log, "Skill name and type are required", null, token);
             throw new IllegalArgumentException("Skill name and type are required");
         }
         SessionEntity session = sessionDao.findSessionByToken(token);
         if(session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
 
         UserEntity user = session.getUser();
-        System.out.println(Color.GREEN + "Deleting skill from user" + Color.GREEN);
         removeSkillFromUser(user.getEmail(), skillDto.getName());
     }
 }

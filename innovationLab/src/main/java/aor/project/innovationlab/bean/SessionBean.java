@@ -10,6 +10,7 @@ import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.enums.TokenStatus;
 import aor.project.innovationlab.utils.TokenUtil;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
@@ -106,17 +107,26 @@ public class SessionBean  {
      * @return - true if the user exists and the password is correct, false otherwise
      */
     public SessionLoginDto login(UserLogInDto userLogInDto) {
-        SessionLoginDto sessionLoginDto = new SessionLoginDto();
-        if(userLogInDto == null) return null;
+        String log = "Attempting to login";
+        if(userLogInDto == null){
+            LoggerUtil.logError(log, "UserLogInDto is null",null,null);
+            throw new IllegalArgumentException("UserLogInDto is null");
+        }
 
         String email = userLogInDto.getEmail();
         String password = userLogInDto.getPassword();
-        if(email == null || password == null) return null;
+        if(email == null || password == null) {
+            LoggerUtil.logError(log, "Email: "+email+" or password is null",null,null);
+            throw new IllegalArgumentException("Email or password is null");
+        }
 
         UserEntity userEntity = userDao.findUserByEmail(email);
-        if (userEntity == null) return null;
+        if (userEntity == null) {
+            return null;
+        }
 
         if (PasswordUtil.checkPassword(password, userEntity.getPassword())) {
+            SessionLoginDto sessionLoginDto = new SessionLoginDto();
             sessionLoginDto.setToken(createSession(userEntity));
             return sessionLoginDto;
         }
@@ -150,6 +160,7 @@ public class SessionBean  {
      * @return
      */
     private String createSession(UserEntity userEntity) {
+        String log = "Attempting to create a session";
         SessionEntity sessionEntity = new SessionEntity();
         sessionEntity.setUser(userEntity);
         sessionEntity.setToken(TokenUtil.generateToken());
@@ -158,11 +169,14 @@ public class SessionBean  {
         while (true) {
             try {
                 sessionDao.persist(sessionEntity);
+                LoggerUtil.logInfo(log, "Session created",userEntity.getEmail(),null);
                 break;  // if the session is persisted, break the loop
             } catch (PersistenceException e) { // if the session is not persisted, generate a new token
                 if (e.getCause() instanceof ConstraintViolationException) {
+                    LoggerUtil.logError(log, "Token already exists, will try another one",userEntity.getEmail(),sessionEntity.getToken());
                     sessionEntity.setToken(UUID.randomUUID().toString());
                 } else {
+                    LoggerUtil.logError(log, "Error while creating session",userEntity.getEmail(),sessionEntity.getToken());
                     throw e; // if the exception is not a ConstraintViolationException, throw it
                 }
             }
