@@ -12,6 +12,8 @@ import aor.project.innovationlab.enums.TokenStatus;
 import aor.project.innovationlab.utils.TokenUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
+import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -27,6 +29,12 @@ public class SessionBean  {
 
     public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 5;
 
+    /**
+     * Method to set the default expiration time of a token
+     * It sets the default expiration time of a token in minutes
+     * @param minutes
+     * @param token
+     */
     private void setDefaultTokenExpirationMinutes(int minutes, String token){
         TokenStatus tokenStatus = isValidUserByToken(token);
         if(!tokenStatus.equals(TokenStatus.VALID)) return;
@@ -56,6 +64,13 @@ public class SessionBean  {
         return sessionEntity.isActive() ? TokenStatus.VALID : TokenStatus.EXPIRED;
     }
 
+    /**
+     * Method to validate a user token
+     * It checks if the token exists, if it is active and if it is not expired
+     * If the token is valid, it updates the expiration date
+     * If the token is not valid, it throws an exception
+     * @param token
+     */
     public void validateUserToken(String token) {
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null) {
@@ -90,8 +105,6 @@ public class SessionBean  {
      * @param userLogInDto - dto with the user email and password
      * @return - true if the user exists and the password is correct, false otherwise
      */
-
-
     public SessionLoginDto login(UserLogInDto userLogInDto) {
         SessionLoginDto sessionLoginDto = new SessionLoginDto();
         if(userLogInDto == null) return null;
@@ -116,21 +129,22 @@ public class SessionBean  {
      * @param token
      * @return - true if the session exists and is set as inactive, false otherwise
      */
-    public boolean logout(String token){
+    public void logout(String token){
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-        if(sessionEntity == null) return false;
+        if(sessionEntity == null){ throw new IllegalArgumentException("Token not found");}
 
         TokenStatus tokenStatus = isValidUserByToken(token);
-        if(!tokenStatus.equals(TokenStatus.VALID)) return false;
+        if(!tokenStatus.equals(TokenStatus.VALID)){ throw new IllegalArgumentException("Token not valid");}
         sessionEntity.setActive(false);
         sessionEntity.setLogoutDate(Instant.now());
         sessionDao.merge(sessionEntity);
-        return true;
     }
 
     /**
      * Method to create a session for a user
-     * It creates a session with a random token and sets the expiration date
+     * It creates a session for the user with a random token and an expiration date
+     * The session is persisted in the database
+     * If the token already exists, it generates a new token, until it finds a token that does not exist and persists the session
      *
      * @param userEntity
      * @return
@@ -140,13 +154,18 @@ public class SessionBean  {
         sessionEntity.setUser(userEntity);
         sessionEntity.setToken(TokenUtil.generateToken());
         sessionEntity.setExpirationDate(generateExpirationDate());
-        try{
-            sessionDao.persist(sessionEntity);
-        }
-        catch (Exception e){
-            sessionEntity.setToken(UUID.randomUUID().toString());
-            sessionDao.persist(sessionEntity);
-            System.out.println("Token already exists, creating new token");
+
+        while (true) {
+            try {
+                sessionDao.persist(sessionEntity);
+                break;  // if the session is persisted, break the loop
+            } catch (PersistenceException e) { // if the session is not persisted, generate a new token
+                if (e.getCause() instanceof ConstraintViolationException) {
+                    sessionEntity.setToken(UUID.randomUUID().toString());
+                } else {
+                    throw e; // if the exception is not a ConstraintViolationException, throw it
+                }
+            }
         }
         return sessionEntity.getToken();
     }
@@ -159,14 +178,14 @@ public class SessionBean  {
         return Instant.now().plus(Duration.ofMinutes(DEFAULT_TOKEN_EXPIRATION_MINUTES));
     }
 
-    public void generateSessionToken(UserEntity userEntity) {
-        String newToken = TokenUtil.generateToken();
-        SessionEntity sessionEntity = new SessionEntity();
-        sessionEntity.setUser(userEntity);
-        sessionEntity.setToken(newToken);
-        sessionEntity.setExpirationDate(generateExpirationDate());
-        sessionDao.merge(sessionEntity);
-    }
+//    public void generateSessionToken(UserEntity userEntity) {
+//        String newToken = TokenUtil.generateToken();
+//        SessionEntity sessionEntity = new SessionEntity();
+//        sessionEntity.setUser(userEntity);
+//        sessionEntity.setToken(newToken);
+//        sessionEntity.setExpirationDate(generateExpirationDate());
+//        sessionDao.merge(sessionEntity);
+//    }
 
     /**
      * Method to get the user of a session

@@ -248,10 +248,6 @@ public class SkillBean {
         if(skillDto.getName() == null || skillDto.getType() == null){
             throw new IllegalArgumentException("Skill name and type are required");
         }
-//        SkillEntity skill = skillDao.findSkillByName(skillDto.getName());
-//        if(skill == null) {
-//            throw new IllegalArgumentException("Skill not found");
-//        }
         SessionEntity session = sessionDao.findSessionByToken(token);
         if(session == null) {
             throw new IllegalArgumentException("Invalid token");
