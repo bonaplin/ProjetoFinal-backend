@@ -13,8 +13,8 @@ public class EmailSender {
 
     private static final String username = "botsemgps@gmail.com";
     private static final String password = "xlvi nhlq blnp olzf";
-    private static final String registrationLink = "http://localhost:3000/confirm-account/";
-    private static final String resetPasswordLink = "http://localhost:3000/restore-password/";
+    private static final String registrationLink = "https://localhost:3000/confirm-account/";
+    private static final String resetPasswordLink = "https://localhost:3000/change-password/";
 
 
     public static void sendEmail(String to, String subject, String content) {

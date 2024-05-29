@@ -22,7 +22,6 @@ public class LabService {
     @GET
     @Produces("application/json")
     public Response getAllLabs() {
-        
         return Response.ok(labBean.findAllLabs()).build();
     }
 }

@@ -38,22 +38,16 @@ public class UserService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(UserLogInDto userLogInDto) {
-        try {
-            SessionLoginDto sessionLoginDto = userBean.loginWithValidation(userLogInDto);
-            return Response.status(200).entity(JsonUtils.convertObjectToJson(sessionLoginDto)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        SessionLoginDto sessionLoginDto = userBean.loginWithValidation(userLogInDto);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(sessionLoginDto)).build();
     }
 
     @POST
     @Path("/logout")
     @Produces(MediaType.APPLICATION_JSON)
     public Response logout(@HeaderParam("token") String token) {
-        if(sessionBean.logout(token)){
-            return Response.status(200).entity("See you soon!").build();
-        }
-        return Response.status(Response.Status.UNAUTHORIZED).build();
+        sessionBean.logout(token);
+        return Response.status(200).entity("See you soon!").build();
     }
 
     @POST
@@ -61,12 +55,8 @@ public class UserService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createUser(UserLogInDto userLogInDto) {
-        try {
-            userBean.createNewUser(userLogInDto);
-            return Response.status(201).entity("Email sending").build();
-        } catch (UserCreationException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        userBean.createNewUser(userLogInDto);
+        return Response.status(201).entity("Email sending").build();
     }
 
     @POST
@@ -74,13 +64,8 @@ public class UserService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response resetPassword(@PathParam("email") String email) {
-        try {
-            userBean.sendPasswordResetEmail(email);
-            return Response.status(200).entity("Email sent. Check your inbox.").build();
-        }
-        catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        userBean.sendPasswordResetEmail(email);
+        return Response.status(200).entity("Email sent. Check your inbox.").build();
     }
 
     @POST
@@ -88,36 +73,26 @@ public class UserService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response changePassword(@HeaderParam("token") String token, UserChangePasswordDto dto) {
-        try {
-            userBean.changePassword(token, dto);
-            return Response.status(200).entity("Password changed successfully.").build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        userBean.changePassword(token, dto);
+        return Response.status(200).entity("Password changed successfully.").build();
+
     }
 
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUser(@HeaderParam("token") String token, @QueryParam("email") String email) {
-        try {
-            UserOwnerProfileDto dto = userBean.getUserProfile(token, email);
-            return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        UserOwnerProfileDto dto = userBean.getUserProfile(token, email);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+
     }
 
     @POST
     @Path("/confirm-account")
     @Produces(MediaType.APPLICATION_JSON)
     public Response confirmAccount(@HeaderParam("token") String token, UserConfirmAccountDto dto) {
-        try {
-            userBean.confirmAccount(token, dto);
-            return Response.status(200).entity("Account confirmed successfully!").build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        userBean.confirmAccount(token, dto);
+        return Response.status(200).entity("Account confirmed successfully!").build();
     }
 
 

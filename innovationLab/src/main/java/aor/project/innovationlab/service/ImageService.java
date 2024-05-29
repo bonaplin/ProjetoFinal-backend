@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,13 +38,9 @@ public class ImageService {
     @POST
     @Path("/user")
     @Consumes("image/*")
-    public Response uploadUserImage(@HeaderParam("token") String token, @HeaderParam("filename") String originalFileName, InputStream imageData) {
-        try {
-            imageBean.saveUserProfileImage(token, imageData, originalFileName);
-        } catch (IOException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
-        return Response.ok().build();
+    public Response uploadUserImage(@HeaderParam("token") String token, InputStream imageData) {
+        String path = imageBean.saveUserProfileImage(token, imageData);
+        return Response.ok().entity(path).build();
     }
 
 
@@ -56,11 +53,6 @@ public class ImageService {
     @Path("/user")
     @Produces("image/*")
     public Response getUserPicture(@HeaderParam("token") String token) {
-
-        TokenStatus tokenStatus = sessionBean.isValidUserByToken(token);
-        if (!tokenStatus.equals(TokenStatus.VALID)) {
-            return Response.status(401).entity(JsonUtils.convertObjectToJson(new ResponseMessage(tokenStatus.getMessage()))).build();
-        }
 
         UserEntity userEntity = sessionBean.getUserByToken(token);
 

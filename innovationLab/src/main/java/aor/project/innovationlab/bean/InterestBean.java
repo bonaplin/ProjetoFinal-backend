@@ -4,9 +4,13 @@ import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TransactionRequiredException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,12 +61,32 @@ public class InterestBean {
     }
 
     public void createInterestIfNotExists(String interestName) {
+
         InterestEntity interest = interestDao.findInterestByName(interestName);
         if(interest == null) {
             interest = new InterestEntity();
             interest.setName(interestName);
-            interestDao.persist(interest);
+            persistInterest(interest);
         }
+    }
+
+    private void persistInterest(InterestEntity interest) {
+        String log = "Attempting to persist interest";
+        try {
+            interestDao.persist(interest);
+            LoggerUtil.logInfo(log,"Interest persisted: "+interest.getName(),null,null);
+        }
+        catch (IllegalArgumentException | TransactionRequiredException | EntityNotFoundException e) {
+            LoggerUtil.logError(log,"Error persisting interest: " + e.getMessage(),null,null);
+            throw new RuntimeException("Error persisting interest: " + e.getMessage());
+        } catch (PersistenceException e) {
+            LoggerUtil.logError(log,"Persistence error persisting interest: " + e.getMessage(),null,null);
+            throw new RuntimeException("Persistence error persisting interest: " + e.getMessage());
+        } catch (Exception e) {
+            LoggerUtil.logError(log,"Unexpected error persisting interest: " + e.getMessage(),null,null);
+            throw new RuntimeException("Unexpected error persisting interest: " + e.getMessage());
+        }
+
     }
 
     /**
@@ -71,14 +95,17 @@ public class InterestBean {
      * @param interestName - nome do interesse
      */
     public InterestDto addInterestToUser(String email, String interestName) {
+        String log = "Attempting to add interest to user";
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
+            LoggerUtil.logError(log,"User not found to add the "+interestName,email,null);
             throw new IllegalArgumentException("User not found");
         }
         InterestEntity interest = interestDao.findInterestByName(interestName);
         if(interest == null) {
             createInterestIfNotExists(interestName);
             interest = interestDao.findInterestByName(interestName);
+            LoggerUtil.logInfo(log,"Interest created: "+interestName,email,null);
         }
         UserInterestEntity userInterest = userInterestDao.userHasInterest(user, interest);
         if(userInterest == null){
@@ -90,13 +117,16 @@ public class InterestBean {
             user.getInterests().add(userInterest);
             // Adiciona o user ao interesse
             interest.getUserInterests().add(userInterest);
+            LoggerUtil.logInfo(log,"UserInterest created",email,null);
         }else{
             userInterest.setActive(true);
+            LoggerUtil.logInfo(log,"UserInterest already exists, just setActive",email,null);
         }
 
         userDao.merge(user);
         interestDao.merge(interest);
         userInterestDao.merge(userInterest);
+        LoggerUtil.logInfo(log,"Interest added to user",null,null);
         return toDto(interest);
     }
 
@@ -106,16 +136,20 @@ public class InterestBean {
      * @param interestName - nome do interesse
      */
     public void removeInterestFromUser(String email, String interestName) {
+        String log = "Attempting to remove interest from user";
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
+            LoggerUtil.logError(log,"User not found to remove the "+interestName,email,null);
             throw new IllegalArgumentException("User not found");
         }
         InterestEntity interest = interestDao.findInterestByName(interestName);
         if(interest == null) {
+            LoggerUtil.logError(log,"Interest not found to remove from user",email,null);
             throw new IllegalArgumentException("Interest not found");
         }
         UserInterestEntity userInterest = userInterestDao.userHasInterest(user, interest);
         if(userInterest == null) {
+            LoggerUtil.logError(log,"User dont have this interest",email,null);
             throw new IllegalArgumentException("User dont have this interest");
         }
         userInterest.setActive(false);
@@ -126,6 +160,7 @@ public class InterestBean {
         interestDao.merge(interest);
 
         userInterestDao.merge(userInterest);
+        LoggerUtil.logInfo(log,"Interest removed from user",email,null);
     }
 
     /**
@@ -210,50 +245,54 @@ public class InterestBean {
     }
 
     public InterestDto addInterest(String token, InterestDto interestDto) {
+        String log = "Attempting to add interest";
         if(token == null) {
+            LoggerUtil.logError(log,"Token is required",null,null);
             throw new IllegalArgumentException("Token is required");
         }
+        String user = sessionDao.findSessionByToken(token).getUser().getEmail();
+        if(user == null) {
+            LoggerUtil.logError(log,"User not found",null,token);
+            throw new IllegalArgumentException("User not found");
+        }
         if(interestDto == null) {
+            LoggerUtil.logError(log,"Interest is required",user,token);
             throw new IllegalArgumentException("Interest is required");
         }
         sessionBean.validateUserToken(token);
         if(interestDto.getName() == null) {
+            LoggerUtil.logError(log,"Interest name is required",user,token);
             throw new IllegalArgumentException("Interest name is required");
         }
         InterestEntity interest = interestDao.findInterestByName(interestDto.getName());
         if(interest == null) {
             createInterestIfNotExists(interestDto.getName());
+            LoggerUtil.logInfo(log,"Interest created: "+interestDto.getName(),user,token);
         }
-        SessionEntity session = sessionDao.findSessionByToken(token);
-        if(session == null) {
-            throw new IllegalArgumentException("Session not found");
-        }
-        System.out.println("Adding interest to user");
-        return addInterestToUser(session.getUser().getEmail(), interestDto.getName());
+
+        return addInterestToUser(user, interestDto.getName());
     }
 
     public void deleteInterest(String token, InterestDto interestDto) {
+        String log = "Attempting to delete interest";
         if(token == null) {
+            LoggerUtil.logError(log,"Token is required",null,null);
             throw new IllegalArgumentException("Token is required");
         }
         if(interestDto == null) {
+            LoggerUtil.logError(log,"Interest is required",null,token);
             throw new IllegalArgumentException("Interest is required");
         }
         sessionBean.validateUserToken(token);
         if(interestDto.getName() == null) {
             throw new IllegalArgumentException("Interest name is required");
         }
-//        InterestEntity interest = interestDao.findInterestByName(interestDto.getName());
-//        if(interest == null) {
-//            throw new IllegalArgumentException("Interest not found");
-//        }
         SessionEntity session = sessionDao.findSessionByToken(token);
         if(session == null) {
             throw new IllegalArgumentException("Session not found");
         }
 
         UserEntity user = session.getUser();
-        System.out.println(Color.GREEN + "Deleting interest from user" + Color.GREEN);
         removeInterestFromUser(user.getEmail(), interestDto.getName());
     }
 }

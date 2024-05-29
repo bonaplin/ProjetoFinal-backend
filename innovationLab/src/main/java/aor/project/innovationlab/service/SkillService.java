@@ -20,12 +20,8 @@ public class SkillService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response addSkill(@HeaderParam("token") String token, SkillDto skillDto) {
-        try {
-            SkillDto skill = skillBean.addSkill(token,skillDto);
-            return Response.status(200).entity(skill).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        SkillDto skill = skillBean.addSkill(token,skillDto);
+        return Response.status(200).entity(skill).build();
     }
 
     @PUT
@@ -33,36 +29,22 @@ public class SkillService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteSkill(@HeaderParam("token") String token, SkillDto skillDto) {
-        System.out.println(Color.GREEN + skillDto + Color.GREEN);
-        try {
-            skillBean.deleteSkill(token,skillDto);
-            return Response.status(200).entity("Skill deleted successfully").build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        skillBean.deleteSkill(token,skillDto);
+        return Response.status(200).entity("Skill deleted successfully").build();
     }
 
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllSkills(@HeaderParam("token") String token, @QueryParam("userEmail") String userEmail) {
-        try {
-            if(userEmail != null) return Response.status(200).entity(skillBean.getUserSkills(token, userEmail)).build();
-            return Response.status(200).entity(skillBean.getAllSkills(token)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
+        if(userEmail != null) return Response.status(200).entity(skillBean.getUserSkills(token, userEmail)).build();
+        return Response.status(200).entity(skillBean.getAllSkills(token)).build();
     }
 
     @GET
     @Path("/types")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllSkillType(@HeaderParam("token") String token) {
-        try {
-            System.out.println(Color.GREEN + "Get all skill types" + Color.GREEN);
             return Response.status(200).entity(skillBean.getAllSkillType(token)).build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        }
     }
 }
