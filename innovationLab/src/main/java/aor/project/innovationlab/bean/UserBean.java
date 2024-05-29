@@ -9,6 +9,7 @@ import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.utils.TokenUtil;
@@ -153,9 +154,10 @@ public class UserBean {
 
         validateUserInput(email, password);
 
+        UserValidator.validatePassword(password);
         UserEntity user = createUserEntity(email, password);
-
         persistUser(user);
+        System.out.println(Color.PURPLE+user.getEmail()+Color.PURPLE);
         
         String newToken = generateVerificationToken(user);
         EmailSender.sendVerificationEmail(email, newToken);
@@ -195,6 +197,7 @@ public class UserBean {
             throw new IllegalArgumentException("Invalid email format!");
         }
         if(!UserValidator.validatePassword(password)) {
+            System.out.println(Color.RED+password+ Color.RED);
             LoggerUtil.logError(log,"Invalid password format!",email,null);
             throw new IllegalArgumentException("Invalid password format!");
         }
@@ -295,7 +298,6 @@ public class UserBean {
         }
 
         String password = dto.getPassword();
-        System.out.println("Password: " + password);
         if(!UserValidator.validatePassword(password)) {
             throw new IllegalArgumentException("Invalid password format");
         }

@@ -169,7 +169,7 @@ public class SessionBean  {
         while (true) {
             try {
                 sessionDao.persist(sessionEntity);
-                LoggerUtil.logInfo(log, "Session created",userEntity.getEmail(),null);
+                LoggerUtil.logInfo(log, "Session created",userEntity.getEmail(),sessionEntity.getToken());
                 break;  // if the session is persisted, break the loop
             } catch (PersistenceException e) { // if the session is not persisted, generate a new token
                 if (e.getCause() instanceof ConstraintViolationException) {

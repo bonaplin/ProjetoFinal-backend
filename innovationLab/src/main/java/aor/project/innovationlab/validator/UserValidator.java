@@ -10,7 +10,7 @@ public class UserValidator {
 
     public static boolean validatePassword(String password) {
         if (password.length() < MIN_PASSWORD_LENGTH) {
-            return false;
+            throw new IllegalArgumentException("Password must have at least " + MIN_PASSWORD_LENGTH + " characters");
         }
 
         boolean hasUpper = false;
@@ -30,6 +30,19 @@ public class UserValidator {
             }
         }
 
-        return hasUpper && hasLower && hasDigit && hasSpecial;
+        if (!hasUpper) {
+            throw new IllegalArgumentException("Password must have at least one uppercase character");
+        }
+        if (!hasLower) {
+            throw new IllegalArgumentException("Password must have at least one lowercase character");
+        }
+        if (!hasDigit) {
+            throw new IllegalArgumentException("Password must have at least one digit");
+        }
+        if (!hasSpecial) {
+            throw new IllegalArgumentException("Password must have at least one special character");
+        }
+
+        return true;
     }
 }

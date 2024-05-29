@@ -213,7 +213,6 @@ public class LogEntity implements Serializable {
     }
 
     private boolean isTaskAffected() {
-        System.out.println("\033[0;36m"+"isTaskAffected"+ "\033[0m");
         return task != null &&
                 affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
     }
