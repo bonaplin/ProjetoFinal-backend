@@ -31,7 +31,6 @@ public class ImageService {
     /**
      * Uploads an image to the server
      * @param token
-     * @param originalFileName
      * @param imageData
      * @return
      */
@@ -44,26 +43,35 @@ public class ImageService {
     }
 
 
-    /**
-     * Gets the image of a user
-     * @param token
-     * @return
-     */
+//    /**
+//     * Gets the image of a user
+//     * @param token
+//     * @return
+//     */
+//    @GET
+//    @Path("/user/{id}")
+//    @Produces("image/*")
+//    public Response getUserPicture(@HeaderParam("token") String token, @PathParam("id") long id) {
+//
+//        UserEntity userEntity = sessionBean.getUserByToken(token);
+//
+//        String imageType = userEntity.getProfileImageType();
+//
+//        try {
+//            InputStream imageStream = imageBean.getUserImage(token);
+//            return Response.ok(imageStream).type(imageType).build();
+//        } catch (IOException e) {
+//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }
+
     @GET
     @Path("/user")
-    @Produces("image/*")
-    public Response getUserPicture(@HeaderParam("token") String token) {
-
-        UserEntity userEntity = sessionBean.getUserByToken(token);
-
-        String imageType = userEntity.getProfileImageType();
-
-        try {
-            InputStream imageStream = imageBean.getUserImage(token);
-            return Response.ok(imageStream).type(imageType).build();
-        } catch (IOException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+    @Produces("APPLICATION/JSON")
+    public Response getUserPicture(@HeaderParam("token") String token, @QueryParam("id") long id){
+        String path = imageBean.getUserImageString(token,id);
+        System.out.println(Color.RED+"User image path: "+path+"."+Color.RED);
+        return Response.ok().entity(path).build();
     }
 
 

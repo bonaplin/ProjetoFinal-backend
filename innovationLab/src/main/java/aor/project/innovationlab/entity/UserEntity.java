@@ -1,5 +1,6 @@
 package aor.project.innovationlab.entity;
 
+import aor.project.innovationlab.bean.ImageBean;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.persistence.*;
 
@@ -60,12 +61,12 @@ public class UserEntity implements Serializable {
 
     @Column(name="confirmed", nullable = false, unique = false, updatable = true)
     private Boolean confirmed = false;
-
-    @Column(name = "profile_image_type", nullable = true, updatable = true)
-    private String profileImageType;
+//
+//    @Column(name = "profile_image_type", nullable = true, updatable = true)
+//    private String profileImageType;
 
     @Column(name="profile_image_path", nullable = true, updatable = true)
-    private String profileImagePath;
+    private String profileImagePath = ImageBean.DEFAULT_IMAGE_PATH;
 
     @Column(name="private_profile", nullable = false, updatable = true)
     private Boolean privateProfile = true;
@@ -93,9 +94,9 @@ public class UserEntity implements Serializable {
     public UserEntity() {
     }
 
-    public String getProfileImageType() {
-        return profileImageType;
-    }
+//    public String getProfileImageType() {
+//        return profileImageType;
+//    }
 
     public String getProfileImagePath() {
         return profileImagePath;
@@ -105,9 +106,9 @@ public class UserEntity implements Serializable {
         this.profileImagePath = profileImagePath;
     }
 
-    public void setProfileImageType(String profileImageType) {
-        this.profileImageType = profileImageType;
-    }
+//    public void setProfileImageType(String profileImageType) {
+//        this.profileImageType = profileImageType;
+//    }
 
     public String getUsername() {
         return username;
@@ -261,6 +262,7 @@ public class UserEntity implements Serializable {
         if (!isValid()) {
             throw new IllegalStateException("Invalid log entity");
         }
+
     }
 
     public boolean isValid() {
