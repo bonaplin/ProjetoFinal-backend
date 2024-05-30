@@ -2,15 +2,15 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.dto.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
-import aor.project.innovationlab.entity.LogEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.enums.TokenStatus;
-import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
@@ -18,7 +18,7 @@ import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.Date;
 
 @ApplicationScoped
 public class SessionBean  {
@@ -28,7 +28,10 @@ public class SessionBean  {
     @EJB
     private SessionDao sessionDao;
 
-    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 5;
+    @EJB
+    private JwtBean jwtService;
+
+    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 1;
 
     /**
      * Method to set the default expiration time of a token
@@ -163,8 +166,14 @@ public class SessionBean  {
         String log = "Attempting to create a session";
         SessionEntity sessionEntity = new SessionEntity();
         sessionEntity.setUser(userEntity);
-        sessionEntity.setToken(TokenUtil.generateToken());
-        sessionEntity.setExpirationDate(generateExpirationDate());
+
+        String token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
+
+        Claims claims = jwtService.decodeJWT(token);
+        Date expirationDate = claims.getExpiration();
+
+        sessionEntity.setToken(token);
+        sessionEntity.setExpirationDate(expirationDate.toInstant());
 
         while (true) {
             try {
@@ -174,7 +183,8 @@ public class SessionBean  {
             } catch (PersistenceException e) { // if the session is not persisted, generate a new token
                 if (e.getCause() instanceof ConstraintViolationException) {
                     LoggerUtil.logError(log, "Token already exists, will try another one",userEntity.getEmail(),sessionEntity.getToken());
-                    sessionEntity.setToken(UUID.randomUUID().toString());
+                    token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
+                    sessionEntity.setToken(token);
                 } else {
                     LoggerUtil.logError(log, "Error while creating session",userEntity.getEmail(),sessionEntity.getToken());
                     throw e; // if the exception is not a ConstraintViolationException, throw it
@@ -188,7 +198,7 @@ public class SessionBean  {
      * Method to generate the expiration date of a session
      * @return
      */
-    private Instant generateExpirationDate() {
+    public Instant generateExpirationDate() {
         return Instant.now().plus(Duration.ofMinutes(DEFAULT_TOKEN_EXPIRATION_MINUTES));
     }
 
@@ -212,5 +222,13 @@ public class SessionBean  {
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null) return null;
         return sessionEntity.getUser();
+    }
+
+    public String getTokenFromAuthorizationHeader(String authorizationHeader) {
+        System.out.println("Authorization header: " + authorizationHeader);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid authorization header");
+        }
+        return authorizationHeader.substring("Bearer".length()).trim();
     }
 }
