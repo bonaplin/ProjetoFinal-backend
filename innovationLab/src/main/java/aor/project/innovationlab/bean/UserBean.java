@@ -20,7 +20,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
-import jakarta.validation.constraints.Email;
 
 import java.time.Duration;
 import java.time.Instant;
