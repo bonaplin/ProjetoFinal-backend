@@ -2,15 +2,16 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
+import aor.project.innovationlab.dto.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.UserConfirmAccountDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
-import aor.project.innovationlab.exception.UserCreationException;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -22,6 +23,9 @@ public class UserService {
 
     @Inject
     private UserBean userBean;
+
+    @Inject
+    private JwtBean jwtService;
 
     public UserService() {
     }
@@ -35,7 +39,6 @@ public class UserService {
 
     @POST
     @Path("/login")
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(UserLogInDto userLogInDto) {
         SessionLoginDto sessionLoginDto = userBean.loginWithValidation(userLogInDto);
@@ -45,8 +48,8 @@ public class UserService {
     @POST
     @Path("/logout")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response logout(@HeaderParam("token") String token) {
-        sessionBean.logout(token);
+    public Response logout(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        sessionBean.logout(sessionBean.getTokenFromAuthorizationHeader(authorizationHeader));
         return Response.status(200).entity("See you soon!").build();
     }
 

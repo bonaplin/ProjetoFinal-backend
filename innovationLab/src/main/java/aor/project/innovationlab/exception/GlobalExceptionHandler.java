@@ -19,6 +19,8 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } else if (e instanceof IOException) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("IO exception occurred.").build();
+        } else if (e instanceof io.jsonwebtoken.security.SignatureException) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("JWT validity cannot be asserted and should not be trusted.").build();
         } else if (e instanceof RuntimeException) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
         } else {
