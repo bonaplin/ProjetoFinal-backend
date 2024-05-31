@@ -142,10 +142,12 @@ public class ImageBean {
      */
     public String saveUserProfileImage(String token, InputStream imageData) {
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
+
         if (userEntity == null) {
             throw new IllegalArgumentException("User not found with token: " + token);
         }
 
+        System.out.println("User found with token: " + token);
         long userId = userEntity.getId();
 
 //        String imageType = "image/" + getFileExtension(IMAGE_TYPE);
