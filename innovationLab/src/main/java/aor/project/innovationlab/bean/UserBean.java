@@ -378,11 +378,13 @@ public class UserBean {
         userOwnerProfileDto.setEmail(userEntity.getEmail());
         userOwnerProfileDto.setFirstname(userEntity.getFirstname());
         userOwnerProfileDto.setLastname(userEntity.getLastname());
-        userOwnerProfileDto.setPhone(userEntity.getPhone());
+
         userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
-        if(userEntity.getPrivateProfile() || userId == userEntity.getId()){
+        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
+        if(!userEntity.getPrivateProfile() || userId == userEntity.getId()){
             userOwnerProfileDto.setRole(userEntity.getRole().getValue());
             userOwnerProfileDto.setSkills(skillBean.getUserSkills(email));
+            userOwnerProfileDto.setPhone(userEntity.getPhone());
             userOwnerProfileDto.setLab(userEntity.getLab().getLocation());
             userOwnerProfileDto.setInterests(interestBean.getUserInterests(email));
         }

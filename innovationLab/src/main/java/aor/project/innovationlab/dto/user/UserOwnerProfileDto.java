@@ -14,6 +14,7 @@ public class UserOwnerProfileDto {
     private String phone;
     private boolean privateProfile;
     private int role;
+    private String imagePath;
     private List<SkillDto> skills;
     private List<InterestDto> interests;
 
@@ -98,5 +99,13 @@ public class UserOwnerProfileDto {
 
     public void setSkills(List<SkillDto> skills) {
         this.skills = skills;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 }
