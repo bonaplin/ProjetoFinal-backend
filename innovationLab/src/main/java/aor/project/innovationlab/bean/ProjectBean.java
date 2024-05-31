@@ -12,6 +12,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectBean {
@@ -55,7 +58,18 @@ public class ProjectBean {
     public void toEntity(ProjectDto dto) {
     }
 
-    public void toDto(ProjectEntity entity) {
+    private ProjectDto toDto(ProjectEntity entity) {
+        ProjectDto dto = new ProjectDto();
+        dto.setName(entity.getName());
+        dto.setActive(entity.isActive());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedDate(entity.getCreatedDate());
+        dto.setStartDate(entity.getStartDate());
+        dto.setEndDate(entity.getEndDate());
+        dto.setFinishDate(entity.getFinishDate());
+        dto.setStatus(entity.getStatus().toString());
+
+        return dto;
     }
 
     /**
@@ -237,5 +251,17 @@ public class ProjectBean {
         // Adiciona o usuário ao array de usuários do projeto
         project.getProjectUsers().add(projectUser);
         projectDao.merge(project);
+    }
+
+    public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
+        UserEntity user = userDao.findUserByEmail(userEmail);
+        if(user == null) {
+            return new ArrayList<>();
+        }
+        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
+        return projectUsers.stream()
+                .map(ProjectUserEntity::getProject)
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 }
