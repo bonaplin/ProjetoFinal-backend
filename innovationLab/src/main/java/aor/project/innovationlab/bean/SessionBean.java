@@ -31,7 +31,7 @@ public class SessionBean  {
     @EJB
     private JwtBean jwtService;
 
-    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 1;
+    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 60;
 
     /**
      * Method to set the default expiration time of a token
