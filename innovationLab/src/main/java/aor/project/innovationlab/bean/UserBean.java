@@ -1,11 +1,9 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
-import aor.project.innovationlab.dto.user.UserChangePasswordDto;
-import aor.project.innovationlab.dto.user.UserConfirmAccountDto;
-import aor.project.innovationlab.dto.user.UserLogInDto;
-import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
+import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
@@ -375,18 +373,18 @@ public class UserBean {
         UserOwnerProfileDto userOwnerProfileDto = new UserOwnerProfileDto();
 
         userOwnerProfileDto.setUsername(userEntity.getUsername());
-        userOwnerProfileDto.setEmail(userEntity.getEmail());
+//        userOwnerProfileDto.setEmail(userEntity.getEmail());
         userOwnerProfileDto.setFirstname(userEntity.getFirstname());
         userOwnerProfileDto.setLastname(userEntity.getLastname());
-
+        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
         userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
         userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
         if(!userEntity.getPrivateProfile() || userId == userEntity.getId()){
             userOwnerProfileDto.setRole(userEntity.getRole().getValue());
-            userOwnerProfileDto.setSkills(skillBean.getUserSkills(email));
-            userOwnerProfileDto.setPhone(userEntity.getPhone());
-            userOwnerProfileDto.setLab(userEntity.getLab().getLocation());
-            userOwnerProfileDto.setInterests(interestBean.getUserInterests(email));
+//            userOwnerProfileDto.setPhone(userEntity.getPhone());
+            userOwnerProfileDto.setLab((userEntity.getLab().getId()));
+            userOwnerProfileDto.setAbout(userEntity.getAbout());
+
         }
         LoggerUtil.logInfo(log,"User profile retrieved",email,token);
         return userOwnerProfileDto;
@@ -443,5 +441,42 @@ public class UserBean {
         }
         LoggerUtil.logInfo(log, "User logged in", userLogInDto.getEmail(), sessionLoginDto.getToken());
         return sessionLoginDto;
+    }
+
+    public void updateUser(String token, UserOwnerProfileDto dto) {
+        String log = "Attempt to update user";
+        UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
+        if (userEntity == null) {
+            LoggerUtil.logError(log,"User not found.",null,token);
+            throw new IllegalArgumentException("User not found.");
+        }
+        sessionBean.validateUserToken(token);
+        if(dto.getUsername() != null){
+            userEntity.setUsername(dto.getUsername());
+        }
+        if(dto.getFirstname() != null){
+            userEntity.setFirstname(dto.getFirstname());
+        }
+        if(dto.getLastname() != null){
+            userEntity.setLastname(dto.getLastname());
+        }
+        if(dto.getLab() != 0){
+            LabEntity lab = labDao.findLabById(dto.getLab());
+            if(lab == null){
+                LoggerUtil.logError(log,"Lab not found with id: "+dto.getLab(),userEntity.getEmail(),token);
+                throw new IllegalArgumentException("Lab not found.");
+            }
+            System.out.println(Color.PURPLE+"lab"+lab.getLocation()+Color.PURPLE);
+            userEntity.setLab(lab);
+        }
+        if(dto.getAbout() != null){
+            userEntity.setAbout(dto.getAbout());
+        }
+        if(dto.getImagePath() != null){
+            userEntity.setProfileImagePath(dto.getImagePath());
+        }
+        userDao.merge(userEntity);
+        LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
+        System.out.println(Color.PURPLE+"atualizado"+userEntity.getEmail()+Color.PURPLE);
     }
 }

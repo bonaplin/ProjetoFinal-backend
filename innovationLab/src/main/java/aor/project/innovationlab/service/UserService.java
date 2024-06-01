@@ -4,10 +4,7 @@ import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 import aor.project.innovationlab.dto.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
-import aor.project.innovationlab.dto.user.UserChangePasswordDto;
-import aor.project.innovationlab.dto.user.UserConfirmAccountDto;
-import aor.project.innovationlab.dto.user.UserLogInDto;
-import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
+import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -60,6 +57,17 @@ public class UserService {
     public Response createUser(UserLogInDto userLogInDto) {
         userBean.createNewUser(userLogInDto);
         return Response.status(201).entity("Email sending").build();
+    }
+
+    @PUT
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUser(@HeaderParam("token") String token, UserOwnerProfileDto dto) {
+        System.out.println("Token: " + token);
+        System.out.println("DTO: " + dto.toString());
+        userBean.updateUser(token, dto);
+        return Response.status(200).entity("User updated successfully.").build();
     }
 
     @POST
