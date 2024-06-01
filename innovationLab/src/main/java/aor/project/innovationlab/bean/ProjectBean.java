@@ -3,10 +3,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.LogType;
-import aor.project.innovationlab.enums.NotificationType;
-import aor.project.innovationlab.enums.ProductStatus;
-import aor.project.innovationlab.enums.ProjectUserType;
+import aor.project.innovationlab.enums.*;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -130,8 +127,10 @@ public class ProjectBean {
     }
 
     public void createInitialData() {
-        createProjectIfNotExists("Project 1", "Description 1", "admin@admin", "Coimbra");
-
+        createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
     }
 
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
@@ -321,6 +320,15 @@ public class ProjectBean {
         List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
         return projectUsers.stream()
                 .map(ProjectUserEntity::getProject)
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProjectDto> getProjects(String name, ProjectStatus status,
+                                        Long labId, String creatorEmail,
+                                        String skill, String interest, String participantEmail){
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail);
+        return projects.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
