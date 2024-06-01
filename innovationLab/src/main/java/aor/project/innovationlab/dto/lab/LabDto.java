@@ -10,6 +10,10 @@ public class LabDto {
     public LabDto() {
     }
 
+    public LabDto(int id, String location) {
+        this.id = id;
+        this.location = location;
+    }
 //    public int getCapacity() {
 //        return capacity;
 //    }
