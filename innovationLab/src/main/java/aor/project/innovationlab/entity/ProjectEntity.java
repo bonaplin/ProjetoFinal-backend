@@ -59,6 +59,9 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskEntity> tasks = new HashSet<>();
 
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ProjectSkillEntity> projectSkills = new HashSet<>();
+
     @Column(name = "active", nullable = false, unique = false)
     private boolean active = true;
 
@@ -78,7 +81,7 @@ public class ProjectEntity implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        createdDate = LocalDate.now();
+        this.createdDate = LocalDate.now();
         status = ProjectStatus.PLANNING;
     }
 
@@ -205,4 +208,14 @@ public class ProjectEntity implements Serializable {
     public void setMessages(Set<MessageEntity> messages) {
         this.messages = messages;
     }
+
+    public Set<ProjectSkillEntity> getProjectSkills() {
+        return projectSkills;
+    }
+
+    public void setProjectSkills(Set<ProjectSkillEntity> projectSkills) {
+        this.projectSkills = projectSkills;
+    }
+
+
 }

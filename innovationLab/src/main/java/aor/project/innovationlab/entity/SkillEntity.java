@@ -33,6 +33,9 @@ public class SkillEntity implements Serializable {
     @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<UserSkillEntity> userSkills = new ArrayList<>();
 
+    @OneToMany(mappedBy = "skill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ProjectSkillEntity> projectSkills = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(name = "skill_type", nullable = false)
     private SkillType skillType;
@@ -91,6 +94,14 @@ public class SkillEntity implements Serializable {
     //ADD_SKILL_TO_USER
     public List<UserSkillEntity> getUserSkills() {
         return userSkills;
+    }
+
+    public List<ProjectSkillEntity> getProjectSkills() {
+        return projectSkills;
+    }
+
+    public void setProjectSkills(List<ProjectSkillEntity> projectSkills) {
+        this.projectSkills = projectSkills;
     }
 
     @Override

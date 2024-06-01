@@ -43,6 +43,12 @@ public class ProjectBean {
     @EJB
     private ProjectProductDao projectProductDao;
 
+    @EJB
+    private ProjectSkillDao projectSkillDao;
+
+    @EJB
+    private SkillDao skillDao;
+
     @Inject
     private MessageBean messageBean;
 
@@ -68,6 +74,7 @@ public class ProjectBean {
         dto.setEndDate(entity.getEndDate());
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
+        dto.setLab_id(entity.getLab().getId());
 
         return dto;
     }
@@ -124,6 +131,7 @@ public class ProjectBean {
 
     public void createInitialData() {
         createProjectIfNotExists("Project 1", "Description 1", "admin@admin", "Coimbra");
+
     }
 
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
@@ -148,6 +156,10 @@ public class ProjectBean {
             addInterestToProject(name, "Interest 2");
             addResourceToProject(name,"123456788");
 
+            addSkillToProject(name, "Java");
+
+            removeSkillFromProject(name, "Java");
+            addSkillToProject(name, "Java");
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 
@@ -251,6 +263,54 @@ public class ProjectBean {
         // Adiciona o usuário ao array de usuários do projeto
         project.getProjectUsers().add(projectUser);
         projectDao.merge(project);
+    }
+
+    public void addSkillToProject(String projectName, String skillName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            return;
+        }
+
+        ProjectSkillEntity projectSkill = projectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skill.getId());
+        if(projectSkill != null) {
+            projectSkill.setActive(true);
+        }
+        else{
+            projectSkill = new ProjectSkillEntity();
+            projectSkill.setProject(project);
+            projectSkill.setSkill(skill);
+            projectSkillDao.persist(projectSkill);
+        }
+
+        // Adiciona o skill ao array de skills do projeto
+        project.getProjectSkills().add(projectSkill);
+        projectDao.merge(project);
+        projectSkillDao.merge(projectSkill); // Adicione esta linha
+    }
+
+    public void removeSkillFromProject(String projectName, String skillName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            return;
+        }
+
+        ProjectSkillEntity projectSkill = projectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skill.getId());
+        if(projectSkill != null) {
+            projectSkill.setActive(false);
+            projectSkillDao.merge(projectSkill);
+
+            // Remove o skill do array de skills do projeto
+            project.getProjectSkills().remove(projectSkill);
+            projectDao.merge(project);
+        }
     }
 
     public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
