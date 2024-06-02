@@ -1,6 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
@@ -73,6 +74,23 @@ public class ProjectBean {
         dto.setStatus(entity.getStatus().toString());
         dto.setLab_id(entity.getLab().getId());
 
+        return dto;
+    }
+
+    private ProjectCardDto toCardDto(ProjectEntity entity) {
+        ProjectCardDto dto = new ProjectCardDto();
+        dto.setId(entity.getId());
+        dto.setTitle(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setKeywords(entity.getProjectInterests().stream()
+                .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
+                .map(InterestEntity::getName) // Obtém o nome
+                .collect(Collectors.toList()));
+
+        dto.setSkills(entity.getProjectSkills().stream()
+                .map(ProjectSkillEntity::getSkill) // Mapeia para SkillEntity
+                .map(SkillEntity::getName) // Obtém o nome
+                .collect(Collectors.toList()));
         return dto;
     }
 
@@ -325,13 +343,13 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
-    public List<ProjectDto> getProjects(String name, ProjectStatus status,
+    public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
                                         Long labId, String creatorEmail,
                                         String skill, String interest,
                                         String participantEmail, ProjectUserType role){
         List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role);
         return projects.stream()
-                .map(this::toDto)
+                .map(this::toCardDto)
                 .collect(Collectors.toList());
     }
 }
