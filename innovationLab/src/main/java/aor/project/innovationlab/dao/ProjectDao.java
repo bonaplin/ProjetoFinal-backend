@@ -48,7 +48,8 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                             String skill,
                                             String interest,
                                             String participantEmail,
-                                            ProjectUserType role) {
+                                            ProjectUserType role,
+                                            String requestingUserEmail) {
 
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
@@ -98,6 +99,19 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                 predicates.add(cb.equal(userJoin.get("role"), role));
             }
         }
+
+        //Order by creator, participant, other
+        Join<ProjectEntity, ProjectUserEntity> projectUserJoin = project.join("projectUsers");
+        Join<ProjectUserEntity, UserEntity> userJoin = projectUserJoin.join("user");
+
+        //Create expression to order by creator, participant, other
+        Expression<Integer> orderByExpression = cb.<Integer>selectCase()
+                .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1) // Se o user que faz o pedido é criador, atribui 1
+                .when(cb.equal(userJoin.get("email"), requestingUserEmail), 2) // Se o user que faz o pedido é participante, atribui 2
+                .otherwise(3) // Se o user que faz o pedido não é nem criador nem participante, atribui 3
+                .as(Integer.class); // Converte a Expression<Object> em uma Expression<Integer>
+
+        cq.orderBy(cb.asc(orderByExpression));
         //Add predicates to query and return result
         cq.where(predicates.toArray(new Predicate[0]));
         return em.createQuery(cq).getResultList();
