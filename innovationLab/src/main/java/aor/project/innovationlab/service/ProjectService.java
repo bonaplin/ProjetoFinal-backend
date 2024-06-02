@@ -4,6 +4,7 @@ import aor.project.innovationlab.bean.ProjectBean;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.enums.ProjectStatus;
+import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -41,8 +42,9 @@ public class ProjectService {
                                 @QueryParam("creator_email") String creatorEmail,
                                 @QueryParam("skill") String skill,
                                 @QueryParam("interest") String interest,
-                                @QueryParam("participant_email") String participantEmail) {
-        List<ProjectDto> dto = projectBean.getProjects(name, status, labId, creatorEmail, skill, interest, participantEmail );
+                                @QueryParam("participant_email") String participantEmail,
+                                @QueryParam("role") ProjectUserType role) {
+        List<ProjectDto> dto = projectBean.getProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role);
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

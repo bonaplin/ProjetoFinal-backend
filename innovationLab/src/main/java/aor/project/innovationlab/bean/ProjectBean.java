@@ -327,8 +327,9 @@ public class ProjectBean {
 
     public List<ProjectDto> getProjects(String name, ProjectStatus status,
                                         Long labId, String creatorEmail,
-                                        String skill, String interest, String participantEmail){
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail);
+                                        String skill, String interest,
+                                        String participantEmail, ProjectUserType role){
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role);
         return projects.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
