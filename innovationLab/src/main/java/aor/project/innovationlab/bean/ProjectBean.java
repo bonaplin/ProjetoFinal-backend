@@ -343,11 +343,15 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
+    // requestingUserEmail é o email do usuário que está fazendo a solicitação
+    // e serve apenas para testes.
     public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
                                         Long labId, String creatorEmail,
                                         String skill, String interest,
-                                        String participantEmail, ProjectUserType role){
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role);
+                                        String participantEmail,
+                                        ProjectUserType role,
+                                            String requestingUserEmail){
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, requestingUserEmail);
         return projects.stream()
                 .map(this::toCardDto)
                 .collect(Collectors.toList());
