@@ -46,7 +46,7 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectUserEntity> projectUsers = new HashSet<>();
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProjectInterestEntity> projectInterests = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -59,7 +59,7 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskEntity> tasks = new HashSet<>();
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProjectSkillEntity> projectSkills = new HashSet<>();
 
     @Column(name = "active", nullable = false, unique = false)
@@ -217,5 +217,11 @@ public class ProjectEntity implements Serializable {
         this.projectSkills = projectSkills;
     }
 
+    public Set<ProjectInterestEntity> getProjectInterests() {
+        return projectInterests;
+    }
 
+    public void setProjectInterests(Set<ProjectInterestEntity> projectInterests) {
+        this.projectInterests = projectInterests;
+    }
 }
