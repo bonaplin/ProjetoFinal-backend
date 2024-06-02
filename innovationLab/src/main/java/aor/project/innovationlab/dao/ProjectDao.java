@@ -2,6 +2,10 @@ package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
+import aor.project.innovationlab.enums.ProjectUserType;
+import aor.project.innovationlab.utils.InputSanitizerUtil;
+import aor.project.innovationlab.utils.PasswordUtil;
+import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.*;
 
@@ -37,9 +41,32 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         }
     }
 
-    public List<ProjectEntity> findProjects(String name, ProjectStatus status,
-                                            Long labId, String creatorEmail,
-                                            String skill, String interest, String participantEmail) {
+    public List<ProjectEntity> findProjects(String name,
+                                            ProjectStatus status,
+                                            Long labId,
+                                            String creatorEmail,
+                                            String skill,
+                                            String interest,
+                                            String participantEmail,
+                                            ProjectUserType role) {
+
+        //Validate inputs
+        name = InputSanitizerUtil.sanitizeInput(name);
+        creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
+        skill = InputSanitizerUtil.sanitizeInput(skill);
+        interest = InputSanitizerUtil.sanitizeInput(interest);
+        participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
+
+
+        //Validate email
+        if(creatorEmail != null && !UserValidator.validateEmail(creatorEmail)){
+            throw new IllegalArgumentException("Invalid creator email");
+        }
+        if(participantEmail != null && !UserValidator.validateEmail(participantEmail)){
+            throw new IllegalArgumentException("Invalid participant email");
+        }
+
+        //Create query and add predicates
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
         Root<ProjectEntity> project = cq.from(ProjectEntity.class);
@@ -50,7 +77,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         if (status != null) {
             predicates.add(cb.equal(project.get("status"), status));
         }
-        if (labId != null) {
+        if (labId != null && labId > 0L && em.find(LabEntity.class, labId) != null) {
             predicates.add(cb.equal(project.get("lab").get("id"), labId));
         }
         if (creatorEmail != null) {
@@ -67,7 +94,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         if (participantEmail != null) {
             Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers");
             predicates.add(cb.equal(userJoin.get("user").get("email"), participantEmail));
+            if(role != null) {
+                predicates.add(cb.equal(userJoin.get("role"), role));
+            }
         }
+        //Add predicates to query and return result
         cq.where(predicates.toArray(new Predicate[0]));
         return em.createQuery(cq).getResultList();
     }

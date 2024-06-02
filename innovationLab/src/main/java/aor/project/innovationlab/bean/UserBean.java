@@ -6,6 +6,7 @@ import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
@@ -21,6 +22,8 @@ import jakarta.persistence.TransactionRequiredException;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class UserBean {
@@ -62,22 +65,23 @@ public class UserBean {
 //        return userEntity;
 //    }
 
-    //convert entity to dto
-//    public UserDto toDto(UserEntity userEntity) {
-//        UserDto userDto = new UserDto();
-//        userDto.setId(userEntity.getId());
-//        userDto.setUsername(userEntity.getUsername());
+//    convert entity to dto
+    public UserDto toDto(UserEntity userEntity) {
+        System.out.println(Color.PURPLE+"userEntity"+userEntity.getEmail()+Color.PURPLE);
+        UserDto userDto = new UserDto();
+        userDto.setId(userEntity.getId());
+        userDto.setUsername(userEntity.getUsername());
 //        userDto.setPassword(userEntity.getPassword());
-//        userDto.setEmail(userEntity.getEmail());
-//        userDto.setFirstname(userEntity.getFirstname());
-//        userDto.setLastname(userEntity.getLastname());
+        userDto.setEmail(userEntity.getEmail());
+        userDto.setFirstname(userEntity.getFirstname());
+        userDto.setLastname(userEntity.getLastname());
 //        userDto.setPhone(userEntity.getPhone());
-//        userDto.setActive(userEntity.getActive().toString());
-//        userDto.setConfirmed(userEntity.getConfirmed().toString());
-//        userDto.setRole(userEntity.getRole());
-//        userDto.setLablocation(userEntity.getLab().getLocation());
-//        return userDto;
-//    }
+        userDto.setActive(userEntity.getActive().toString());
+        userDto.setConfirmed(userEntity.getConfirmed().toString());
+        userDto.setRole(userEntity.getRole().name());
+        userDto.setLablocation(userEntity.getLab().getLocation());
+        return userDto;
+    }
 
     /**
      * Creates the initial data for the application
@@ -478,5 +482,21 @@ public class UserBean {
         userDao.merge(userEntity);
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
         System.out.println(Color.PURPLE+"atualizado"+userEntity.getEmail()+Color.PURPLE);
+    }
+
+    public List<UserDto> getUsers(String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
+        String log = "Attempt to get users";
+        if(email != null && !UserValidator.validateEmail(email)){
+            LoggerUtil.logError(log,"Invalid email format.",email,null);
+            throw new IllegalArgumentException("Invalid email format.");
+        }
+        LoggerUtil.logInfo(log,"Users retrieved",null,null);
+        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId);
+//                role,
+
+        return users.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
     }
 }
