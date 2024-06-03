@@ -84,6 +84,7 @@ public class ProjectBean {
         ProjectCardDto dto = new ProjectCardDto();
         dto.setId(entity.getId());
         dto.setTitle(entity.getName());
+        dto.setStatus(entity.getStatus());
         dto.setDescription(entity.getDescription());
         dto.setKeywords(entity.getProjectInterests().stream()
                 .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
