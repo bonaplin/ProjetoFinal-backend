@@ -50,4 +50,25 @@ public class ProjectService {
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 
-}
+    @GET
+    @Path("/search/{dtoType}")
+    @Produces("application/json")
+    public Response getProjectsByDto(
+                                @PathParam("dtoType") String dtoType,
+                                @QueryParam("name") String name,
+                                @QueryParam("status") ProjectStatus status,
+                                @QueryParam("lab_id") Long labId,
+                                @QueryParam("creator_email") String creatorEmail,
+                                @QueryParam("skill") String skill,
+                                @QueryParam("interest") String interest,
+                                @QueryParam("participant_email") String participantEmail,
+                                @QueryParam("role") ProjectUserType role,
+                                @HeaderParam("token") String token) {
+
+                List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, labId, creatorEmail, skill, interest, participantEmail, role, token);
+
+                return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
+        }
+    }
+
+
