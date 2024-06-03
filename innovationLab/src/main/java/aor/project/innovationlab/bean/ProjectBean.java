@@ -68,6 +68,7 @@ public class ProjectBean {
         dto.setEndDate(entity.getEndDate());
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
+        dto.setLab_id(entity.getLab().getId());
 
         return dto;
     }
@@ -254,9 +255,10 @@ public class ProjectBean {
     }
 
     public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
-        UserEntity user = userDao.findUserByEmail(userEmail);
+        UserEntity user = userDao.findUserBySessionToken(token);
         if(user == null) {
-            return new ArrayList<>();
+            System.out.println("User not found");
+            return null;
         }
         List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
         return projectUsers.stream()
