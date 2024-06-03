@@ -103,7 +103,7 @@ public class UserBean {
         String log = "Attempt to create user if not exists";
         if(userDao.findUserByEmail(email) != null){
             LoggerUtil.logError(log,"Email already exists.",email,null);
-            throw new IllegalArgumentException("Email already exists.");
+            return;
         }
         UserEntity user = new UserEntity();
         user.setEmail(email);
@@ -134,6 +134,7 @@ public class UserBean {
             LoggerUtil.logError(log,"UserLogInDto is null.",null,null);
             throw new IllegalArgumentException("Please fill all the fields.");
         }
+        System.out.println(Color.PURPLE+userLogInDto.getEmail()+Color.PURPLE);
         String email = userLogInDto.getEmail();
         String password = userLogInDto.getPassword();
         String confirmPassword = userLogInDto.getConfirmPassword();

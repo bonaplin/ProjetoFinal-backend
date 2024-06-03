@@ -45,8 +45,8 @@ public class ProjectService {
                                 @QueryParam("interest") String interest,
                                 @QueryParam("participant_email") String participantEmail,
                                 @QueryParam("role") ProjectUserType role,
-                                @QueryParam("requesting_user_email") String requestingUserEmail) {
-        List<ProjectCardDto> dto = projectBean.getProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, requestingUserEmail);
+                                @HeaderParam("token") String token) {
+        List<ProjectCardDto> dto = projectBean.getProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, token);
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

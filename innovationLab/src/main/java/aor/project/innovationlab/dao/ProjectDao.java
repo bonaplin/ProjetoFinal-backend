@@ -95,9 +95,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         if (participantEmail != null) {
             Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers");
             predicates.add(cb.equal(userJoin.get("user").get("email"), participantEmail));
-            if(role != null) {
-                predicates.add(cb.equal(userJoin.get("role"), role));
-            }
+            predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
         }
 
         //Order by creator, participant, other

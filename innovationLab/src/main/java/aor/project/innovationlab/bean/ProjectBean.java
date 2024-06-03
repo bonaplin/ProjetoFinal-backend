@@ -352,9 +352,17 @@ public class ProjectBean {
                                         Long labId, String creatorEmail,
                                         String skill, String interest,
                                         String participantEmail,
-                                        ProjectUserType role,
-                                            String requestingUserEmail){
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, requestingUserEmail);
+                                        ProjectUserType role, String token){
+
+
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            return new ArrayList<>();
+        }
+        UserEntity user = se.getUser();
+        String userEmail = user.getEmail();
+
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
         return projects.stream()
                 .map(this::toCardDto)
                 .collect(Collectors.toList());

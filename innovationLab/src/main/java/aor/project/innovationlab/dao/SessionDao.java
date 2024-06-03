@@ -15,6 +15,7 @@ public class SessionDao extends AbstractDao<SessionEntity> {
 
     public SessionEntity findSessionByToken(String token) {
         try {
+            System.out.println("Token no findSessionByToken: " + token);
             return (SessionEntity) em.createNamedQuery("Session.findSessionByToken").setParameter("token", token)
                     .getSingleResult();
 

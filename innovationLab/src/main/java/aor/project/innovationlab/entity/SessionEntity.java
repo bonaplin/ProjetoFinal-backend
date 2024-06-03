@@ -92,6 +92,7 @@ public class SessionEntity implements Serializable{
         this.user = user;
     }
 
+
     @PrePersist
     public void prePersist() {
         this.active = true;
