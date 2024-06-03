@@ -46,8 +46,8 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectUserEntity> projectUsers = new HashSet<>();
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<ProjectInterestEntity> interests = new HashSet<>();
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ProjectInterestEntity> projectInterests = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<MessageEntity> messages = new HashSet<>();
@@ -58,6 +58,9 @@ public class ProjectEntity implements Serializable {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TaskEntity> tasks = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<ProjectSkillEntity> projectSkills = new HashSet<>();
 
     @Column(name = "active", nullable = false, unique = false)
     private boolean active = true;
@@ -78,7 +81,7 @@ public class ProjectEntity implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        createdDate = LocalDate.now();
+        this.createdDate = LocalDate.now();
         status = ProjectStatus.PLANNING;
     }
 
@@ -115,11 +118,11 @@ public class ProjectEntity implements Serializable {
     }
 
     public Set<ProjectInterestEntity> getInterests() {
-        return interests;
+        return projectInterests;
     }
 
     public void setInterests(Set<ProjectInterestEntity> interests) {
-        this.interests = interests;
+        this.projectInterests = interests;
     }
 
     public long getId() {
@@ -204,5 +207,21 @@ public class ProjectEntity implements Serializable {
 
     public void setMessages(Set<MessageEntity> messages) {
         this.messages = messages;
+    }
+
+    public Set<ProjectSkillEntity> getProjectSkills() {
+        return projectSkills;
+    }
+
+    public void setProjectSkills(Set<ProjectSkillEntity> projectSkills) {
+        this.projectSkills = projectSkills;
+    }
+
+    public Set<ProjectInterestEntity> getProjectInterests() {
+        return projectInterests;
+    }
+
+    public void setProjectInterests(Set<ProjectInterestEntity> projectInterests) {
+        this.projectInterests = projectInterests;
     }
 }

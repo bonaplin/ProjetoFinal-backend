@@ -1,35 +1,27 @@
 package aor.project.innovationlab.dto.user;
 
 import aor.project.innovationlab.dto.interests.InterestDto;
+import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 
 import java.util.List;
 
 public class UserOwnerProfileDto {
     private String username;
-    private String email;
     private String firstname;
     private String lastname;
-    private String lab;
-    private String phone;
+    private int lab;
     private boolean privateProfile;
     private int role;
-    private List<SkillDto> skills;
-    private List<InterestDto> interests;
+    private String imagePath;
+    private String about;
+
 
     public UserOwnerProfileDto() {
     }
 
     public String getUsername() {
         return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public void setUsername(String username) {
@@ -44,14 +36,6 @@ public class UserOwnerProfileDto {
         this.privateProfile = privateProfile;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
     public String getLastname() {
         return lastname;
     }
@@ -60,20 +44,12 @@ public class UserOwnerProfileDto {
         this.lastname = lastname;
     }
 
-    public String getLab() {
+    public int getLab() {
         return lab;
     }
 
-    public void setLab(String lab) {
+    public void setLab(int lab) {
         this.lab = lab;
-    }
-
-    public List<InterestDto> getInterests() {
-        return interests;
-    }
-
-    public void setInterests(List<InterestDto> interests) {
-        this.interests = interests;
     }
 
     public String getFirstname() {
@@ -92,11 +68,33 @@ public class UserOwnerProfileDto {
         this.role = role;
     }
 
-    public List<SkillDto> getSkills() {
-        return skills;
+    public String getImagePath() {
+        return imagePath;
     }
 
-    public void setSkills(List<SkillDto> skills) {
-        this.skills = skills;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public String getAbout() {
+        return about;
+    }
+
+    public void setAbout(String about) {
+        this.about = about;
+    }
+
+    @Override
+    public String toString() {
+        return "UserOwnerProfileDto{" +
+                "about='" + about + '\'' +
+                ", username='" + username + '\'' +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", lab=" + lab +
+                ", privateProfile=" + privateProfile +
+                ", role=" + role +
+                ", imagePath='" + imagePath + '\'' +
+                '}';
     }
 }

@@ -3,11 +3,11 @@ package aor.project.innovationlab.dto.user;
 public class UserDto {
     private long id;
     private String username;
-    private String password;
+//    private String password;
     private String email;
     private String firstname;
     private String lastname;
-    private String phone;
+//    private String phone;
     private String active;
     private String confirmed;
     private String role;
@@ -28,13 +28,13 @@ public class UserDto {
         return lastname;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
+//    public String getPassword() {
+//        return password;
+//    }
+//
+//    public String getPhone() {
+//        return phone;
+//    }
 
     public String getUsername() {
         return username;
@@ -79,14 +79,14 @@ public class UserDto {
     public void setLastname(String lastname) {
         this.lastname = lastname;
     }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+//
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
+//
+//    public void setPhone(String phone) {
+//        this.phone = phone;
+//    }
 
     public void setUsername(String username) {
         this.username = username;
@@ -109,11 +109,11 @@ public class UserDto {
         return "UserDto{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
+
                 ", email='" + email + '\'' +
                 ", firstname='" + firstname + '\'' +
                 ", lastname='" + lastname + '\'' +
-                ", phone='" + phone + '\'' +
+
                 ", active='" + active + '\'' +
                 ", confirmed='" + confirmed + '\'' +
                 ", userType='" + role + '\'' +

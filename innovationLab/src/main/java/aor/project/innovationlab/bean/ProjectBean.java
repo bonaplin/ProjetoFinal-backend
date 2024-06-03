@@ -1,17 +1,18 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.LogType;
-import aor.project.innovationlab.enums.NotificationType;
-import aor.project.innovationlab.enums.ProductStatus;
-import aor.project.innovationlab.enums.ProjectUserType;
+import aor.project.innovationlab.enums.*;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectBean {
@@ -32,6 +33,9 @@ public class ProjectBean {
     private LabDao labDao;
 
     @EJB
+    private SessionDao sessionDao;
+
+    @EJB
     private ProductDao productDao;
 
     @EJB
@@ -39,6 +43,12 @@ public class ProjectBean {
 
     @EJB
     private ProjectProductDao projectProductDao;
+
+    @EJB
+    private ProjectSkillDao projectSkillDao;
+
+    @EJB
+    private SkillDao skillDao;
 
     @Inject
     private MessageBean messageBean;
@@ -55,7 +65,36 @@ public class ProjectBean {
     public void toEntity(ProjectDto dto) {
     }
 
-    public void toDto(ProjectEntity entity) {
+    private ProjectDto toDto(ProjectEntity entity) {
+        ProjectDto dto = new ProjectDto();
+        dto.setName(entity.getName());
+        dto.setActive(entity.isActive());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedDate(entity.getCreatedDate());
+        dto.setStartDate(entity.getStartDate());
+        dto.setEndDate(entity.getEndDate());
+        dto.setFinishDate(entity.getFinishDate());
+        dto.setStatus(entity.getStatus().toString());
+        dto.setLab_id(entity.getLab().getId());
+
+        return dto;
+    }
+
+    private ProjectCardDto toCardDto(ProjectEntity entity) {
+        ProjectCardDto dto = new ProjectCardDto();
+        dto.setId(entity.getId());
+        dto.setTitle(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setKeywords(entity.getProjectInterests().stream()
+                .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
+                .map(InterestEntity::getName) // Obtém o nome
+                .collect(Collectors.toList()));
+
+        dto.setSkills(entity.getProjectSkills().stream()
+                .map(ProjectSkillEntity::getSkill) // Mapeia para SkillEntity
+                .map(SkillEntity::getName) // Obtém o nome
+                .collect(Collectors.toList()));
+        return dto;
     }
 
     /**
@@ -109,7 +148,10 @@ public class ProjectBean {
     }
 
     public void createInitialData() {
-        createProjectIfNotExists("Project 1", "Description 1", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
     }
 
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
@@ -134,6 +176,10 @@ public class ProjectBean {
             addInterestToProject(name, "Interest 2");
             addResourceToProject(name,"123456788");
 
+            addSkillToProject(name, "Java");
+
+            removeSkillFromProject(name, "Java");
+            addSkillToProject(name, "Java");
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 
@@ -237,5 +283,80 @@ public class ProjectBean {
         // Adiciona o usuário ao array de usuários do projeto
         project.getProjectUsers().add(projectUser);
         projectDao.merge(project);
+    }
+
+    public void addSkillToProject(String projectName, String skillName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            return;
+        }
+
+        ProjectSkillEntity projectSkill = projectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skill.getId());
+        if(projectSkill != null) {
+            projectSkill.setActive(true);
+        }
+        else{
+            projectSkill = new ProjectSkillEntity();
+            projectSkill.setProject(project);
+            projectSkill.setSkill(skill);
+            projectSkillDao.persist(projectSkill);
+        }
+
+        // Adiciona o skill ao array de skills do projeto
+        project.getProjectSkills().add(projectSkill);
+        projectDao.merge(project);
+        projectSkillDao.merge(projectSkill); // Adicione esta linha
+    }
+
+    public void removeSkillFromProject(String projectName, String skillName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return;
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillName);
+        if(skill == null) {
+            return;
+        }
+
+        ProjectSkillEntity projectSkill = projectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skill.getId());
+        if(projectSkill != null) {
+            projectSkill.setActive(false);
+            projectSkillDao.merge(projectSkill);
+
+            // Remove o skill do array de skills do projeto
+            project.getProjectSkills().remove(projectSkill);
+            projectDao.merge(project);
+        }
+    }
+
+    public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
+        UserEntity user = sessionDao.findSessionByToken(token).getUser();
+        if(user == null) {
+            System.out.println("User not found");
+            return null;
+        }
+        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
+        return projectUsers.stream()
+                .map(ProjectUserEntity::getProject)
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // requestingUserEmail é o email do usuário que está fazendo a solicitação
+    // e serve apenas para testes.
+    public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
+                                        Long labId, String creatorEmail,
+                                        String skill, String interest,
+                                        String participantEmail,
+                                        ProjectUserType role,
+                                            String requestingUserEmail){
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, requestingUserEmail);
+        return projects.stream()
+                .map(this::toCardDto)
+                .collect(Collectors.toList());
     }
 }

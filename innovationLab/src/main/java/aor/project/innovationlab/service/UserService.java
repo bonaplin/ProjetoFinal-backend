@@ -2,17 +2,18 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
+import aor.project.innovationlab.dto.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
-import aor.project.innovationlab.dto.user.UserChangePasswordDto;
-import aor.project.innovationlab.dto.user.UserConfirmAccountDto;
-import aor.project.innovationlab.dto.user.UserLogInDto;
-import aor.project.innovationlab.dto.user.UserOwnerProfileDto;
-import aor.project.innovationlab.exception.UserCreationException;
+import aor.project.innovationlab.dto.user.*;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import java.util.List;
 
 @Path("/users")
 public class UserService {
@@ -22,6 +23,9 @@ public class UserService {
 
     @Inject
     private UserBean userBean;
+
+    @Inject
+    private JwtBean jwtService;
 
     public UserService() {
     }
@@ -35,7 +39,6 @@ public class UserService {
 
     @POST
     @Path("/login")
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(UserLogInDto userLogInDto) {
         SessionLoginDto sessionLoginDto = userBean.loginWithValidation(userLogInDto);
@@ -45,8 +48,8 @@ public class UserService {
     @POST
     @Path("/logout")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response logout(@HeaderParam("token") String token) {
-        sessionBean.logout(token);
+    public Response logout(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        sessionBean.logout(sessionBean.getTokenFromAuthorizationHeader(authorizationHeader));
         return Response.status(200).entity("See you soon!").build();
     }
 
@@ -57,6 +60,17 @@ public class UserService {
     public Response createUser(UserLogInDto userLogInDto) {
         userBean.createNewUser(userLogInDto);
         return Response.status(201).entity("Email sending").build();
+    }
+
+    @PUT
+    @Path("/")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateUser(@HeaderParam("token") String token, UserOwnerProfileDto dto) {
+        System.out.println("Token: " + token);
+        System.out.println("DTO: " + dto.toString());
+        userBean.updateUser(token, dto);
+        return Response.status(200).entity("User updated successfully.").build();
     }
 
     @POST
@@ -93,6 +107,22 @@ public class UserService {
     public Response confirmAccount(@HeaderParam("token") String token, UserConfirmAccountDto dto) {
         userBean.confirmAccount(token, dto);
         return Response.status(200).entity("Account confirmed successfully!").build();
+    }
+
+    @GET
+    @Path("/search")
+    @Produces("application/json")
+    public Response searchUsers(@HeaderParam("token") String token,
+                                @QueryParam("username") String username,
+                                @QueryParam("email") String email,
+                                @QueryParam("firstname") String firstname,
+                                @QueryParam("lastname") String lastname,
+                                @QueryParam("role") UserType role, @QueryParam("active") Boolean active,
+                                @QueryParam("confirmed") Boolean confirmed,
+                                @QueryParam("privateProfile") Boolean privateProfile,
+                                @QueryParam("lab_id") Long labId) {
+        List<UserDto> dto = userBean.getUsers(username, email, firstname, lastname, role, active, confirmed, privateProfile, labId);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 
 
