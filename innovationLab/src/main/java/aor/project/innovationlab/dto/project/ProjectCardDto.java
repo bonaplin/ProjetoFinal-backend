@@ -5,18 +5,18 @@ import io.jsonwebtoken.lang.Strings;
 import java.util.List;
 
 public class ProjectCardDto {
-    Long id;
+    long id;
     String title;
     String description;
 //    String imageUrl;
     List<String> keywords;
     List<String> skill;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -57,11 +57,6 @@ public class ProjectCardDto {
 //public void setImageUrl(String imageUrl) {
 //    this.imageUrl = imageUrl;
 //}
-
-    public List<String> getSkill() {
-        return skill;
-    }
-
 
 //    }
 }
