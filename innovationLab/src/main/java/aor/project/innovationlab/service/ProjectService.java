@@ -51,7 +51,7 @@ public class ProjectService {
     }
 
     @GET
-    @Path("/search/{dtoType}")
+    @Path("/{dtoType}")
     @Produces("application/json")
     public Response getProjectsByDto(
                                 @PathParam("dtoType") String dtoType,
