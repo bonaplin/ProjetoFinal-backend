@@ -25,7 +25,11 @@ public class ProjectService {
     @Produces("application/json")
     public Response getProjectsByUser(@HeaderParam("token") String token, @QueryParam("email") String email) {
         List<ProjectDto> dto = projectBean.getProjectsByUser(token, email);
-        return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
+        if (dto == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized").build();
+        } else {
+            return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
+        }
     }
 
 

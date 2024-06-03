@@ -314,9 +314,10 @@ public class ProjectBean {
     }
 
     public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
-        UserEntity user = userDao.findUserByEmail(userEmail);
+        UserEntity user = userDao.findUserBySessionToken(token);
         if(user == null) {
-            return new ArrayList<>();
+            System.out.println("User not found");
+            return null;
         }
         List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
         return projectUsers.stream()
