@@ -33,6 +33,9 @@ public class ProjectBean {
     private LabDao labDao;
 
     @EJB
+    private SessionDao sessionDao;
+
+    @EJB
     private ProductDao productDao;
 
     @EJB
@@ -331,7 +334,7 @@ public class ProjectBean {
     }
 
     public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
-        UserEntity user = userDao.findUserBySessionToken(token);
+        UserEntity user = sessionDao.findSessionByToken(token).getUser();
         if(user == null) {
             System.out.println("User not found");
             return null;
