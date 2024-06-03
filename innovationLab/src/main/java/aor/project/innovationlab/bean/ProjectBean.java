@@ -3,6 +3,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
+import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
 import jakarta.ejb.EJB;
@@ -84,6 +85,7 @@ public class ProjectBean {
         ProjectCardDto dto = new ProjectCardDto();
         dto.setId(entity.getId());
         dto.setTitle(entity.getName());
+        dto.setStatus(entity.getStatus());
         dto.setDescription(entity.getDescription());
         dto.setKeywords(entity.getProjectInterests().stream()
                 .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
@@ -94,6 +96,14 @@ public class ProjectBean {
                 .map(ProjectSkillEntity::getSkill) // Mapeia para SkillEntity
                 .map(SkillEntity::getName) // Obtém o nome
                 .collect(Collectors.toList()));
+        return dto;
+    }
+
+    private ProjectSideBarDto toSideBarDto(ProjectEntity entity) {
+        ProjectSideBarDto dto = new ProjectSideBarDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setStatus(entity.getStatus());
         return dto;
     }
 
@@ -367,4 +377,39 @@ public class ProjectBean {
                 .map(this::toCardDto)
                 .collect(Collectors.toList());
     }
+
+    public List<?> getProjectsByDto(String dtoType, String name, ProjectStatus status,
+                               Long labId, String creatorEmail,
+                               String skill, String interest,
+                               String participantEmail,
+                               ProjectUserType role, String token){
+
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            return new ArrayList<>();
+        }
+        UserEntity user = se.getUser();
+        String userEmail = user.getEmail();
+
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
+
+        switch (dtoType) {
+            case "ProjectCardDto":
+                return projects.stream()
+                        .map(this::toCardDto)
+                        .collect(Collectors.toList());
+            case "ProjectDto":
+                return projects.stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList());
+                case "ProjectSideBarDto":
+            return projects.stream()
+                        .map(this::toSideBarDto)
+                        .collect(Collectors.toList());
+            default:
+                throw new IllegalArgumentException("Invalid dtoType");
+        }
+    }
+
+
 }
