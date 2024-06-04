@@ -2,7 +2,7 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.dto.jwt.JwtBean;
+import aor.project.innovationlab.utils.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.entity.SessionEntity;
@@ -224,11 +224,10 @@ public class SessionBean  {
         return sessionEntity.getUser();
     }
 
-    public String getTokenFromAuthorizationHeader(String authorizationHeader) {
-        System.out.println("Authorization header: " + authorizationHeader);
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+    public String getTokenFromAuthorizationHeader(String auth) {
+        if (auth == null || !auth.startsWith("Bearer ")) {
             throw new IllegalArgumentException("Invalid authorization header");
         }
-        return authorizationHeader.substring("Bearer".length()).trim();
+        return auth.substring("Bearer".length()).trim();
     }
 }

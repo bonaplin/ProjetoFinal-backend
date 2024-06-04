@@ -117,8 +117,11 @@ public class UserDao extends AbstractDao<UserEntity> {
         if (privateProfile != null) {
             predicates.add(cb.equal(user.get("privateProfile"), privateProfile));
         }
-        if(labId != null && labId > 0L && em.find(LabEntity.class, labId) != null){
-            predicates.add(cb.equal(user.get("lab").get("id"), labId));
+        if (labId != null && labId > 0L) {
+            Integer intLabId = labId.intValue();
+            if (em.find(LabEntity.class, intLabId) != null) {
+                predicates.add(cb.equal(user.get("lab").get("id"), intLabId));
+            }
         }
 
         // Add predicates to query and return result

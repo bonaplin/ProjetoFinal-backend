@@ -1,7 +1,7 @@
 package aor.project.innovationlab.enums;
 
 public enum UserType {
-    ADMIN(10), USER(20), GUEST(30);
+    ADMIN(10), USER(20);
 
     private final int value;
 

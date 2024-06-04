@@ -9,6 +9,7 @@ import aor.project.innovationlab.enums.*;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -59,6 +60,9 @@ public class ProjectBean {
 
     @Inject
     private LogBean logBean;
+
+    @Inject
+    private SessionBean sessionBean;
 
     public ProjectBean() {
     }
@@ -175,16 +179,19 @@ public class ProjectBean {
             project.setFinishDate(LocalDate.now().plusDays(30));
             project.setLab(labDao.findLabByLocation(location));
             projectDao.persist(project);
+            // create the entity project - creator
+            addUserToProject(name, creatorEmail, ProjectUserType.MANAGER);
+
+            addInterestToProject(name, "Interest 1");
+            addInterestToProject(name, "Interest 2");
+            addResourceToProject(name,"123456788");
+
             addResourceToProjectByNames(name, "Product 6");
             addResourceToProjectByNames(name, "Product 2");
             addResourceToProjectByNames(name, "Product 3");
             removeResourceFromProject(name, "123456788");
-            addUserToProject(name, "admin@admin", ProjectUserType.MANAGER);
-            addUserToProject(name, "ricardo@ricardo", ProjectUserType.NORMAL);
+
             addUserToProject(name, "joao@joao", ProjectUserType.INVITED);
-            addInterestToProject(name, "Interest 1");
-            addInterestToProject(name, "Interest 2");
-            addResourceToProject(name,"123456788");
 
             addSkillToProject(name, "Java");
 
@@ -195,6 +202,7 @@ public class ProjectBean {
 
             notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Hello, this is a notification by Admin", NotificationType.MESSAGE, name);
             notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Olá ric",NotificationType.INVITE,null);
+
 
             //TESTE - add log ao add user
             logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId(), LogType.USER_JOIN);
@@ -342,57 +350,69 @@ public class ProjectBean {
             projectDao.merge(project);
         }
     }
-
-    public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
-        UserEntity user = sessionDao.findSessionByToken(token).getUser();
-        if(user == null) {
-            System.out.println("User not found");
-            return null;
-        }
-        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
-        return projectUsers.stream()
-                .map(ProjectUserEntity::getProject)
-                .map(this::toDto)
-                .collect(Collectors.toList());
-    }
-
-    // requestingUserEmail é o email do usuário que está fazendo a solicitação
-    // e serve apenas para testes.
-    public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
-                                        Long labId, String creatorEmail,
-                                        String skill, String interest,
-                                        String participantEmail,
-                                        ProjectUserType role, String token){
-
-
-        SessionEntity se = sessionDao.findSessionByToken(token);
-        if(se == null) {
-            return new ArrayList<>();
-        }
-        UserEntity user = se.getUser();
-        String userEmail = user.getEmail();
-
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
-        return projects.stream()
-                .map(this::toCardDto)
-                .collect(Collectors.toList());
-    }
+//
+//    public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
+//        UserEntity user = sessionDao.findSessionByToken(token).getUser();
+//        if(user == null) {
+//            System.out.println("User not found");
+//            return null;
+//        }
+//        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
+//        return projectUsers.stream()
+//                .map(ProjectUserEntity::getProject)
+//                .map(this::toDto)
+//                .collect(Collectors.toList());
+//    }
+//
+//    // requestingUserEmail é o email do usuário que está fazendo a solicitação
+//    // e serve apenas para testes.
+//    public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
+//                                        Long labId, String creatorEmail,
+//                                        String skill, String interest,
+//                                        String participantEmail,
+//                                        ProjectUserType role, String token){
+//
+//
+//        SessionEntity se = sessionDao.findSessionByToken(token);
+//        if(se == null) {
+//            return new ArrayList<>();
+//        }
+//        UserEntity user = se.getUser();
+//        String userEmail = user.getEmail();
+//
+//        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
+//        return projects.stream()
+//                .map(this::toCardDto)
+//                .collect(Collectors.toList());
+//    }
 
     public List<?> getProjectsByDto(String dtoType, String name, ProjectStatus status,
                                Long labId, String creatorEmail,
                                String skill, String interest,
                                String participantEmail,
-                               ProjectUserType role, String token){
+                               ProjectUserType role, String auth){
 
-        SessionEntity se = sessionDao.findSessionByToken(token);
-        if(se == null) {
-            return new ArrayList<>();
+        String userEmail = null;
+
+        if(auth != null){
+            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+
+            SessionEntity se = sessionDao.findSessionByToken(token);
+            if(se != null) {
+                userEmail = se.getUser().getEmail();
+            }
+            else{
+               throw new IllegalArgumentException("Sorry, you are not authorized to access this resource.");
+            }
         }
-        UserEntity user = se.getUser();
-        String userEmail = user.getEmail();
+
+        System.out.println("userEmail: " + userEmail);
 
         List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
 
+        if(dtoType == null || dtoType.isEmpty()) {
+            dtoType = "ProjectCardDto";
+        }
         switch (dtoType) {
             case "ProjectCardDto":
                 return projects.stream()
@@ -402,12 +422,12 @@ public class ProjectBean {
                 return projects.stream()
                         .map(this::toDto)
                         .collect(Collectors.toList());
-                case "ProjectSideBarDto":
-            return projects.stream()
+            case "ProjectSideBarDto":
+                return projects.stream()
                         .map(this::toSideBarDto)
                         .collect(Collectors.toList());
             default:
-                throw new IllegalArgumentException("Invalid dtoType");
+                return new ArrayList<>();
         }
     }
 

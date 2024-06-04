@@ -20,8 +20,10 @@ public class LabService {
     private SessionBean sessionBean;
 
     @GET
+    @Path("/")
     @Produces("application/json")
     public Response getAllLabs() {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         return Response.ok(labBean.findAllLabs()).build();
     }
 }
