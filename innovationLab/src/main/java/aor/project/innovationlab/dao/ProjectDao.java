@@ -1,12 +1,15 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.validator.UserValidator;
+import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
@@ -78,8 +81,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         if (status != null) {
             predicates.add(cb.equal(project.get("status"), status));
         }
-        if (labId != null && labId > 0L && em.find(LabEntity.class, labId) != null) {
-            predicates.add(cb.equal(project.get("lab").get("id"), labId));
+        if (labId != null && labId > 0L) {
+            Integer intLabId = labId.intValue();
+            if (em.find(LabEntity.class, intLabId) != null) {
+                predicates.add(cb.equal(project.get("lab").get("id"), intLabId));
+            }
         }
         if (creatorEmail != null) {
             predicates.add(cb.equal(project.get("creator").get("email"), creatorEmail));
@@ -95,21 +101,31 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         if (participantEmail != null) {
             Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers");
             predicates.add(cb.equal(userJoin.get("user").get("email"), participantEmail));
-            predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
+            // If role is not null, add role to query
+            if(role != null){
+                predicates.add(cb.equal(userJoin.get("role"), role));
+                // If role is not null, only return projects where the user is a participant
+            } else {
+                predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
+            }
         }
 
         //Order by creator, participant, other
         Join<ProjectEntity, ProjectUserEntity> projectUserJoin = project.join("projectUsers");
         Join<ProjectUserEntity, UserEntity> userJoin = projectUserJoin.join("user");
 
-        //Create expression to order by creator, participant, other
-        Expression<Integer> orderByExpression = cb.<Integer>selectCase()
-                .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1) // Se o user que faz o pedido é criador, atribui 1
-                .when(cb.equal(userJoin.get("email"), requestingUserEmail), 2) // Se o user que faz o pedido é participante, atribui 2
-                .otherwise(3) // Se o user que faz o pedido não é nem criador nem participante, atribui 3
-                .as(Integer.class); // Converte a Expression<Object> em uma Expression<Integer>
+        System.out.println("Requesting user email: before: " + requestingUserEmail);
+        if (requestingUserEmail != null) {
+            System.out.println("Requesting user email: after: " + requestingUserEmail);
+            //Create expression to order by creator, participant, other
+            Expression<Integer> orderByExpression = cb.<Integer>selectCase()
+                    .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1) // Se o user que faz o pedido é criador, atribui 1
+                    .when(cb.equal(userJoin.get("email"), requestingUserEmail), 2) // Se o user que faz o pedido é participante, atribui 2
+                    .otherwise(3) // Se o user que faz o pedido não é nem criador nem participante, atribui 3
+                    .as(Integer.class); // Converte a Expression<Object> em uma Expression<Integer>
 
-        cq.orderBy(cb.asc(orderByExpression));
+            cq.orderBy(cb.asc(orderByExpression));
+        }
         //Add predicates to query and return result
         cq.where(predicates.toArray(new Predicate[0]));
         return em.createQuery(cq).getResultList();

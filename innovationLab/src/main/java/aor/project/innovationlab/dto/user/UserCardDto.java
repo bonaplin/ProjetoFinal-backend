@@ -4,7 +4,7 @@ import aor.project.innovationlab.dto.skill.SkillDto;
 
 import java.util.List;
 
-public class UserDto {
+public class UserCardDto {
     private long id;
     private String username;
     private String email;
@@ -17,7 +17,7 @@ public class UserDto {
     private boolean privateProfile;
     private String imagePath;
 
-    public UserDto() {
+    public UserCardDto() {
     }
 
     public String getFirstname() {

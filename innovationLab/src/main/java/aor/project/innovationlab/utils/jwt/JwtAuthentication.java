@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto.jwt;
+package aor.project.innovationlab.utils.jwt;
 
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
@@ -16,8 +16,8 @@ import java.util.Set;
  * This class is responsible for authenticating JWT tokens.
  * It is a filter that intercepts requests and checks if the token is valid.
  */
-//@Provider
-//@Priority(Priorities.AUTHENTICATION)
+@Provider
+@Priority(Priorities.AUTHENTICATION)
 public class JwtAuthentication implements ContainerRequestFilter {
 
     @EJB
@@ -30,6 +30,11 @@ public class JwtAuthentication implements ContainerRequestFilter {
      */
     static {
         EXCLUDED_PATHS.add("/users/login");
+        EXCLUDED_PATHS.add("/users/confirm-account");
+        EXCLUDED_PATHS.add("/users/reset-password");
+        EXCLUDED_PATHS.add("/users/change-password");
+        EXCLUDED_PATHS.add("/labs");
+        EXCLUDED_PATHS.add("/projects");
     }
 
     /**
@@ -39,6 +44,13 @@ public class JwtAuthentication implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
+
+        for (String excludedPath : EXCLUDED_PATHS) {
+            if (path.startsWith(excludedPath)) {
+                return;
+            }
+        }
+
         if(EXCLUDED_PATHS.contains(path)){
             return;
         }

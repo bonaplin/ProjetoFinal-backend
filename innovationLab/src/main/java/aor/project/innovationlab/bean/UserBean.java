@@ -22,6 +22,7 @@ import jakarta.persistence.TransactionRequiredException;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,21 +67,31 @@ public class UserBean {
 //    }
 
 //    convert entity to dto
+
     public UserDto toDto(UserEntity userEntity) {
-        System.out.println(Color.PURPLE+"userEntity"+userEntity.getEmail()+Color.PURPLE);
-        UserDto userDto = new UserDto();
-        userDto.setId(userEntity.getId());
-        userDto.setUsername(userEntity.getUsername());
-//        userDto.setPassword(userEntity.getPassword());
-        userDto.setEmail(userEntity.getEmail());
-        userDto.setFirstname(userEntity.getFirstname());
-        userDto.setLastname(userEntity.getLastname());
-//        userDto.setPhone(userEntity.getPhone());
-        userDto.setActive(userEntity.getActive().toString());
-        userDto.setConfirmed(userEntity.getConfirmed().toString());
-        userDto.setRole(userEntity.getRole().name());
-        userDto.setLablocation(userEntity.getLab().getLocation());
-        return userDto;
+        UserDto user = new UserDto();
+        user.setId(userEntity.getId());
+        user.setFirstname(userEntity.getFirstname());
+        user.setLastname(userEntity.getLastname());
+        user.setPrivateProfile(userEntity.getPrivateProfile());
+        user.setImagePath(userEntity.getProfileImagePath());
+        user.setEmail(userEntity.getEmail());
+        user.setRole(userEntity.getRole().name());
+
+        if(!userEntity.getPrivateProfile()) {
+            user.setLablocation(userEntity.getLab().getLocation());
+
+            user.setInterests(userEntity.getInterests().stream()
+                    .map(UserInterestEntity::getInterest)
+                    .map(InterestEntity::getName)
+                    .collect(Collectors.toList()));
+
+            user.setSkills(userEntity.getUserSkills().stream()
+                    .map(UserSkillEntity::getSkill)
+                    .map(SkillEntity::getName)
+                    .collect(Collectors.toList()));
+        }
+        return user;
     }
 
     /**
@@ -482,22 +493,24 @@ public class UserBean {
         }
         userDao.merge(userEntity);
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
-        System.out.println(Color.PURPLE+"atualizado"+userEntity.getEmail()+Color.PURPLE);
     }
 
-    public List<UserDto> getUsers(String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
+    public List<?> getUsers(String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
         String log = "Attempt to get users";
-        if(email != null && !UserValidator.validateEmail(email)){
-            LoggerUtil.logError(log,"Invalid email format.",email,null);
-            throw new IllegalArgumentException("Invalid email format.");
-        }
-        LoggerUtil.logInfo(log,"Users retrieved",null,null);
+
         List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId);
-//                role,
 
-        return users.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
 
+        if(dtoType == null || dtoType.isEmpty()) {
+            dtoType = "UserDto";
+        }
+        switch (dtoType) {
+            case "UserDto":
+                return users.stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList());
+            default:
+                return new ArrayList<>();
+        }
     }
 }

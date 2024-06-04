@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto.jwt;
+package aor.project.innovationlab.utils.jwt;
 
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dao.UserDao;
@@ -60,7 +60,7 @@ public class JwtBean {
 
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", type.getValue())
+                .claim("role", type.name())
                 .claim("email", email)
                 .setIssuedAt(Date.from(Instant.now()))
                 .setExpiration(Date.from(exp))
