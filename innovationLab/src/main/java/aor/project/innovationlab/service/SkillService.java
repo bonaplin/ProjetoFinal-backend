@@ -38,19 +38,28 @@ public class SkillService {
         return Response.status(200).entity("Skill deleted successfully").build();
     }
 
+    //String name, String type, String userEmail, String projectName
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllSkills(@HeaderParam("Authorization") String auth, @QueryParam("userEmail") String userEmail) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        if(userEmail != null) return Response.status(200).entity(skillBean.getUserSkills(token, userEmail)).build();
-        return Response.status(200).entity(skillBean.getAllSkills(token)).build();
+    public Response getAllSkills(@HeaderParam("Authorization")
+                                     String auth,
+                                 @QueryParam("userEmail") String userEmail,
+                                 @QueryParam("skillType") String skillType,
+                                 @QueryParam("projectName") String projectName,
+                                 @QueryParam("name") String name){
+        return Response.status(200).entity(skillBean.getSkills(name,skillType,userEmail,projectName)).build();
     }
 
     @GET
     @Path("/types")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllSkillType(@HeaderParam("Authorization") String auth) {
-            return Response.status(200).entity(skillBean.getAllSkillType(auth)).build();
+            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+            return Response.status(200).entity(skillBean.getAllSkillType(token)).build();
     }
+
+
+
+
 }

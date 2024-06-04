@@ -40,6 +40,9 @@ public class SkillBean {
     @Inject
     private SessionBean sessionBean;
 
+    @Inject
+    private SkillBean skillBean;
+
     /**
      * Convert dto to entity
      * @param dto
@@ -181,6 +184,18 @@ public class SkillBean {
 
     public List<SkillDto> getUserSkills(String token, String email) {
         sessionBean.validateUserToken(token);
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+        if(email == null) {
+            String mail = se.getUser().getEmail();
+            getUserSkills(mail);
+        }
+        boolean privateProfile = se.getUser().getPrivateProfile();
+        if(privateProfile && !se.getUser().getEmail().equals(email)) {
+            return new ArrayList<>();
+        }
         return getUserSkills(email);
     }
 
@@ -237,7 +252,7 @@ public class SkillBean {
      * @param token
      * @return
      */
-    public Object getAllSkills(String token) {
+    public Object getAllSkills(String token, String skillType) {
         if(token == null) {
             throw new IllegalArgumentException("Token is required.");
         }
@@ -274,5 +289,9 @@ public class SkillBean {
 
         UserEntity user = session.getUser();
         removeSkillFromUser(user.getEmail(), skillDto.getName());
+    }
+    public List<?> getSkills(String name, String type, String userEmail, String projectName) {
+        List<SkillEntity> skills = skillDao.findSkills(name, type, userEmail, projectName);
+        return skills.stream().map(this::toDto).collect(Collectors.toList());
     }
 }

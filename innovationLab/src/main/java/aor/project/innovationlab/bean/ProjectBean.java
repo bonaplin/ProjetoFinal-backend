@@ -422,8 +422,6 @@ public class ProjectBean {
             }
         }
 
-        System.out.println("userEmail: " + userEmail);
-
         List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
 
         if(dtoType == null || dtoType.isEmpty()) {
