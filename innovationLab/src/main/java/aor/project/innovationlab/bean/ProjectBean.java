@@ -86,6 +86,7 @@ public class ProjectBean {
         dto.setTitle(entity.getName());
         dto.setStatus(entity.getStatus());
         dto.setDescription(entity.getDescription());
+        dto.setStartDate(entity.getStartDate());
         dto.setKeywords(entity.getProjectInterests().stream()
                 .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
                 .map(InterestEntity::getName) // Obtém o nome
