@@ -1,12 +1,12 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
+import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
+import aor.project.innovationlab.dto.user.password.UserRecoverPasswordDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
@@ -80,7 +80,7 @@ public class UserBean {
 
         if(!userEntity.getPrivateProfile()) {
             user.setLablocation(userEntity.getLab().getLocation());
-
+            user.setAbout(userEntity.getAbout());
             user.setInterests(userEntity.getInterests().stream()
                     .map(UserInterestEntity::getInterest)
                     .map(InterestEntity::getName)
@@ -92,6 +92,19 @@ public class UserBean {
                     .collect(Collectors.toList()));
         }
         return user;
+    }
+
+    public UserOwnerProfileDto toDtoOwner(UserEntity userEntity) {
+        UserOwnerProfileDto userOwnerProfileDto = new UserOwnerProfileDto();
+        userOwnerProfileDto.setUsername(userEntity.getUsername());
+        userOwnerProfileDto.setFirstname(userEntity.getFirstname());
+        userOwnerProfileDto.setLastname(userEntity.getLastname());
+        userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
+        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
+        userOwnerProfileDto.setRole(userEntity.getRole().getValue());
+        userOwnerProfileDto.setLab(userEntity.getLab().getId());
+        userOwnerProfileDto.setAbout(userEntity.getAbout());
+        return userOwnerProfileDto;
     }
 
     /**
@@ -294,7 +307,7 @@ public class UserBean {
      * @param dto - the dto with the password and confirm password
      * @return
      */
-    public boolean changePassword(String token, UserChangePasswordDto dto) {
+    public boolean changePassword(String token, UserRecoverPasswordDto dto) {
         String log = "Attempt to change password";
         UserEntity userEntity = userDao.findUserByToken(token);
         if (userEntity == null) {
@@ -495,22 +508,67 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
+    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
         String log = "Attempt to get users";
-
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+        String emailUser = sessionEntity.getUser().getEmail();
         List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId);
 
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "UserDto";
         }
+        if(emailUser.equalsIgnoreCase(email)){
+            System.out.println(Color.PURPLE+"UserOwnerProfileDto"+Color.PURPLE);
+            dtoType = "UserOwnerProfileDto";
+            System.out.println(dtoType);
+        }
+
         switch (dtoType) {
             case "UserDto":
                 return users.stream()
                         .map(this::toDto)
                         .collect(Collectors.toList());
+            case "UserOwnerProfileDto":
+                List<UserOwnerProfileDto> list = users.stream()
+                        .map(this::toDtoOwner)
+                        .collect(Collectors.toList());
+                System.out.println(list);
+                return list;
+
             default:
                 return new ArrayList<>();
         }
+    }
+
+
+    public void updatePassword(String token, UserChangePasswordDto dto) {
+        sessionBean.validateUserToken(token);
+        UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
+
+        if(!PasswordUtil.checkPassword(dto.getCurrentPassword(),userEntity.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        if(!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+        if(!UserValidator.validatePassword(dto.getNewPassword())) {
+            throw new IllegalArgumentException("Invalid password format");
+        }
+
+        userEntity.setPassword(PasswordUtil.hashPassword(dto.getNewPassword()));
+        userDao.merge(userEntity);
+    }
+
+    public void changeVisiblity(String token, UserChangeVisibilityDto dto) {
+        sessionBean.validateUserToken(token);
+        UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
+        userEntity.setPrivateProfile(dto.getPrivateProfile());
+        userDao.merge(userEntity);
+        System.out.println(Color.PURPLE+userEntity.getPrivateProfile()+Color.PURPLE);
     }
 }

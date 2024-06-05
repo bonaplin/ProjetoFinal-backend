@@ -1,13 +1,13 @@
-package aor.project.innovationlab.dto.user;
+package aor.project.innovationlab.dto.user.password;
 
-public class UserChangePasswordDto {
+public class UserRecoverPasswordDto {
     private String password;
     private String confirmPassword;
 
-    public UserChangePasswordDto() {
+    public UserRecoverPasswordDto() {
     }
 
-    public UserChangePasswordDto(String password, String confirmPassword) {
+    public UserRecoverPasswordDto(String password, String confirmPassword) {
         this.password = password;
         this.confirmPassword = confirmPassword;
     }

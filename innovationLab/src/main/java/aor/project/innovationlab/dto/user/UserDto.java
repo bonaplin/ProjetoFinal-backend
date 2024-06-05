@@ -16,6 +16,7 @@ public class UserDto {
     private List<String> interests;
     private boolean privateProfile;
     private String imagePath;
+    private String about;
 
     public UserDto() {
     }
@@ -106,5 +107,13 @@ public class UserDto {
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public String getAbout() {
+        return about;
+    }
+
+    public void setAbout(String about) {
+        this.about = about;
     }
 }
