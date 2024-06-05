@@ -1,8 +1,7 @@
 package aor.project.innovationlab.dto.project;
 
-import aor.project.innovationlab.dto.user.UserCardDto;
+import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.enums.ProjectStatus;
-import io.jsonwebtoken.lang.Strings;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,7 +16,7 @@ public class ProjectCardDto {
     List<String> keywords;
     List<String> skill;
 
-    List<UserCardDto> projectUsers;
+    List<UserImgCardDto> projectUsers;
 
     public long getId() {
         return id;
@@ -75,11 +74,11 @@ public class ProjectCardDto {
         this.startDate = startDate;
     }
 
-    public List<UserCardDto> getProjectUsers() {
+    public List<UserImgCardDto> getProjectUsers() {
         return projectUsers;
     }
 
-    public void setProjectUsers(List<UserCardDto> projectUsers) {
+    public void setProjectUsers(List<UserImgCardDto> projectUsers) {
         this.projectUsers = projectUsers;
     }
 

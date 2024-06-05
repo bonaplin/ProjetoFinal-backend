@@ -1,11 +1,11 @@
 package aor.project.innovationlab.dto.user;
 
-public class UserCardDto {
+public class UserImgCardDto {
 
     private long id;
     private String imagePath;
 
-    public UserCardDto() {
+    public UserImgCardDto() {
     }
 
     public long getId() {

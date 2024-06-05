@@ -3,8 +3,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
-import aor.project.innovationlab.dto.user.UserCardDto;
-import aor.project.innovationlab.dto.user.UserDto;
+import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
 import jakarta.ejb.EJB;
@@ -100,12 +99,12 @@ public class ProjectBean {
                 .map(SkillEntity::getName) // Obtém o nome
                 .collect(Collectors.toList()));
 
-        List<UserCardDto> users = entity.getProjectUsers().stream()
+        List<UserImgCardDto> users = entity.getProjectUsers().stream()
                 .map(projectUserEntity -> {
-                    UserCardDto userCardDto = new UserCardDto();
-                    userCardDto.setId(projectUserEntity.getUser().getId());
-                    userCardDto.setImagePath(projectUserEntity.getUser().getProfileImagePath());
-                    return userCardDto;
+                    UserImgCardDto userImgCardDto = new UserImgCardDto();
+                    userImgCardDto.setId(projectUserEntity.getUser().getId());
+                    userImgCardDto.setImagePath(projectUserEntity.getUser().getProfileImagePath());
+                    return userImgCardDto;
                 })
                 .collect(Collectors.toList());
 
