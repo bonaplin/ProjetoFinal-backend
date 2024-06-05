@@ -411,9 +411,9 @@ public class ProjectBean {
         String userEmail = null;
 
         if(auth != null){
-            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+//            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
 
-            SessionEntity se = sessionDao.findSessionByToken(token);
+            SessionEntity se = sessionDao.findSessionByToken(auth);
             if(se != null) {
                 userEmail = se.getUser().getEmail();
             }

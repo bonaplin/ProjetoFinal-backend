@@ -22,14 +22,14 @@ public class InterestService {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getInterests(@HeaderParam("Authorization") String auth, @QueryParam("userEmail") String userEmail) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+    public Response getInterests(@HeaderParam("token") String auth, @QueryParam("userEmail") String userEmail) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         List<InterestDto> interests = new ArrayList<>();
             if(userEmail != null){
-                interests = interestBean.getUserInterests(token, userEmail);
+                interests = interestBean.getUserInterests(auth, userEmail);
                 return Response.status(200).entity(interests).build();
             }
-            interests = interestBean.getAllInterests(token);
+            interests = interestBean.getAllInterests(auth);
             return Response.status(200).entity(interests).build();
 
     }
@@ -38,9 +38,9 @@ public class InterestService {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addInterest(@HeaderParam("Authorization") String auth, InterestDto interestDto) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        InterestDto interest = interestBean.addInterest(token, interestDto);
+    public Response addInterest(@HeaderParam("token") String auth, InterestDto interestDto) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        InterestDto interest = interestBean.addInterest(auth, interestDto);
         return Response.status(200).entity(interest).build();
     }
 
@@ -48,9 +48,9 @@ public class InterestService {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteInterest(@HeaderParam("Authorization") String auth, InterestDto interestDto) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        interestBean.deleteInterest(token, interestDto);
+    public Response deleteInterest(@HeaderParam("token") String auth, InterestDto interestDto) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        interestBean.deleteInterest(auth, interestDto);
         return Response.status(200).entity("Interest deleted successfully").build();
 
     }

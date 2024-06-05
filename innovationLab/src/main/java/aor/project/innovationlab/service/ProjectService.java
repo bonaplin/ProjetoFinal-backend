@@ -78,7 +78,7 @@ public class ProjectService {
                                 @QueryParam("interest") String interest,
                                 @QueryParam("participant_email") String participantEmail,
                                 @QueryParam("role") ProjectUserType role,
-                                @HeaderParam("Authorization") String auth) {
+                                @HeaderParam("token") String auth) {
 
                 List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, labId, creatorEmail, skill, interest, participantEmail, role, auth);
 

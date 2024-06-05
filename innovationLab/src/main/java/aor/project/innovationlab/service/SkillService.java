@@ -22,9 +22,9 @@ public class SkillService {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addSkill(@HeaderParam("Authorization") String auth, SkillDto skillDto) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        SkillDto skill = skillBean.addSkill(token,skillDto);
+    public Response addSkill(@HeaderParam("token") String auth, SkillDto skillDto) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        SkillDto skill = skillBean.addSkill(auth,skillDto);
         return Response.status(200).entity(skill).build();
     }
 
@@ -32,9 +32,9 @@ public class SkillService {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteSkill(@HeaderParam("Authorization") String auth, SkillDto skillDto) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        skillBean.deleteSkill(token,skillDto);
+    public Response deleteSkill(@HeaderParam("token") String auth, SkillDto skillDto) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        skillBean.deleteSkill(auth,skillDto);
         return Response.status(200).entity("Skill deleted successfully").build();
     }
 
@@ -42,7 +42,7 @@ public class SkillService {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllSkills(@HeaderParam("Authorization")
+    public Response getAllSkills(@HeaderParam("token")
                                      String auth,
                                  @QueryParam("userEmail") String userEmail,
                                  @QueryParam("skillType") String skillType,
@@ -54,9 +54,9 @@ public class SkillService {
     @GET
     @Path("/types")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllSkillType(@HeaderParam("Authorization") String auth) {
-            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-            return Response.status(200).entity(skillBean.getAllSkillType(token)).build();
+    public Response getAllSkillType(@HeaderParam("token") String auth) {
+//            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+            return Response.status(200).entity(skillBean.getAllSkillType(auth)).build();
     }
 
 

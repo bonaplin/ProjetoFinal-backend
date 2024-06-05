@@ -37,9 +37,9 @@ public class ImageService {
     @POST
     @Path("/user")
     @Consumes("image/*")
-    public Response uploadUserImage(@HeaderParam("Auth") String auth, InputStream imageData) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        String path = imageBean.saveUserProfileImage(token, imageData);
+    public Response uploadUserImage(@HeaderParam("token") String auth, InputStream imageData) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        String path = imageBean.saveUserProfileImage(auth, imageData);
         return Response.ok().entity(path).build();
     }
 

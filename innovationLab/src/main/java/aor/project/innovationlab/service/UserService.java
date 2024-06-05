@@ -2,9 +2,11 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
-import aor.project.innovationlab.utils.jwt.JwtBean;
+//import aor.project.innovationlab.utils.jwt.JwtBean;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
+import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
+import aor.project.innovationlab.dto.user.password.UserRecoverPasswordDto;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
@@ -23,8 +25,8 @@ public class UserService {
     @Inject
     private UserBean userBean;
 
-    @Inject
-    private JwtBean jwtService;
+//    @Inject
+//    private JwtBean jwtService;
 
     public UserService() {
     }
@@ -32,7 +34,7 @@ public class UserService {
     @GET
     @Path("/test")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllUsers(@HeaderParam("Authorization") String auth) {
+    public Response getAllUsers(@HeaderParam("token") String auth) {
         String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         return Response.ok("BATEU com "+token).build();
     }
@@ -48,8 +50,8 @@ public class UserService {
     @POST
     @Path("/logout")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response logout(@HeaderParam("Authorization") String auth) {
-        sessionBean.logout(sessionBean.getTokenFromAuthorizationHeader(auth));
+    public Response logout(@HeaderParam("token") String auth) {
+        sessionBean.logout((auth));
         return Response.status(200).entity("See you soon!").build();
     }
 
@@ -66,9 +68,9 @@ public class UserService {
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUser(@HeaderParam("Authorization") String auth, UserOwnerProfileDto dto) {
-        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        userBean.updateUser(token, dto);
+    public Response updateUser(@HeaderParam("token") String auth, UserOwnerProfileDto dto) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        userBean.updateUser(auth, dto);
         return Response.status(200).entity("User updated successfully.").build();
     }
 
@@ -85,10 +87,28 @@ public class UserService {
     @Path("/change-password")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response changePassword(@HeaderParam("token") String token, UserChangePasswordDto dto) {
+    public Response changePassword(@HeaderParam("token") String token, UserRecoverPasswordDto dto) {
         userBean.changePassword(token, dto);
         return Response.status(200).entity("Password changed successfully.").build();
     }
+
+    @PUT
+    @Path("/update-password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updatePassword(@HeaderParam("token") String token, UserChangePasswordDto dto) {
+        userBean.updatePassword(token, dto);
+        return Response.status(200).entity("Password updated successfully.").build();
+    }
+
+    @PUT
+    @Path("/change-visiblity")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response changeVisiblity(@HeaderParam("token") String token, UserChangeVisibilityDto dto) {
+        userBean.changeVisiblity(token, dto);
+        return Response.status(200).entity("Visiblity changed successfully.").build();
+    }
+
 
 //    @GET
 //    @Path("/")
@@ -116,11 +136,13 @@ public class UserService {
                                 @QueryParam("email") String email,
                                 @QueryParam("firstname") String firstname,
                                 @QueryParam("lastname") String lastname,
-                                @QueryParam("role") UserType role, @QueryParam("active") Boolean active,
+                                @QueryParam("role") UserType role,
+                                @QueryParam("active") Boolean active,
                                 @QueryParam("confirmed") Boolean confirmed,
                                 @QueryParam("privateProfile") Boolean privateProfile,
-                                @QueryParam("lab_id") Long labId) {
-        List<?> dto = userBean.getUsers(dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, labId);
+                                @QueryParam("lab_id") Long labId,
+                                @HeaderParam("token") String token) {
+        List<?> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, labId);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

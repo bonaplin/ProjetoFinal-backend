@@ -2,7 +2,8 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.utils.jwt.JwtBean;
+import aor.project.innovationlab.utils.TokenUtil;
+
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.UserLogInDto;
 import aor.project.innovationlab.entity.SessionEntity;
@@ -27,9 +28,9 @@ public class SessionBean  {
     private UserDao userDao;
     @EJB
     private SessionDao sessionDao;
-
-    @EJB
-    private JwtBean jwtService;
+//
+//    @EJB
+//    private JwtBean jwtService;
 
     public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 60;
 
@@ -167,13 +168,13 @@ public class SessionBean  {
         SessionEntity sessionEntity = new SessionEntity();
         sessionEntity.setUser(userEntity);
 
-        String token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
-
-        Claims claims = jwtService.decodeJWT(token);
-        Date expirationDate = claims.getExpiration();
-
+//        String token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
+//
+//        Claims claims = jwtService.decodeJWT(token);
+//        Date expirationDate = claims.getExpiration();
+        String token = TokenUtil.generateToken();
         sessionEntity.setToken(token);
-        sessionEntity.setExpirationDate(expirationDate.toInstant());
+        sessionEntity.setExpirationDate(generateExpirationDate());
 
         while (true) {
             try {
@@ -183,7 +184,8 @@ public class SessionBean  {
             } catch (PersistenceException e) { // if the session is not persisted, generate a new token
                 if (e.getCause() instanceof ConstraintViolationException) {
                     LoggerUtil.logError(log, "Token already exists, will try another one",userEntity.getEmail(),sessionEntity.getToken());
-                    token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
+//                    token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
+                    token = TokenUtil.generateToken();
                     sessionEntity.setToken(token);
                 } else {
                     LoggerUtil.logError(log, "Error while creating session",userEntity.getEmail(),sessionEntity.getToken());
