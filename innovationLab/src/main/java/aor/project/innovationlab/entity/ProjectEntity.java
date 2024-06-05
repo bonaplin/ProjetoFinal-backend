@@ -43,7 +43,7 @@ public class ProjectEntity implements Serializable {
     @JoinColumn(name = "creator_id", nullable = false)
     private  UserEntity creator;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<ProjectUserEntity> projectUsers = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

@@ -37,8 +37,9 @@ public class ImageService {
     @POST
     @Path("/user")
     @Consumes("image/*")
-    public Response uploadUserImage(@HeaderParam("token") String token, InputStream imageData) {
-        String path = imageBean.saveUserProfileImage(token, imageData);
+    public Response uploadUserImage(@HeaderParam("token") String auth, InputStream imageData) {
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        String path = imageBean.saveUserProfileImage(auth, imageData);
         return Response.ok().entity(path).build();
     }
 
@@ -68,7 +69,8 @@ public class ImageService {
     @GET
     @Path("/user")
     @Produces("APPLICATION/JSON")
-    public Response getUserPicture(@HeaderParam("token") String token, @QueryParam("id") long id){
+    public Response getUserPicture(@HeaderParam("Authorization") String auth, @QueryParam("id") long id){
+        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         String path = imageBean.getUserImageString(token,id);
         System.out.println(Color.RED+"User image path: "+path+"."+Color.RED);
         return Response.ok().entity(path).build();

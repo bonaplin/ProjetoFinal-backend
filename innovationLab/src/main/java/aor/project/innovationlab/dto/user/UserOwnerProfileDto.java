@@ -20,6 +20,7 @@ public class UserOwnerProfileDto {
     public UserOwnerProfileDto() {
     }
 
+
     public String getUsername() {
         return username;
     }
