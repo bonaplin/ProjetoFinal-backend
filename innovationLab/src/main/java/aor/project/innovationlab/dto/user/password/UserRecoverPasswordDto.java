@@ -3,6 +3,7 @@ package aor.project.innovationlab.dto.user.password;
 public class UserRecoverPasswordDto {
     private String password;
     private String confirmPassword;
+    
 
     public UserRecoverPasswordDto() {
     }
