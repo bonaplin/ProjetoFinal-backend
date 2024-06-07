@@ -107,6 +107,15 @@ public class UserBean {
         return userOwnerProfileDto;
     }
 
+    public UserAddToProjectDto toDtoUserProject(UserEntity userEntity) {
+        UserAddToProjectDto userAddToProjectDto = new UserAddToProjectDto();
+        userAddToProjectDto.setUserId(userEntity.getId());
+        userAddToProjectDto.setFirstName(userEntity.getFirstname());
+        userAddToProjectDto.setLastName(userEntity.getLastname());
+        userAddToProjectDto.setImagePath(userEntity.getProfileImagePath());
+        return userAddToProjectDto;
+    }
+
     /**
      * Creates the initial data for the application
      */
@@ -539,6 +548,11 @@ public class UserBean {
                         .collect(Collectors.toList());
                 System.out.println(list);
                 return list;
+                case "UserAddToProjectDto":
+                List<UserAddToProjectDto> list2 = users.stream()
+                        .map(this::toDtoUserProject)
+                        .collect(Collectors.toList());
+
 
             default:
                 return new ArrayList<>();
