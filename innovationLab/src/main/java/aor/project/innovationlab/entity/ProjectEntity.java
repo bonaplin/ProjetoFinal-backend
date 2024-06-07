@@ -72,6 +72,9 @@ public class ProjectEntity implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ProjectProductEntity> projectProducts = new HashSet<>();
 
+    @Column(name = "max_participants", nullable = false, unique = false)
+    private int maxParticipants;
+
     public ProjectEntity() {
     }
 
@@ -83,6 +86,7 @@ public class ProjectEntity implements Serializable {
     public void prePersist() {
         this.createdDate = LocalDate.now();
         status = ProjectStatus.PLANNING;
+        this.maxParticipants = 4;
     }
 
 //    public Set<TaskEntity> getTasks() {
@@ -92,6 +96,15 @@ public class ProjectEntity implements Serializable {
 //    public void setTasks(Set<TaskEntity> tasks) {
 //        this.tasks = tasks;
 //    }
+
+
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
 
     public LocalDate getStartDate() {
         return startDate;
