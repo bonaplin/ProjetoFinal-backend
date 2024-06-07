@@ -95,6 +95,7 @@ public class ProjectBean {
         dto.setStatus(entity.getStatus());
         dto.setDescription(entity.getDescription());
         dto.setStartDate(entity.getStartDate());
+        dto.setMaxParticipants(entity.getMaxParticipants());
         dto.setKeywords(entity.getProjectInterests().stream()
                 .map(ProjectInterestEntity::getInterest) // Mapeia para InterestEntity
                 .map(InterestEntity::getName) // Obtém o nome
@@ -139,7 +140,9 @@ public class ProjectBean {
         }
         InterestEntity interest = interestDao.findInterestByName(interestName);
         if(interest == null) {
-            return;
+            interest = new InterestEntity();
+            interest.setName(interestName);
+            interestDao.persist(interest);
         }
         ProjectInterestEntity projectInterest = new ProjectInterestEntity();
         projectInterest.setProject(project);
@@ -207,12 +210,14 @@ public class ProjectBean {
             addResourceToProjectByNames(name, "Product 3");
             removeResourceFromProject(name, "123456788");
 
-            addUserToProject(name, "joao@joao", ProjectUserType.INVITED);
-
-            addSkillToProject(name, "Java");
-
-            removeSkillFromProject(name, "Java");
-            addSkillToProject(name, "Java");
+            addUserToProject(name, "joao@joao", ProjectUserType.NORMAL);
+            addSkillToProject(name, "Assembly");
+            addSkillToProject(name, "macOS");
+            addSkillToProject(name, "IntelIJ");
+            addInterestToProject(name, "Interest 3");
+            addInterestToProject(name, "Interest 4");
+            addInterestToProject(name, "Interest 5");
+            addInterestToProject(name, "Interest 6");
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 

@@ -15,8 +15,16 @@ public class ProjectCardDto {
     ProjectStatus status;
     List<String> keywords;
     List<String> skill;
-
+    int maxParticipants;
     List<UserImgCardDto> projectUsers;
+
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
 
     public long getId() {
         return id;
