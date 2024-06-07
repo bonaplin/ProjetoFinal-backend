@@ -123,6 +123,9 @@ public class UserBean {
         createUserIfNotExists("admin@admin","admin");
         createUserIfNotExists("ricardo@ricardo","ricardo");
         createUserIfNotExists("joao@joao","joao");
+        createUserIfNotExists("joana@joana","joana");
+        createUserIfNotExists("maria@maria","maria");
+        createUserIfNotExists("carlos@carlos","carlos");
     }
 
     /**
@@ -553,7 +556,7 @@ public class UserBean {
                         .map(this::toDtoUserProject)
                         .collect(Collectors.toList());
 
-
+                return list2;
             default:
                 return new ArrayList<>();
         }
