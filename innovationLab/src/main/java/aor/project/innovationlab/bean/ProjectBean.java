@@ -1,8 +1,12 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
+import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
+import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
@@ -15,6 +19,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,6 +70,12 @@ public class ProjectBean {
 
     @Inject
     private SessionBean sessionBean;
+
+    @Inject
+    private InterestBean interestBean;
+
+    @Inject
+    private SkillBean skillBean;
 
     public ProjectBean() {
     }
@@ -201,23 +212,22 @@ public class ProjectBean {
             // create the entity project - creator
             addUserToProject(name, creatorEmail, ProjectUserType.MANAGER);
 
-            addInterestToProject(name, "Interest 1");
-            addInterestToProject(name, "Interest 2");
-            addResourceToProject(name,"123456788");
+            addInterestToProject(name, "Interest1");
+            addInterestToProject(name, "Interest2");
 
+            addResourceToProject(name,"123456788");
             addResourceToProjectByNames(name, "Product 6");
             addResourceToProjectByNames(name, "Product 2");
             addResourceToProjectByNames(name, "Product 3");
-            removeResourceFromProject(name, "123456788");
 
             addUserToProject(name, "joao@joao", ProjectUserType.NORMAL);
             addSkillToProject(name, "Assembly");
             addSkillToProject(name, "macOS");
             addSkillToProject(name, "IntelIJ");
-            addInterestToProject(name, "Interest 3");
-            addInterestToProject(name, "Interest 4");
-            addInterestToProject(name, "Interest 5");
-            addInterestToProject(name, "Interest 6");
+            addInterestToProject(name, "Interest3");
+            addInterestToProject(name, "Interest4");
+            addInterestToProject(name, "Interest5");
+            addInterestToProject(name, "Interest6");
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 
@@ -371,45 +381,31 @@ public class ProjectBean {
             projectDao.merge(project);
         }
     }
-//
-//    public List<ProjectDto> getProjectsByUser(String token, String userEmail) {
-//        UserEntity user = sessionDao.findSessionByToken(token).getUser();
-//        if(user == null) {
-//            System.out.println("User not found");
-//            return null;
-//        }
-//        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectsByUserId(user.getId());
-//        return projectUsers.stream()
-//                .map(ProjectUserEntity::getProject)
-//                .map(this::toDto)
-//                .collect(Collectors.toList());
-//    }
-//
-//    // requestingUserEmail é o email do usuário que está fazendo a solicitação
-//    // e serve apenas para testes.
-//    public List<ProjectCardDto> getProjects(String name, ProjectStatus status,
-//                                        Long labId, String creatorEmail,
-//                                        String skill, String interest,
-//                                        String participantEmail,
-//                                        ProjectUserType role, String token){
-//
-//
-//        SessionEntity se = sessionDao.findSessionByToken(token);
-//        if(se == null) {
-//            return new ArrayList<>();
-//        }
-//        UserEntity user = se.getUser();
-//        String userEmail = user.getEmail();
-//
-//        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
-//        return projects.stream()
-//                .map(this::toCardDto)
-//                .collect(Collectors.toList());
-//    }
 
-    public List<?> getProjectsByDto(String dtoType, String name, ProjectStatus status,
+    public FilterOptionsDto filterOptions(String token){
+        sessionBean.validateUserToken(token);
+        FilterOptionsDto dto = new FilterOptionsDto();
+        List<SkillDto> skills = skillDao.getAllSkills().stream()
+                .map(skillBean::toDto)
+                .collect(Collectors.toList());
+        List<InterestDto> interests = interestDao.getAllInterests().stream()
+                .map(interestBean::toDto)
+                .collect(Collectors.toList());
+
+        List<IdNameDto> statuses = Arrays.stream(ProjectStatus.values())
+                .map(status -> new IdNameDto(status.getValue(), status.name()))
+                .collect(Collectors.toList());
+
+        dto.setInterests(interests);
+        dto.setSkills(skills);
+        dto.setStatuses(statuses);
+        return dto;
+    }
+
+    public List<?> getProjectsByDto(String dtoType, String name,
+                                    List<ProjectStatus> status,
                                Long labId, String creatorEmail,
-                               String skill, String interest,
+                               List<String> skill, List<String> interest,
                                String participantEmail,
                                ProjectUserType role, String auth){
 

@@ -16,6 +16,7 @@ import java.util.List;
 @NamedQuery(name = "Skill.getAllSkillType", query = "SELECT DISTINCT s.skillType FROM SkillEntity s")
 @NamedQuery(name = "Skill.findSkills", query = "SELECT s FROM SkillEntity s WHERE s.name = :name AND s.skillType = :type")
 @NamedQuery(name = "Skill.findSkillsByType", query = "SELECT s FROM SkillEntity s WHERE s.skillType = :type")
+@NamedQuery(name = "Skill.getAllSkills", query = "SELECT s FROM SkillEntity s WHERE s.active = true")
 public class SkillEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
