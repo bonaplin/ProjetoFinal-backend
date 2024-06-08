@@ -23,34 +23,6 @@ public class ProjectService {
     @Inject
     private SessionBean sessionBean;
 
-//    @GET
-//    @Path("/")
-//    @Produces("application/json")
-//    public Response getProjectsByUser(@HeaderParam("token") String token, @QueryParam("email") String email) {
-//        List<ProjectDto> dto = projectBean.getProjectsByUser(token, email);
-//        if (dto == null) {
-//            return Response.status(Response.Status.UNAUTHORIZED).entity("Unauthorized").build();
-//        } else {
-//            return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
-//        }
-//    }
-
-//    @GET
-//    @Path("/search")
-//    @Produces("application/json")
-//    public Response getProjects(@QueryParam("name") String name,
-//                                @QueryParam("status") ProjectStatus status,
-//                                @QueryParam("lab_id") Long labId,
-//                                @QueryParam("creator_email") String creatorEmail,
-//                                @QueryParam("skill") String skill,
-//                                @QueryParam("interest") String interest,
-//                                @QueryParam("participant_email") String participantEmail,
-//                                @QueryParam("role") ProjectUserType role,
-//                                @HeaderParam("token") String token) {
-//        List<ProjectCardDto> dto = projectBean.getProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, token);
-//        return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
-//    }
-
     /**
      * Get projects by dto, this method is used to get projects by a specific dto
      * @param dtoType
@@ -71,18 +43,29 @@ public class ProjectService {
     public Response getProjectsByDto(
                                 @QueryParam("dtoType") String dtoType,
                                 @QueryParam("name") String name,
-                                @QueryParam("status") ProjectStatus status,
+                                @QueryParam("status") List<ProjectStatus> status,
                                 @QueryParam("lab_id") Long labId,
                                 @QueryParam("creator_email") String creatorEmail,
-                                @QueryParam("skill") String skill,
-                                @QueryParam("interest") String interest,
+                                @QueryParam("skill") List<String> skill,
+                                @QueryParam("interest") List<String> interest,
                                 @QueryParam("participant_email") String participantEmail,
                                 @QueryParam("role") ProjectUserType role,
                                 @HeaderParam("token") String auth) {
 
+        System.out.println(Color.BLUE+status+Color.BLUE);
+        System.out.println(Color.BLUE+skill+Color.BLUE);
+        System.out.println(Color.BLUE+interest+Color.BLUE);
+
                 List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, labId, creatorEmail, skill, interest, participantEmail, role, auth);
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
+        }
+
+        @GET
+        @Path("/filter-options")
+        @Produces("application/json")
+        public Response getFilterOptions(@HeaderParam("token") String token) {
+            return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.filterOptions(token))).build();
         }
     }
 

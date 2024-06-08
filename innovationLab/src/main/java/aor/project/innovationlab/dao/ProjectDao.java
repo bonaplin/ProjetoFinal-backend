@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class ProjectDao extends AbstractDao<ProjectEntity> {
@@ -45,11 +46,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
     }
 
     public List<ProjectEntity> findProjects(String name,
-                                            ProjectStatus status,
+                                            List<ProjectStatus> status,
                                             Long labId,
                                             String creatorEmail,
-                                            String skill,
-                                            String interest,
+                                            List<String> skills,
+                                            List<String> interests,
                                             String participantEmail,
                                             ProjectUserType role,
                                             String requestingUserEmail) {
@@ -57,10 +58,19 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
-        skill = InputSanitizerUtil.sanitizeInput(skill);
-        interest = InputSanitizerUtil.sanitizeInput(interest);
         participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
 
+        if (skills != null) {
+            skills = skills.stream()
+                    .map(InputSanitizerUtil::sanitizeInput)
+                    .collect(Collectors.toList());
+        }
+
+        if (interests != null) {
+            interests = interests.stream()
+                    .map(InputSanitizerUtil::sanitizeInput)
+                    .collect(Collectors.toList());
+        }
 
         //Validate email
         if(creatorEmail != null && !UserValidator.validateEmail(creatorEmail)){
@@ -76,34 +86,66 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         Root<ProjectEntity> project = cq.from(ProjectEntity.class);
         List<Predicate> predicates = new ArrayList<>();
         if (name != null) {
-            predicates.add(cb.equal(project.get("name"), name));
+            predicates.add(cb.and(
+                    cb.equal(project.get("name"), name),
+                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
+            ));
         }
-        if (status != null) {
-            predicates.add(cb.equal(project.get("status"), status));
+        if (status != null && !status.isEmpty()) {
+            predicates.add(cb.and(
+                    project.get("status").in(status),
+                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
+            ));
+        }
+
+        if (skills != null && !skills.isEmpty()) {
+            for (String skill : skills) {
+                Subquery<Long> skillSubquery = cq.subquery(Long.class);
+                Root<ProjectSkillEntity> skillRoot = skillSubquery.from(ProjectSkillEntity.class);
+                skillSubquery.select(skillRoot.get("project").get("id"));
+                skillSubquery.where(cb.and(
+                        cb.equal(skillRoot.get("skill").get("name"), skill),
+                        cb.isTrue(skillRoot.get("skill").get("active"))
+                ));
+                predicates.add(cb.in(project.get("id")).value(skillSubquery));
+            }
+        }
+        if (interests != null && !interests.isEmpty()) {
+            for (String interest : interests) {
+                Subquery<Long> interestSubquery = cq.subquery(Long.class);
+                Root<ProjectInterestEntity> interestRoot = interestSubquery.from(ProjectInterestEntity.class);
+                interestSubquery.select(interestRoot.get("project").get("id"));
+                interestSubquery.where(cb.and(
+                        cb.equal(interestRoot.get("interest").get("name"), interest),
+                        cb.isTrue(interestRoot.get("interest").get("active")) // Verifica se o interesse está ativo
+                ));
+                predicates.add(cb.in(project.get("id")).value(interestSubquery));
+            }
         }
         if (labId != null && labId > 0L) {
             Integer intLabId = labId.intValue();
             if (em.find(LabEntity.class, intLabId) != null) {
-                predicates.add(cb.equal(project.get("lab").get("id"), intLabId));
+                predicates.add(cb.and(
+                        cb.equal(project.get("lab").get("id"), intLabId),
+                        cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
+                ));
             }
         }
         if (creatorEmail != null) {
-            predicates.add(cb.equal(project.get("creator").get("email"), creatorEmail));
-        }
-        if (skill != null) {
-            Join<ProjectEntity, ProjectSkillEntity> skillJoin = project.join("projectSkills");
-            predicates.add(cb.equal(skillJoin.get("skill").get("name"), skill));
-        }
-        if (interest != null) {
-            Join<ProjectEntity, ProjectInterestEntity> interestJoin = project.join("projectInterests");
-            predicates.add(cb.equal(interestJoin.get("interest").get("name"), interest));
+            predicates.add(cb.and(
+                    cb.equal(project.get("creator").get("email"), creatorEmail),
+                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
+            ));
         }
         if (participantEmail != null) {
             // Join with ProjectUserEntity to get projects where the user is a participant
             Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers", JoinType.LEFT);
-            predicates.add(cb.or(
-                    cb.equal(userJoin.get("user").get("email"), participantEmail),
-                    cb.equal(project.get("creator").get("email"), participantEmail)
+            predicates.add(cb.and(
+                    cb.or(
+                            cb.equal(userJoin.get("user").get("email"), participantEmail),
+                            cb.equal(project.get("creator").get("email"), participantEmail)
+                    ),
+                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
             ));
             if(role != null){
                 predicates.add(cb.equal(userJoin.get("role"), role));

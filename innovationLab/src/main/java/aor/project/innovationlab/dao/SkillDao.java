@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Stateless
@@ -64,4 +65,8 @@ public class SkillDao extends AbstractDao<SkillEntity>{
     }
 
 
+    public List<SkillEntity> getAllSkills() {
+        return em.createNamedQuery("Skill.getAllSkills", SkillEntity.class)
+                .getResultList();
+    }
 }
