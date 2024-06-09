@@ -1,18 +1,13 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.entity.LabEntity;
-import aor.project.innovationlab.entity.UserEntity;
-import aor.project.innovationlab.entity.UserSkillEntity;
+import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +69,9 @@ public class UserDao extends AbstractDao<UserEntity> {
                                       Boolean active,
                                       Boolean confirmed,
                                       Boolean privateProfile,
-                                      Long labId) {
+                                      Long labId,
+                                      List<String> skills,
+                                      List<String> interests) {
 
 
         // Validate inputs
@@ -93,6 +90,9 @@ public class UserDao extends AbstractDao<UserEntity> {
         CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
         Root<UserEntity> user = cq.from(UserEntity.class);
         List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(user.get("active"), true));
+
         if (username != null) {
             predicates.add(cb.equal(user.get("username"), username));
         }
@@ -122,6 +122,24 @@ public class UserDao extends AbstractDao<UserEntity> {
             if (em.find(LabEntity.class, intLabId) != null) {
                 predicates.add(cb.equal(user.get("lab").get("id"), intLabId));
             }
+        }
+        if (skills != null && !skills.isEmpty()) {
+            Subquery<Long> skillSubquery = cq.subquery(Long.class);
+            Root<UserSkillEntity> skillRoot = skillSubquery.from(UserSkillEntity.class);
+            skillSubquery.select(skillRoot.get("user").get("id"));
+            skillSubquery.where(skillRoot.get("skill").get("name").in(skills), cb.isTrue(skillRoot.get("skill").get("active")));
+            skillSubquery.groupBy(skillRoot.get("user").get("id"));
+            skillSubquery.having(cb.equal(cb.count(skillRoot), skills.size()));
+            predicates.add(cb.in(user.get("id")).value(skillSubquery));
+        }
+        if(interests != null && !interests.isEmpty()){
+            Subquery<Long> interestSubquery = cq.subquery(Long.class);
+            Root<UserInterestEntity> interestRoot = interestSubquery.from(UserInterestEntity.class);
+            interestSubquery.select(interestRoot.get("user").get("id"));
+            interestSubquery.where(interestRoot.get("interest").get("name").in(interests), cb.isTrue(interestRoot.get("interest").get("active")));
+            interestSubquery.groupBy(interestRoot.get("user").get("id"));
+            interestSubquery.having(cb.equal(cb.count(interestRoot), interests.size()));
+            predicates.add(cb.in(user.get("id")).value(interestSubquery));
         }
 
         // Add predicates to query and return result

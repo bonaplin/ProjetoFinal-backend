@@ -9,7 +9,6 @@ import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.entity.UserSkillEntity;
 import aor.project.innovationlab.enums.SkillType;
 
-import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -121,7 +120,7 @@ public class SkillBean {
             userSkillDao.persist(userSkill);
 
             // Adiciona a habilidade ao array de habilidades do user
-            user.getUserSkills().add(userSkill);
+            user.getSkills().add(userSkill);
             skill.getUserSkills().add(userSkill); // Adiciona o user à habilidade
         } else {
             // Se a associação já existir, apenas altera o active para true
@@ -159,7 +158,7 @@ public class SkillBean {
         }
         userSkill.setActive(false);
         // Remove o skill do array de skills do user
-        user.getUserSkills().remove(userSkill);
+        user.getSkills().remove(userSkill);
         skill.getUserSkills().remove(userSkill); // Remove o user da habilidade
         userDao.merge(user);
         skillDao.merge(skill);

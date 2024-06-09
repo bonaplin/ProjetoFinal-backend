@@ -2,6 +2,8 @@ package aor.project.innovationlab.dto.user;
 
 import aor.project.innovationlab.dto.skill.SkillDto;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public class UserCardDto {
@@ -16,6 +18,7 @@ public class UserCardDto {
     private List<String> interests;
     private boolean privateProfile;
     private String imagePath;
+    private LocalDate created;
 
     public UserCardDto() {
     }
@@ -107,4 +110,13 @@ public class UserCardDto {
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
+
+    public LocalDate getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDate created) {
+        this.created = created;
+    }
+
 }
