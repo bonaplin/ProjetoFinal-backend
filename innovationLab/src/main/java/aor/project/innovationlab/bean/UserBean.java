@@ -20,8 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
 
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,6 +67,37 @@ public class UserBean {
 
 //    convert entity to dto
 
+    public UserCardDto toDtoCard(UserEntity userEntity) {
+        UserCardDto user = new UserCardDto();
+        user.setId(userEntity.getId());
+        user.setFirstname(userEntity.getFirstname());
+        user.setLastname(userEntity.getLastname());
+        user.setPrivateProfile(userEntity.getPrivateProfile());
+        user.setImagePath(userEntity.getProfileImagePath());
+        user.setEmail(userEntity.getEmail());
+        user.setRole(userEntity.getRole().name());
+        user.setLablocation(userEntity.getLab().getLocation());
+        user.setUsername(userEntity.getUsername());
+
+        if(!userEntity.getPrivateProfile()) {
+            user.setInterests(userEntity.getInterests().stream()
+                    .map(UserInterestEntity::getInterest)
+                    .map(InterestEntity::getName)
+                    .collect(Collectors.toList()));
+
+            user.setSkills(userEntity.getSkills().stream()
+                    .map(UserSkillEntity::getSkill)
+                    .map(SkillEntity::getName)
+                    .collect(Collectors.toList()));
+
+            Instant createdInstant = userEntity.getCreated();
+            LocalDateTime createdDateTime = LocalDateTime.ofInstant(createdInstant, ZoneOffset.UTC);
+            LocalDate createdDate = createdDateTime.toLocalDate();
+            user.setCreated(createdDate);
+        }
+        return user;
+    }
+
     public UserDto toDto(UserEntity userEntity) {
         UserDto user = new UserDto();
         user.setId(userEntity.getId());
@@ -77,16 +107,17 @@ public class UserBean {
         user.setImagePath(userEntity.getProfileImagePath());
         user.setEmail(userEntity.getEmail());
         user.setRole(userEntity.getRole().name());
+        user.setLablocation(userEntity.getLab().getLocation());
+        user.setUsername(userEntity.getUsername());
 
         if(!userEntity.getPrivateProfile()) {
-            user.setLablocation(userEntity.getLab().getLocation());
             user.setAbout(userEntity.getAbout());
             user.setInterests(userEntity.getInterests().stream()
                     .map(UserInterestEntity::getInterest)
                     .map(InterestEntity::getName)
                     .collect(Collectors.toList()));
 
-            user.setSkills(userEntity.getUserSkills().stream()
+            user.setSkills(userEntity.getSkills().stream()
                     .map(UserSkillEntity::getSkill)
                     .map(SkillEntity::getName)
                     .collect(Collectors.toList()));
@@ -114,6 +145,21 @@ public class UserBean {
         createUserIfNotExists("admin@admin","admin");
         createUserIfNotExists("ricardo@ricardo","ricardo");
         createUserIfNotExists("joao@joao","joao");
+
+        skillBean.addSkillToUser("admin@admin","Java",null);
+        skillBean.addSkillToUser("admin@admin","IntelIJ",null);
+        interestBean.addInterestToUser("admin@admin","AI");
+        interestBean.addInterestToUser("admin@admin","Machine Learning");
+
+        skillBean.addSkillToUser("ricardo@ricardo","macOS",null);
+        skillBean.addSkillToUser("ricardo@ricardo","Java",null);
+        interestBean.addInterestToUser("ricardo@ricardo","AI");
+        interestBean.addInterestToUser("ricardo@ricardo","python");
+
+        skillBean.addSkillToUser("joao@joao","Assembly",null);
+        skillBean.addSkillToUser("joao@joao","IntelIJ",null);
+        interestBean.addInterestToUser("joao@joao","python");
+        interestBean.addInterestToUser("joao@joao","Machine Learning");
     }
 
     /**
@@ -144,6 +190,8 @@ public class UserBean {
 
         persistUser(user);
     }
+
+
 
     /**
      * Creates a new user with the given email and password
@@ -508,7 +556,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
+    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId, List<String> skill, List<String> interest) {
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
@@ -516,7 +564,7 @@ public class UserBean {
             throw new IllegalArgumentException("Session not found.");
         }
         String emailUser = sessionEntity.getUser().getEmail();
-        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId);
+        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId, skill, interest);
 
 
         if(dtoType == null || dtoType.isEmpty()) {
@@ -529,6 +577,10 @@ public class UserBean {
         }
 
         switch (dtoType) {
+            case "UserCardDto":
+                return users.stream()
+                        .map(this::toDtoCard)
+                        .collect(Collectors.toList());
             case "UserDto":
                 return users.stream()
                         .map(this::toDto)

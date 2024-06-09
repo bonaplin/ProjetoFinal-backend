@@ -85,6 +85,9 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
         Root<ProjectEntity> project = cq.from(ProjectEntity.class);
         List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.isTrue(project.get("active")));
+
         if (name != null) {
             predicates.add(cb.and(
                     cb.equal(project.get("name"), name),
