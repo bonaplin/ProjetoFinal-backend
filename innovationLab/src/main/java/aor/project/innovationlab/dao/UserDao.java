@@ -92,7 +92,7 @@ public class UserDao extends AbstractDao<UserEntity> {
         List<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.equal(user.get("active"), true));
-
+        // Only show public profiles when searching for skills or interests
         if ((skills != null && !skills.isEmpty()) || (interests != null && !interests.isEmpty())) {
             predicates.add(cb.isFalse(user.get("privateProfile")));
         }
