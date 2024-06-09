@@ -93,6 +93,10 @@ public class UserDao extends AbstractDao<UserEntity> {
 
         predicates.add(cb.equal(user.get("active"), true));
 
+        if ((skills != null && !skills.isEmpty()) || (interests != null && !interests.isEmpty())) {
+            predicates.add(cb.isFalse(user.get("privateProfile")));
+        }
+
         if (username != null) {
             predicates.add(cb.equal(user.get("username"), username));
         }
