@@ -93,6 +93,8 @@ public class UserEntity implements Serializable {
     public UserEntity() {
     }
 
+
+
 //    public String getProfileImageType() {
 //        return profileImageType;
 //    }

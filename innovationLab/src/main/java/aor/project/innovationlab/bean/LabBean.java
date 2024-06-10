@@ -46,8 +46,6 @@ public class LabBean {
             LabDto dto = new LabDto();
             dto.setLocation(location);
 
-            dto.setLocation(location);
-
             labDao.persist(toEntity(dto));
         }
     }
