@@ -128,6 +128,7 @@ public class UserService {
         return Response.status(200).entity("Account confirmed successfully!").build();
     }
 
+    //TODO - alterar o userType para string no endpoint e deixar como os products.
     @GET
     @Path("/")
     @Produces("application/json")
