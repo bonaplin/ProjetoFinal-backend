@@ -69,7 +69,7 @@ public class UserDao extends AbstractDao<UserEntity> {
                                       Boolean active,
                                       Boolean confirmed,
                                       Boolean privateProfile,
-                                      Long labId,
+                                      List<String> labs,
                                       List<String> skills,
                                       List<String> interests) {
 
@@ -96,7 +96,6 @@ public class UserDao extends AbstractDao<UserEntity> {
         if ((skills != null && !skills.isEmpty()) || (interests != null && !interests.isEmpty())) {
             predicates.add(cb.isFalse(user.get("privateProfile")));
         }
-
         if (username != null) {
             predicates.add(cb.equal(user.get("username"), username));
         }
@@ -121,11 +120,8 @@ public class UserDao extends AbstractDao<UserEntity> {
         if (privateProfile != null) {
             predicates.add(cb.equal(user.get("privateProfile"), privateProfile));
         }
-        if (labId != null && labId > 0L) {
-            Integer intLabId = labId.intValue();
-            if (em.find(LabEntity.class, intLabId) != null) {
-                predicates.add(cb.equal(user.get("lab").get("id"), intLabId));
-            }
+        if (labs != null && !labs.isEmpty()) {
+            predicates.add(user.get("lab").get("location").in(labs));
         }
         if (skills != null && !skills.isEmpty()) {
             Subquery<Long> skillSubquery = cq.subquery(Long.class);

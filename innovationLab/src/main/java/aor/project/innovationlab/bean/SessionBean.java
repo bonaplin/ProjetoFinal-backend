@@ -132,6 +132,7 @@ public class SessionBean  {
         if (PasswordUtil.checkPassword(password, userEntity.getPassword())) {
             SessionLoginDto sessionLoginDto = new SessionLoginDto();
             sessionLoginDto.setToken(createSession(userEntity));
+            sessionLoginDto.setEmail(userEntity.getEmail());
             return sessionLoginDto;
         }
         return null;

@@ -141,11 +141,11 @@ public class UserService {
                                 @QueryParam("active") Boolean active,
                                 @QueryParam("confirmed") Boolean confirmed,
                                 @QueryParam("privateProfile") Boolean privateProfile,
-                                @QueryParam("lab_id") Long labId,
+                                @QueryParam("lab") List<String> lab,
                                 @QueryParam("skill") List<String> skill,
                                 @QueryParam("interest") List<String> interest,
                                 @HeaderParam("token") String token) {
-        List<?> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, labId, skill, interest);
+        List<?> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, lab, skill, interest);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

@@ -44,7 +44,7 @@ public class ProjectService {
                                 @QueryParam("dtoType") String dtoType,
                                 @QueryParam("name") String name,
                                 @QueryParam("status") List<ProjectStatus> status,
-                                @QueryParam("lab_id") Long labId,
+                                @QueryParam("lab") List<String> lab,
                                 @QueryParam("creator_email") String creatorEmail,
                                 @QueryParam("skill") List<String> skill,
                                 @QueryParam("interest") List<String> interest,
@@ -56,7 +56,7 @@ public class ProjectService {
         System.out.println(Color.BLUE+skill+Color.BLUE);
         System.out.println(Color.BLUE+interest+Color.BLUE);
 
-                List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, labId, creatorEmail, skill, interest, participantEmail, role, auth);
+                List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth);
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
         }

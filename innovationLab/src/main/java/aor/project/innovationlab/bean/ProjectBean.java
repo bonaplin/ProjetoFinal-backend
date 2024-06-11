@@ -3,6 +3,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.interests.InterestDto;
+import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
@@ -396,15 +397,21 @@ public class ProjectBean {
                 .map(status -> new IdNameDto(status.getValue(), status.name()))
                 .collect(Collectors.toList());
 
+        List<IdNameDto> labs = labDao.findAllLabs().stream()
+                .map(lab -> new IdNameDto(lab.getId(), lab.getLocation()))
+                .collect(Collectors.toList());
+
         dto.setInterests(interests);
         dto.setSkills(skills);
         dto.setStatuses(statuses);
+        dto.setLabs(labs);
+
         return dto;
     }
 
     public List<?> getProjectsByDto(String dtoType, String name,
                                     List<ProjectStatus> status,
-                               Long labId, String creatorEmail,
+                               List<String> lab, String creatorEmail,
                                List<String> skill, List<String> interest,
                                String participantEmail,
                                ProjectUserType role, String auth){
@@ -423,7 +430,18 @@ public class ProjectBean {
             }
         }
 
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, labId, creatorEmail, skill, interest, participantEmail, role, userEmail);
+        if (lab != null && !lab.isEmpty()) {
+            for (String l : lab) {
+                LabEntity labEntity = labDao.findLabByName(l);
+                if (labEntity == null) {
+                    throw new IllegalArgumentException("Lab with id " + l + " does not exist.");
+                }
+            }
+        }
+
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail);
+
+
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";

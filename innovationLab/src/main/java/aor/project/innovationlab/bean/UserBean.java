@@ -568,24 +568,32 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId, List<String> skill, List<String> interest) {
+    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest) {
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
             LoggerUtil.logError(log,"Session not found.",null,token);
             throw new IllegalArgumentException("Session not found.");
         }
-        String emailUser = sessionEntity.getUser().getEmail();
-        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId, skill, interest);
 
+        if (lab != null && !lab.isEmpty()) {
+            for (String name : lab) {
+                LabEntity labEntity = labDao.findLabByName(name);
+                if (labEntity == null) {
+                    throw new IllegalArgumentException("Lab with id " + name + " does not exist.");
+                }
+            }
+        }
+
+        String emailUser = sessionEntity.getUser().getEmail();
+        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest);
+
+        if(emailUser.equalsIgnoreCase(email)){
+            dtoType = "UserOwnerProfileDto";
+        }
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "UserDto";
-        }
-        if(emailUser.equalsIgnoreCase(email)){
-            System.out.println(Color.PURPLE+"UserOwnerProfileDto"+Color.PURPLE);
-            dtoType = "UserOwnerProfileDto";
-            System.out.println(dtoType);
         }
 
         switch (dtoType) {

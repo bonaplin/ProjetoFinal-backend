@@ -47,7 +47,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
 
     public List<ProjectEntity> findProjects(String name,
                                             List<ProjectStatus> status,
-                                            Long labId,
+                                            List<String> labs,
                                             String creatorEmail,
                                             List<String> skills,
                                             List<String> interests,
@@ -125,14 +125,8 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                 predicates.add(cb.in(project.get("id")).value(interestSubquery));
             }
         }
-        if (labId != null && labId > 0L) {
-            Integer intLabId = labId.intValue();
-            if (em.find(LabEntity.class, intLabId) != null) {
-                predicates.add(cb.and(
-                        cb.equal(project.get("lab").get("id"), intLabId),
-                        cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-                ));
-            }
+        if (labs != null && !labs.isEmpty()) {
+            predicates.add(project.get("lab").get("location").in(labs));
         }
         if (creatorEmail != null) {
             predicates.add(cb.and(

@@ -45,4 +45,12 @@ public class LabDao extends AbstractDao<LabEntity>{
         }
     }
 
+    public LabEntity findLabByName(String name) {
+        try{
+            return (LabEntity) em.createNamedQuery("Lab.findLabByName").setParameter("name", name)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }

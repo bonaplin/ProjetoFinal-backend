@@ -22,4 +22,24 @@ public class PopulatorService {
         populatorBean.addUser(dto);
         return Response.ok().build();
     }
+
+    @POST
+    @Path("/skill")
+    @Produces ("application/json")
+    @Consumes("application/json")
+    public Response populateSkills(PopulatorSkillDto dto) {
+        System.out.println("service called");
+        populatorBean.addSkills(dto.getName());
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/interest")
+    @Produces ("application/json")
+    @Consumes("application/json")
+    public Response populateInterests(PopulatorSkillDto dto) {
+        System.out.println("service called");
+        populatorBean.addInterest(dto.getName());
+        return Response.ok().build();
+    }
 }

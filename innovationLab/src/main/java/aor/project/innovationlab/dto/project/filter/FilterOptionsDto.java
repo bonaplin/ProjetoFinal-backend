@@ -11,6 +11,7 @@ public class FilterOptionsDto {
     private List<InterestDto> interests;
     private List<SkillDto> skills;
     private List<IdNameDto> statuses;
+    private List<IdNameDto> labs;
 
     public FilterOptionsDto() {
     }
@@ -37,5 +38,13 @@ public class FilterOptionsDto {
 
     public void setSkills(List<SkillDto> skills) {
         this.skills = skills;
+    }
+
+    public void setLabs(List<IdNameDto> labs) {
+        this.labs = labs;
+    }
+
+    public List<IdNameDto> getLabs() {
+        return labs;
     }
 }
