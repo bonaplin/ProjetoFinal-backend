@@ -1,5 +1,6 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.enums.UserType;
@@ -62,21 +63,19 @@ public class UserDao extends AbstractDao<UserEntity> {
         }
     }
 
-    public List<UserEntity> findUsers(String username,
-                                      String email,
-                                      String firstname,
-                                      String lastname,
-                                      UserType role,
-                                      Boolean active,
-                                      Boolean confirmed,
-                                      Boolean privateProfile,
-                                      List<String> labs,
-                                      List<String> skills,
-                                      List<String> interests,
-                                      Integer pageNumber,
-                                      Integer pageSize) {
-
-        System.out.println(pageNumber + " " + pageSize + " ");
+    public PaginatedResponse<UserEntity> findUsers(String username,
+                                                   String email,
+                                                   String firstname,
+                                                   String lastname,
+                                                   UserType role,
+                                                   Boolean active,
+                                                   Boolean confirmed,
+                                                   Boolean privateProfile,
+                                                   List<String> labs,
+                                                   List<String> skills,
+                                                   List<String> interests,
+                                                   Integer pageNumber,
+                                                   Integer pageSize) {
 
         // Create query and add predicates
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -141,9 +140,20 @@ public class UserDao extends AbstractDao<UserEntity> {
         TypedQuery<UserEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
         query.setMaxResults(pageSize);
-        System.out.println(pageNumber + " final " + pageSize + " ");
 
-        return query.getResultList();
+        List<UserEntity> users = query.getResultList();
+
+        // Calculate total pages
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        countQuery.select(cb.count(countQuery.from(UserEntity.class)));
+        Long count = em.createQuery(countQuery).getSingleResult();
+        int totalPages = (int) Math.ceil((double) count / pageSize);
+
+        PaginatedResponse<UserEntity> response = new PaginatedResponse<>();
+        response.setResults(users);
+        response.setTotalPages(totalPages);
+
+        return response;
     }
 }
 

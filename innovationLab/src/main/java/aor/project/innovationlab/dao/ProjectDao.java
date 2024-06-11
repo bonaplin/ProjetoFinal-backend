@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.bean.SessionBean;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
@@ -46,17 +47,17 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         }
     }
 
-    public List<ProjectEntity> findProjects(String name,
-                                            List<ProjectStatus> status,
-                                            List<String> labs,
-                                            String creatorEmail,
-                                            List<String> skills,
-                                            List<String> interests,
-                                            String participantEmail,
-                                            ProjectUserType role,
-                                            String requestingUserEmail,
-                                            Integer pageNumber,
-                                            Integer pageSize) {
+    public PaginatedResponse<ProjectEntity> findProjects(String name,
+                                                         List<ProjectStatus> status,
+                                                         List<String> labs,
+                                                         String creatorEmail,
+                                                         List<String> skills,
+                                                         List<String> interests,
+                                                         String participantEmail,
+                                                         ProjectUserType role,
+                                                         String requestingUserEmail,
+                                                         Integer pageNumber,
+                                                         Integer pageSize) {
 
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
@@ -177,7 +178,18 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         query.setFirstResult((pageNumber - 1) * pageSize);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<ProjectEntity> projects = query.getResultList();
+
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        countQuery.select(cb.count(countQuery.from(ProjectEntity.class)));
+        Long count = em.createQuery(countQuery).getSingleResult();
+        int totalPages = (int) Math.ceil((double) count / pageSize);
+
+        PaginatedResponse<ProjectEntity> response = new PaginatedResponse<>();
+        response.setResults(projects);
+        response.setTotalPages(totalPages);
+
+        return response;
     }
 
 }

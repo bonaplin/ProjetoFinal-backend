@@ -1,5 +1,6 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
@@ -52,14 +53,14 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         }
     }
 
-    public List<ProductEntity> findProducts(Long supplierId,
-                                            List<String> brands,
-                                            String description,
-                                            String identifier,
-                                            String name,
-                                            List<ProductType> types,
-                                            Integer pageNumber,
-                                            Integer pageSize) {
+    public PaginatedResponse<ProductEntity> findProducts(Long supplierId,
+                                                         List<String> brands,
+                                                         String description,
+                                                         String identifier,
+                                                         String name,
+                                                         List<ProductType> types,
+                                                         Integer pageNumber,
+                                                         Integer pageSize) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
         Root<ProductEntity> product = cq.from(ProductEntity.class);
@@ -90,7 +91,18 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         query.setFirstResult((pageNumber - 1) * pageSize);
         query.setMaxResults(pageSize);
 
-        return query.getResultList();
+        List<ProductEntity> products = query.getResultList();
+
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        countQuery.select(cb.count(countQuery.from(ProductEntity.class)));
+        Long count = em.createQuery(countQuery).getSingleResult();
+        int totalPages = (int) Math.ceil((double) count / pageSize);
+
+        PaginatedResponse<ProductEntity> response = new PaginatedResponse<>();
+        response.setResults(products);
+        response.setTotalPages(totalPages);
+
+        return response;
     }
 
     public List<ProductType> findProductTypes() {

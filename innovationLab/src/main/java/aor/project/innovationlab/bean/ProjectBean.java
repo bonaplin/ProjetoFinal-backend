@@ -2,6 +2,7 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
@@ -409,13 +410,13 @@ public class ProjectBean {
         return dto;
     }
 
-    public List<?> getProjectsByDto(String dtoType, String name,
-                                    List<ProjectStatus> status,
-                               List<String> lab, String creatorEmail,
-                               List<String> skill, List<String> interest,
-                               String participantEmail,
-                               ProjectUserType role,
-                                    String auth, Integer pageNumber, Integer pageSize) {
+    public PaginatedResponse<Object> getProjectsByDto(String dtoType, String name,
+                                                 List<ProjectStatus> status,
+                                                 List<String> lab, String creatorEmail,
+                                                 List<String> skill, List<String> interest,
+                                                 String participantEmail,
+                                                 ProjectUserType role,
+                                                 String auth, Integer pageNumber, Integer pageSize) {
 
         String userEmail = null;
 
@@ -447,30 +448,40 @@ public class ProjectBean {
             pageSize = 10;
         }
 
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        List<ProjectEntity> projects = projectsResponse.getResults();
 
 
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";
         }
+
+        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setTotalPages(projectsResponse.getTotalPages());
+
         switch (dtoType) {
             case "ProjectCardDto":
-                return projects.stream()
+                response.setResults(projects.stream()
                         .map(this::toCardDto)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             case "ProjectDto":
-                return projects.stream()
+                response.setResults(projects.stream()
                         .map(this::toDto)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             case "ProjectSideBarDto":
-                return projects.stream()
+                response.setResults(projects.stream()
                         .map(this::toSideBarDto)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             default:
-                return new ArrayList<>();
+                response.setResults(new ArrayList<>());
         }
+        return response;
     }
+
 
 
 }

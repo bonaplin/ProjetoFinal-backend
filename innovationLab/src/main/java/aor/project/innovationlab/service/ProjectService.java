@@ -2,6 +2,7 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.ProjectBean;
 import aor.project.innovationlab.bean.SessionBean;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.enums.ProjectStatus;
@@ -54,11 +55,7 @@ public class ProjectService {
                                 @QueryParam("page_size") Integer pageSize,
                                 @HeaderParam("token") String auth) {
 
-        System.out.println(Color.BLUE+status+Color.BLUE);
-        System.out.println(Color.BLUE+skill+Color.BLUE);
-        System.out.println(Color.BLUE+interest+Color.BLUE);
-
-                List<?> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth, pageNumber, pageSize);
+                PaginatedResponse<Object> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth, pageNumber, pageSize);
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
         }

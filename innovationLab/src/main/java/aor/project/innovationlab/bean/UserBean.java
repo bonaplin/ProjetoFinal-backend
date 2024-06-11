@@ -1,6 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
@@ -569,7 +570,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize){
+    public PaginatedResponse<Object> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize){
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
@@ -604,7 +605,8 @@ public class UserBean {
         }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
+        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
+        List<UserEntity> users = usersResponse.getResults();
 
         if(emailUser.equalsIgnoreCase(email)){
             dtoType = "UserOwnerProfileDto";
@@ -614,30 +616,36 @@ public class UserBean {
             dtoType = "UserDto";
         }
 
+
+        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setTotalPages(usersResponse.getTotalPages());
+
         switch (dtoType) {
             case "UserCardDto":
-                return users.stream()
+                response.setResults(users.stream()
                         .map(this::toDtoCard)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             case "UserDto":
-                return users.stream()
+                response.setResults(users.stream()
                         .map(this::toDto)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             case "UserOwnerProfileDto":
-                List<UserOwnerProfileDto> list = users.stream()
+                response.setResults(users.stream()
                         .map(this::toDtoOwner)
-                        .collect(Collectors.toList());
-                System.out.println(list);
-                return list;
-                case "UserAddToProjectDto":
-                List<UserAddToProjectDto> list2 = users.stream()
+                        .collect(Collectors.toList()));
+                break;
+            case "UserAddToProjectDto":
+                response.setResults(users.stream()
                         .map(this::toDtoUserProject)
-                        .collect(Collectors.toList());
-
-                return list2;
+                        .collect(Collectors.toList()));
+                break;
             default:
-                return new ArrayList<>();
+                response.setResults(new ArrayList<>());
+                break;
         }
+        return response;
     }
 
 

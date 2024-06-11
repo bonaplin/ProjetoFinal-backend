@@ -4,6 +4,7 @@ import aor.project.innovationlab.dao.ProductDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.SupplierDao;
 import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.product.filter.FilterOptionsProductDto;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
@@ -109,7 +110,7 @@ public class ProductBean {
     }
 
 
-    public List<?> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize) {
+    public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize) {
         String log = "Attempt to get products";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(auth);
         if(sessionEntity == null) {
@@ -144,7 +145,11 @@ public class ProductBean {
             pageSize = 10;
         }
 
-        List<ProductEntity> products = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize);
+        PaginatedResponse<ProductEntity> productResponse = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize);
+        List<ProductEntity> products = productResponse.getResults();
+
+        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setTotalPages(productResponse.getTotalPages());
 
         if(dtoType == null || dtoType.isEmpty()){
             dtoType = "ProductDto";
@@ -152,10 +157,13 @@ public class ProductBean {
 
         switch (dtoType) {
             case "ProductDto":
-                return products.stream().map(this::toDto).collect(Collectors.toList());
+                response.setResults(products.stream().map(this::toDto).collect(Collectors.toList()));
+                break;
             default:
-                return new ArrayList<>();
+                response.setResults(new ArrayList<>());
+                break;
         }
+        return response;
 
     }
 

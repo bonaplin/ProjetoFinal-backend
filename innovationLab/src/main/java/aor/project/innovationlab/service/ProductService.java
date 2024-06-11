@@ -1,6 +1,7 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.ProductBean;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
@@ -30,7 +31,7 @@ public class ProductService {
             @QueryParam("page_number") Integer pageNumber,
             @QueryParam("page_size") Integer pageSize,
             @HeaderParam("token") String auth) {
-        List<?> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize);
+        PaginatedResponse<Object> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize);
 
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
