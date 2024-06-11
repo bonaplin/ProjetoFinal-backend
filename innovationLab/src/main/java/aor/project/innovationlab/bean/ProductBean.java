@@ -109,7 +109,7 @@ public class ProductBean {
     }
 
 
-    public List<?> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier){
+    public List<?> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize) {
         String log = "Attempt to get products";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(auth);
         if(sessionEntity == null) {
@@ -137,7 +137,14 @@ public class ProductBean {
             }
         }
 
-        List<ProductEntity> products = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums);
+        if(pageNumber == null || pageNumber < 0){
+            pageNumber = 1;
+        }
+        if(pageSize == null || pageSize < 0){
+            pageSize = 10;
+        }
+
+        List<ProductEntity> products = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize);
 
         if(dtoType == null || dtoType.isEmpty()){
             dtoType = "ProductDto";

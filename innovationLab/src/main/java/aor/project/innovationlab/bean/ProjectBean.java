@@ -414,7 +414,8 @@ public class ProjectBean {
                                List<String> lab, String creatorEmail,
                                List<String> skill, List<String> interest,
                                String participantEmail,
-                               ProjectUserType role, String auth){
+                               ProjectUserType role,
+                                    String auth, Integer pageNumber, Integer pageSize) {
 
         String userEmail = null;
 
@@ -439,7 +440,14 @@ public class ProjectBean {
             }
         }
 
-        List<ProjectEntity> projects = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail);
+        if(pageNumber == null || pageNumber < 0){
+            pageNumber = 1;
+        }
+        if(pageSize == null || pageSize < 0){
+            pageSize = 10;
+        }
+
+        List<ProjectEntity> projects = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
 
 
 

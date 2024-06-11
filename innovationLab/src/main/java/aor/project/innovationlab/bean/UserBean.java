@@ -9,6 +9,7 @@ import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.utils.TokenUtil;
@@ -568,7 +569,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest) {
+    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize){
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
@@ -584,9 +585,26 @@ public class UserBean {
                 }
             }
         }
+        // Validate inputs
+        username = InputSanitizerUtil.sanitizeInput(username);
+        email = InputSanitizerUtil.sanitizeInput(email);
+        firstname = InputSanitizerUtil.sanitizeInput(firstname);
+        lastname = InputSanitizerUtil.sanitizeInput(lastname);
+
+        // Validate email
+        if(email != null && !UserValidator.validateEmail(email)){
+            throw new IllegalArgumentException("Invalid email");
+        }
+
+        if(pageNumber == null || pageNumber < 0){
+            pageNumber = 1;
+        }
+        if(pageSize == null || pageSize < 0){
+            pageSize = 10;
+        }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest);
+        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
 
         if(emailUser.equalsIgnoreCase(email)){
             dtoType = "UserOwnerProfileDto";

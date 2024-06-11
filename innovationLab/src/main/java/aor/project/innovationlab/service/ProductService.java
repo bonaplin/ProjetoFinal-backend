@@ -27,9 +27,10 @@ public class ProductService {
             @QueryParam("brand") List<String> brand,
             @QueryParam("supplier_name") String supplier_name,
             @QueryParam("identifier") String identifier,
+            @QueryParam("page_number") Integer pageNumber,
+            @QueryParam("page_size") Integer pageSize,
             @HeaderParam("token") String auth) {
-
-        List<?> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier);
+        List<?> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize);
 
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }

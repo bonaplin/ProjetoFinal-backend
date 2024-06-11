@@ -10,6 +10,7 @@ import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
@@ -53,7 +54,9 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                             List<String> interests,
                                             String participantEmail,
                                             ProjectUserType role,
-                                            String requestingUserEmail) {
+                                            String requestingUserEmail,
+                                            Integer pageNumber,
+                                            Integer pageSize) {
 
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
@@ -169,7 +172,12 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         }
         //Add predicates to query and return result
         cq.where(predicates.toArray(new Predicate[0]));
-        return em.createQuery(cq).getResultList();
+
+        TypedQuery<ProjectEntity> query = em.createQuery(cq);
+        query.setFirstResult((pageNumber - 1) * pageSize);
+        query.setMaxResults(pageSize);
+
+        return query.getResultList();
     }
 
 }

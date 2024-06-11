@@ -7,6 +7,7 @@ import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
@@ -71,19 +72,11 @@ public class UserDao extends AbstractDao<UserEntity> {
                                       Boolean privateProfile,
                                       List<String> labs,
                                       List<String> skills,
-                                      List<String> interests) {
+                                      List<String> interests,
+                                      Integer pageNumber,
+                                      Integer pageSize) {
 
-
-        // Validate inputs
-        username = InputSanitizerUtil.sanitizeInput(username);
-        email = InputSanitizerUtil.sanitizeInput(email);
-        firstname = InputSanitizerUtil.sanitizeInput(firstname);
-        lastname = InputSanitizerUtil.sanitizeInput(lastname);
-
-        // Validate email
-        if(email != null && !UserValidator.validateEmail(email)){
-            throw new IllegalArgumentException("Invalid email");
-        }
+        System.out.println(pageNumber + " " + pageSize + " ");
 
         // Create query and add predicates
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -144,7 +137,13 @@ public class UserDao extends AbstractDao<UserEntity> {
 
         // Add predicates to query and return result
         cq.where(predicates.toArray(new Predicate[0]));
-        return em.createQuery(cq).getResultList();
+
+        TypedQuery<UserEntity> query = em.createQuery(cq);
+        query.setFirstResult((pageNumber - 1) * pageSize);
+        query.setMaxResults(pageSize);
+        System.out.println(pageNumber + " final " + pageSize + " ");
+
+        return query.getResultList();
     }
 }
 

@@ -3,6 +3,7 @@ package aor.project.innovationlab.dao;
 import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -51,7 +52,14 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         }
     }
 
-    public List<ProductEntity> findProducts(Long supplierId, List<String> brands, String description, String identifier, String name, List<ProductType> types) {
+    public List<ProductEntity> findProducts(Long supplierId,
+                                            List<String> brands,
+                                            String description,
+                                            String identifier,
+                                            String name,
+                                            List<ProductType> types,
+                                            Integer pageNumber,
+                                            Integer pageSize) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
         Root<ProductEntity> product = cq.from(ProductEntity.class);
@@ -77,7 +85,12 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         }
 
         cq.where(predicates.toArray(new Predicate[0]));
-        return em.createQuery(cq).getResultList();
+
+        TypedQuery<ProductEntity> query = em.createQuery(cq);
+        query.setFirstResult((pageNumber - 1) * pageSize);
+        query.setMaxResults(pageSize);
+
+        return query.getResultList();
     }
 
     public List<ProductType> findProductTypes() {
