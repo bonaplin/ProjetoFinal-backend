@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -79,7 +78,7 @@ public class UserEntity implements Serializable {
      * This is a set of skills that the user has and can be used to search for users with specific skills
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<UserSkillEntity> userSkills = new HashSet<>();
+    private Set<UserSkillEntity> skills = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<UserInterestEntity> interests = new HashSet<>();
@@ -93,6 +92,8 @@ public class UserEntity implements Serializable {
 
     public UserEntity() {
     }
+
+
 
 //    public String getProfileImageType() {
 //        return profileImageType;
@@ -214,12 +215,12 @@ public class UserEntity implements Serializable {
         this.interests = interests;
     }
 
-    public Set<UserSkillEntity> getUserSkills() {
-        return userSkills;
+    public Set<UserSkillEntity> getSkills() {
+        return skills;
     }
 
-    public void setUserSkills(Set<UserSkillEntity> userSkills) {
-        this.userSkills = userSkills;
+    public void setSkills(Set<UserSkillEntity> userSkills) {
+        this.skills = userSkills;
     }
 
     public Set<MessageEntity> getMessages() {

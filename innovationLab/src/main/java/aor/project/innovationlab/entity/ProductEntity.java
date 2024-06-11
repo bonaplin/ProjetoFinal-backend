@@ -1,6 +1,7 @@
 package aor.project.innovationlab.entity;
 
 import aor.project.innovationlab.enums.ProductType;
+import jakarta.inject.Named;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import java.util.Set;
 @NamedQuery(name = "Product.findProductByName", query = "SELECT p FROM ProductEntity p WHERE p.name = :name")
 @NamedQuery(name = "Product.findProductById", query = "SELECT p FROM ProductEntity p WHERE p.id = :id")
 @NamedQuery(name = "Product.findProductByIdentifier", query = "SELECT p FROM ProductEntity p WHERE p.identifier = :identifier")
+@NamedQuery(name = "Product.findAllBrands", query = "SELECT DISTINCT p.brand FROM ProductEntity p")
 public class ProductEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

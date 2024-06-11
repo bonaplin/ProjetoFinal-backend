@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 //import aor.project.innovationlab.utils.jwt.JwtBean;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
@@ -128,6 +129,7 @@ public class UserService {
         return Response.status(200).entity("Account confirmed successfully!").build();
     }
 
+    //TODO - alterar o userType para string no endpoint e deixar como os products.
     @GET
     @Path("/")
     @Produces("application/json")
@@ -140,9 +142,15 @@ public class UserService {
                                 @QueryParam("active") Boolean active,
                                 @QueryParam("confirmed") Boolean confirmed,
                                 @QueryParam("privateProfile") Boolean privateProfile,
-                                @QueryParam("lab_id") Long labId,
+                                @QueryParam("lab") List<String> lab,
+                                @QueryParam("skill") List<String> skill,
+                                @QueryParam("interest") List<String> interest,
+                                @QueryParam("page_number") Integer pageNumber,
+                                @QueryParam("page_size") Integer pageSize,
                                 @HeaderParam("token") String token) {
-        List<?> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, labId);
+        System.out.println(pageNumber + " " + pageSize + " ");
+
+        PaginatedResponse<Object> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

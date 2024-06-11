@@ -1,6 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
@@ -9,6 +10,7 @@ import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.utils.TokenUtil;
@@ -20,8 +22,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
 
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,6 +69,37 @@ public class UserBean {
 
 //    convert entity to dto
 
+    public UserCardDto toDtoCard(UserEntity userEntity) {
+        UserCardDto user = new UserCardDto();
+        user.setId(userEntity.getId());
+        user.setFirstname(userEntity.getFirstname());
+        user.setLastname(userEntity.getLastname());
+        user.setPrivateProfile(userEntity.getPrivateProfile());
+        user.setImagePath(userEntity.getProfileImagePath());
+        user.setEmail(userEntity.getEmail());
+        user.setRole(userEntity.getRole().name());
+        user.setLablocation(userEntity.getLab().getLocation());
+        user.setUsername(userEntity.getUsername());
+
+        if(!userEntity.getPrivateProfile()) {
+            user.setInterests(userEntity.getInterests().stream()
+                    .map(UserInterestEntity::getInterest)
+                    .map(InterestEntity::getName)
+                    .collect(Collectors.toList()));
+
+            user.setSkills(userEntity.getSkills().stream()
+                    .map(UserSkillEntity::getSkill)
+                    .map(SkillEntity::getName)
+                    .collect(Collectors.toList()));
+
+            Instant createdInstant = userEntity.getCreated();
+            LocalDateTime createdDateTime = LocalDateTime.ofInstant(createdInstant, ZoneOffset.UTC);
+            LocalDate createdDate = createdDateTime.toLocalDate();
+            user.setCreated(createdDate);
+        }
+        return user;
+    }
+
     public UserDto toDto(UserEntity userEntity) {
         UserDto user = new UserDto();
         user.setId(userEntity.getId());
@@ -77,16 +109,17 @@ public class UserBean {
         user.setImagePath(userEntity.getProfileImagePath());
         user.setEmail(userEntity.getEmail());
         user.setRole(userEntity.getRole().name());
+        user.setLablocation(userEntity.getLab().getLocation());
+        user.setUsername(userEntity.getUsername());
 
         if(!userEntity.getPrivateProfile()) {
-            user.setLablocation(userEntity.getLab().getLocation());
             user.setAbout(userEntity.getAbout());
             user.setInterests(userEntity.getInterests().stream()
                     .map(UserInterestEntity::getInterest)
                     .map(InterestEntity::getName)
                     .collect(Collectors.toList()));
 
-            user.setSkills(userEntity.getUserSkills().stream()
+            user.setSkills(userEntity.getSkills().stream()
                     .map(UserSkillEntity::getSkill)
                     .map(SkillEntity::getName)
                     .collect(Collectors.toList()));
@@ -107,6 +140,15 @@ public class UserBean {
         return userOwnerProfileDto;
     }
 
+    public UserAddToProjectDto toDtoUserProject(UserEntity userEntity) {
+        UserAddToProjectDto userAddToProjectDto = new UserAddToProjectDto();
+        userAddToProjectDto.setUserId(userEntity.getId());
+        userAddToProjectDto.setFirstName(userEntity.getFirstname());
+        userAddToProjectDto.setLastName(userEntity.getLastname());
+        userAddToProjectDto.setImagePath(userEntity.getProfileImagePath());
+        return userAddToProjectDto;
+    }
+
     /**
      * Creates the initial data for the application
      */
@@ -114,6 +156,24 @@ public class UserBean {
         createUserIfNotExists("admin@admin","admin");
         createUserIfNotExists("ricardo@ricardo","ricardo");
         createUserIfNotExists("joao@joao","joao");
+        createUserIfNotExists("joana@joana","joana");
+        createUserIfNotExists("maria@maria","maria");
+        createUserIfNotExists("carlos@carlos","carlos");
+
+        skillBean.addSkillToUser("admin@admin","Java",null);
+        skillBean.addSkillToUser("admin@admin","IntelIJ",null);
+        interestBean.addInterestToUser("admin@admin","AI");
+        interestBean.addInterestToUser("admin@admin","Machine Learning");
+
+        skillBean.addSkillToUser("ricardo@ricardo","macOS",null);
+        skillBean.addSkillToUser("ricardo@ricardo","Java",null);
+        interestBean.addInterestToUser("ricardo@ricardo","AI");
+        interestBean.addInterestToUser("ricardo@ricardo","python");
+
+        skillBean.addSkillToUser("joao@joao","Assembly",null);
+        skillBean.addSkillToUser("joao@joao","IntelIJ",null);
+        interestBean.addInterestToUser("joao@joao","python");
+        interestBean.addInterestToUser("joao@joao","Machine Learning");
     }
 
     /**
@@ -144,6 +204,8 @@ public class UserBean {
 
         persistUser(user);
     }
+
+
 
     /**
      * Creates a new user with the given email and password
@@ -508,41 +570,82 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public List<?> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, Long labId) {
+    public PaginatedResponse<Object> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize){
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
             LoggerUtil.logError(log,"Session not found.",null,token);
             throw new IllegalArgumentException("Session not found.");
         }
-        String emailUser = sessionEntity.getUser().getEmail();
-        List<UserEntity> users = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, labId);
 
+        if (lab != null && !lab.isEmpty()) {
+            for (String name : lab) {
+                LabEntity labEntity = labDao.findLabByName(name);
+                if (labEntity == null) {
+                    throw new IllegalArgumentException("Lab with id " + name + " does not exist.");
+                }
+            }
+        }
+        // Validate inputs
+        username = InputSanitizerUtil.sanitizeInput(username);
+        email = InputSanitizerUtil.sanitizeInput(email);
+        firstname = InputSanitizerUtil.sanitizeInput(firstname);
+        lastname = InputSanitizerUtil.sanitizeInput(lastname);
+
+        // Validate email
+        if(email != null && !UserValidator.validateEmail(email)){
+            throw new IllegalArgumentException("Invalid email");
+        }
+
+        if(pageNumber == null || pageNumber < 0){
+            pageNumber = 1;
+        }
+        if(pageSize == null || pageSize < 0){
+            pageSize = 10;
+        }
+
+        String emailUser = sessionEntity.getUser().getEmail();
+        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
+        List<UserEntity> users = usersResponse.getResults();
+
+        if(emailUser.equalsIgnoreCase(email)){
+            dtoType = "UserOwnerProfileDto";
+        }
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "UserDto";
         }
-        if(emailUser.equalsIgnoreCase(email)){
-            System.out.println(Color.PURPLE+"UserOwnerProfileDto"+Color.PURPLE);
-            dtoType = "UserOwnerProfileDto";
-            System.out.println(dtoType);
-        }
+
+
+        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setTotalPages(usersResponse.getTotalPages());
 
         switch (dtoType) {
+            case "UserCardDto":
+                response.setResults(users.stream()
+                        .map(this::toDtoCard)
+                        .collect(Collectors.toList()));
+                break;
             case "UserDto":
-                return users.stream()
+                response.setResults(users.stream()
                         .map(this::toDto)
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()));
+                break;
             case "UserOwnerProfileDto":
-                List<UserOwnerProfileDto> list = users.stream()
+                response.setResults(users.stream()
                         .map(this::toDtoOwner)
-                        .collect(Collectors.toList());
-                System.out.println(list);
-                return list;
-
+                        .collect(Collectors.toList()));
+                break;
+            case "UserAddToProjectDto":
+                response.setResults(users.stream()
+                        .map(this::toDtoUserProject)
+                        .collect(Collectors.toList()));
+                break;
             default:
-                return new ArrayList<>();
+                response.setResults(new ArrayList<>());
+                break;
         }
+        return response;
     }
 
 

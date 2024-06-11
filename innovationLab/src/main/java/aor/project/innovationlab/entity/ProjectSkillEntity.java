@@ -24,7 +24,7 @@ public class ProjectSkillEntity implements Serializable {
     private SkillEntity skill;
 
     @Column(name = "active", nullable = false, unique = false)
-    private boolean active;
+    private boolean active = true;
 
     public long getId() {
         return id;
