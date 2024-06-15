@@ -3,9 +3,10 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.SupplierDao;
 import aor.project.innovationlab.entity.SupplierEntity;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 
-@ApplicationScoped
+@Stateless
 public class SupplierBean {
 
     @EJB

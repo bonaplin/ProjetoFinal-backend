@@ -2,6 +2,7 @@ package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.ProductEntity;
+import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
@@ -64,6 +65,36 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
         Root<ProductEntity> product = cq.from(ProductEntity.class);
+
+        List<Predicate> predicates = createPredicates(cb, product, supplierId, brands, description, identifier, name, types);
+        cq.where(predicates.toArray(new Predicate[0]));
+
+        TypedQuery<ProductEntity> query = em.createQuery(cq);
+        query.setFirstResult((pageNumber - 1) * pageSize);
+        query.setMaxResults(pageSize);
+
+        List<ProductEntity> products = query.getResultList();
+
+        // Construct the count query
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<ProductEntity> countRoot = countQuery.from(ProductEntity.class);
+        List<Predicate> countPredicates = createPredicates(cb, countRoot, supplierId, brands, description, identifier, name, types);
+
+        countQuery.select(cb.count(countRoot));
+        countQuery.where(countPredicates.toArray(new Predicate[0]));
+        Long count = em.createQuery(countQuery).getSingleResult();
+        int totalPages = (int) Math.ceil((double) count / pageSize);
+
+        PaginatedResponse<ProductEntity> response = new PaginatedResponse<>();
+        response.setResults(products);
+        response.setTotalPages(totalPages);
+
+        return response;
+    }
+
+    private List<Predicate> createPredicates(CriteriaBuilder cb, Root<ProductEntity> product, Long supplierId,
+                                             List<String> brands, String description, String identifier,
+                                             String name, List<ProductType> types) {
         List<Predicate> predicates = new ArrayList<>();
 
         if (supplierId != null) {
@@ -85,24 +116,7 @@ public class ProductDao extends AbstractDao<ProductEntity> {
             predicates.add(product.get("type").in(types));
         }
 
-        cq.where(predicates.toArray(new Predicate[0]));
-
-        TypedQuery<ProductEntity> query = em.createQuery(cq);
-        query.setFirstResult((pageNumber - 1) * pageSize);
-        query.setMaxResults(pageSize);
-
-        List<ProductEntity> products = query.getResultList();
-
-        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-        countQuery.select(cb.count(countQuery.from(ProductEntity.class)));
-        Long count = em.createQuery(countQuery).getSingleResult();
-        int totalPages = (int) Math.ceil((double) count / pageSize);
-
-        PaginatedResponse<ProductEntity> response = new PaginatedResponse<>();
-        response.setResults(products);
-        response.setTotalPages(totalPages);
-
-        return response;
+        return predicates;
     }
 
     public List<ProductType> findProductTypes() {

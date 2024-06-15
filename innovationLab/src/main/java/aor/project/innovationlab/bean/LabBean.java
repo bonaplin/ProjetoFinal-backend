@@ -4,13 +4,14 @@ import aor.project.innovationlab.dao.LabDao;
 import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.entity.LabEntity;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Stateless
 public class LabBean {
 
     @EJB

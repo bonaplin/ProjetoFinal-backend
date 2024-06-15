@@ -16,6 +16,7 @@ import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Stateless
 public class UserBean {
 
     @EJB
@@ -580,7 +581,7 @@ public class UserBean {
 
         if (lab != null && !lab.isEmpty()) {
             for (String name : lab) {
-                LabEntity labEntity = labDao.findLabByName(name);
+                LabEntity labEntity = labDao.findLabByName(name.toUpperCase());
                 if (labEntity == null) {
                     throw new IllegalArgumentException("Lab with id " + name + " does not exist.");
                 }

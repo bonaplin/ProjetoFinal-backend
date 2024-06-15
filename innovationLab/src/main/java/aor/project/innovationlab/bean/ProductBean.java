@@ -15,7 +15,9 @@ import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -24,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Stateless
 public class ProductBean {
 
     @EJB
@@ -118,8 +120,9 @@ public class ProductBean {
         }
 
         Long supplierId = null;
+        System.out.println(supplierName);
         if(supplierName != null) {
-            SupplierEntity supplier = supplierDao.findSupplierByName(supplierName);
+            SupplierEntity supplier = supplierDao.findSupplierByName(supplierName.toUpperCase());
             if(supplier == null) {
                 LoggerUtil.logError(log, "Supplier not found", null, auth);
             } else {
@@ -129,8 +132,11 @@ public class ProductBean {
 
         List<ProductType> typeEnums = new ArrayList<>();
         if (types != null) {
+            System.out.println("os types são: " + types);
             for (String type : types) {
+                System.out.println("type:" + type);
                 if (ProductType.contains(type.toUpperCase())) {
+                    System.out.println("tem este:" + type);
                     typeEnums.add(ProductType.valueOf(type.toUpperCase()));
                 } else {
                     LoggerUtil.logError(log, "Invalid product type", null, auth);

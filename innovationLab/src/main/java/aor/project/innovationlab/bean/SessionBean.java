@@ -13,6 +13,7 @@ import aor.project.innovationlab.enums.TokenStatus;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.exception.ConstraintViolationException;
@@ -21,7 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 
-@ApplicationScoped
+@Stateless
 public class SessionBean  {
 
     @EJB

@@ -4,6 +4,7 @@ import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.Color;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -19,7 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-@ApplicationScoped
+@Stateless
 public class ImageBean {
 
     @EJB

@@ -14,7 +14,10 @@ import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
+import aor.project.innovationlab.utils.InputSanitizerUtil;
+import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -25,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Stateless
 public class ProjectBean {
 
     @EJB
@@ -421,8 +424,6 @@ public class ProjectBean {
         String userEmail = null;
 
         if(auth != null){
-//            String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-
             SessionEntity se = sessionDao.findSessionByToken(auth);
             if(se != null) {
                 userEmail = se.getUser().getEmail();
@@ -447,15 +448,35 @@ public class ProjectBean {
         if(pageSize == null || pageSize < 0){
             pageSize = 10;
         }
+        if (skill != null) {
+            skill = skill.stream()
+                    .map(InputSanitizerUtil::sanitizeInput)
+                    .collect(Collectors.toList());
+        }
 
-        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
-        List<ProjectEntity> projects = projectsResponse.getResults();
+        if (interest != null) {
+            interest = interest.stream()
+                    .map(InputSanitizerUtil::sanitizeInput)
+                    .collect(Collectors.toList());
+        }
 
-
-
+        //Validate email
+        if(creatorEmail != null && !UserValidator.validateEmail(creatorEmail)){
+            throw new IllegalArgumentException("Invalid creator email");
+        }
+        if(participantEmail != null && !UserValidator.validateEmail(participantEmail)){
+            throw new IllegalArgumentException("Invalid participant email");
+        }
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";
         }
+        //Validate inputs
+        name = InputSanitizerUtil.sanitizeInput(name);
+        creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
+        participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
+
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        List<ProjectEntity> projects = projectsResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(projectsResponse.getTotalPages());

@@ -29,7 +29,6 @@ public class ProjectService {
      * @param dtoType
      * @param name
      * @param status
-     * @param labId
      * @param creatorEmail
      * @param skill
      * @param interest
@@ -54,7 +53,7 @@ public class ProjectService {
                                 @QueryParam("page_number") Integer pageNumber,
                                 @QueryParam("page_size") Integer pageSize,
                                 @HeaderParam("token") String auth) {
-
+        System.out.println(pageNumber + " " + pageSize);
                 PaginatedResponse<Object> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth, pageNumber, pageSize);
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();

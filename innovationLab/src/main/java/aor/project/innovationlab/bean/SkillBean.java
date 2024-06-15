@@ -11,6 +11,7 @@ import aor.project.innovationlab.enums.SkillType;
 
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import aor.project.innovationlab.dto.skill.SkillDto;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Stateless
 public class SkillBean {
 
     @EJB

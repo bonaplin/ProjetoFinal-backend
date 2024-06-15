@@ -77,15 +77,47 @@ public class UserDao extends AbstractDao<UserEntity> {
                                                    Integer pageNumber,
                                                    Integer pageSize) {
 
-        // Create query and add predicates
         CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        // Construct the main query
         CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
         Root<UserEntity> user = cq.from(UserEntity.class);
-        List<Predicate> predicates = new ArrayList<>();
+        List<Predicate> predicates = createPredicates(cb, user, username, email, firstname, lastname, role, active, confirmed, privateProfile, labs, skills, interests);
 
+        cq.where(predicates.toArray(new Predicate[0]));
+        TypedQuery<UserEntity> query = em.createQuery(cq);
+        query.setFirstResult((pageNumber - 1) * pageSize);
+        query.setMaxResults(pageSize);
+        List<UserEntity> users = query.getResultList();
+
+        // Construct the count query
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<UserEntity> countRoot = countQuery.from(UserEntity.class);
+        List<Predicate> countPredicates = createPredicates(cb, countRoot, username, email, firstname, lastname, role, active, confirmed, privateProfile, labs, skills, interests);
+
+        countQuery.select(cb.count(countRoot));
+        countQuery.where(countPredicates.toArray(new Predicate[0]));
+        Long count = em.createQuery(countQuery).getSingleResult();
+        int totalPages = (int) Math.ceil((double) count / pageSize);
+
+        // Construct the response
+        PaginatedResponse<UserEntity> response = new PaginatedResponse<>();
+        response.setResults(users);
+        response.setTotalPages(totalPages);
+
+        return response;
+    }
+
+    private List<Predicate> createPredicates(CriteriaBuilder cb, Root<UserEntity> user, String username, String email,
+                                             String firstname, String lastname, UserType role, Boolean active,
+                                             Boolean confirmed, Boolean privateProfile, List<String> labs,
+                                             List<String> skills, List<String> interests) {
+        List<Predicate> predicates = new ArrayList<>();
+//        predicates.add(cb.isFalse(user.get("privateProfile")));
         predicates.add(cb.equal(user.get("active"), true));
         // Only show public profiles when searching for skills or interests
-        if ((skills != null && !skills.isEmpty()) || (interests != null && !interests.isEmpty())) {
+        if ((skills != null && !skills.isEmpty()) || (interests != null && !interests.isEmpty()) ||
+                (labs != null && !labs.isEmpty() && (username != null || email != null || firstname != null || lastname != null || role != null || active != null || confirmed != null))) {
             predicates.add(cb.isFalse(user.get("privateProfile")));
         }
         if (username != null) {
@@ -103,20 +135,14 @@ public class UserDao extends AbstractDao<UserEntity> {
         if (role != null) {
             predicates.add(cb.equal(user.get("role"), role));
         }
-        if (active != null) {
-            predicates.add(cb.equal(user.get("active"), active));
-        }
         if (confirmed != null) {
             predicates.add(cb.equal(user.get("confirmed"), confirmed));
-        }
-        if (privateProfile != null) {
-            predicates.add(cb.equal(user.get("privateProfile"), privateProfile));
         }
         if (labs != null && !labs.isEmpty()) {
             predicates.add(user.get("lab").get("location").in(labs));
         }
         if (skills != null && !skills.isEmpty()) {
-            Subquery<Long> skillSubquery = cq.subquery(Long.class);
+            Subquery<Long> skillSubquery = cb.createQuery().subquery(Long.class);
             Root<UserSkillEntity> skillRoot = skillSubquery.from(UserSkillEntity.class);
             skillSubquery.select(skillRoot.get("user").get("id"));
             skillSubquery.where(skillRoot.get("skill").get("name").in(skills), cb.isTrue(skillRoot.get("skill").get("active")));
@@ -124,8 +150,8 @@ public class UserDao extends AbstractDao<UserEntity> {
             skillSubquery.having(cb.equal(cb.count(skillRoot), skills.size()));
             predicates.add(cb.in(user.get("id")).value(skillSubquery));
         }
-        if(interests != null && !interests.isEmpty()){
-            Subquery<Long> interestSubquery = cq.subquery(Long.class);
+        if (interests != null && !interests.isEmpty()) {
+            Subquery<Long> interestSubquery = cb.createQuery().subquery(Long.class);
             Root<UserInterestEntity> interestRoot = interestSubquery.from(UserInterestEntity.class);
             interestSubquery.select(interestRoot.get("user").get("id"));
             interestSubquery.where(interestRoot.get("interest").get("name").in(interests), cb.isTrue(interestRoot.get("interest").get("active")));
@@ -134,26 +160,7 @@ public class UserDao extends AbstractDao<UserEntity> {
             predicates.add(cb.in(user.get("id")).value(interestSubquery));
         }
 
-        // Add predicates to query and return result
-        cq.where(predicates.toArray(new Predicate[0]));
-
-        TypedQuery<UserEntity> query = em.createQuery(cq);
-        query.setFirstResult((pageNumber - 1) * pageSize);
-        query.setMaxResults(pageSize);
-
-        List<UserEntity> users = query.getResultList();
-
-        // Calculate total pages
-        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-        countQuery.select(cb.count(countQuery.from(UserEntity.class)));
-        Long count = em.createQuery(countQuery).getSingleResult();
-        int totalPages = (int) Math.ceil((double) count / pageSize);
-
-        PaginatedResponse<UserEntity> response = new PaginatedResponse<>();
-        response.setResults(users);
-        response.setTotalPages(totalPages);
-
-        return response;
+        return predicates;
     }
 }
 
