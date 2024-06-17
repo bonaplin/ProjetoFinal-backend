@@ -138,4 +138,12 @@ public class ProductEntity implements Serializable {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public Set<ProjectProductEntity> getProjectProducts() {
+        return projectProducts;
+    }
+
+    public void setProjectProducts(Set<ProjectProductEntity> projectProducts) {
+        this.projectProducts = projectProducts;
+    }
 }

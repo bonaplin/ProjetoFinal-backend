@@ -6,10 +6,7 @@ import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,13 +58,21 @@ public class ProductDao extends AbstractDao<ProductEntity> {
                                                          String name,
                                                          List<ProductType> types,
                                                          Integer pageNumber,
-                                                         Integer pageSize) {
+                                                         Integer pageSize,
+                                                         String orderField,
+                                                         String orderDirection) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
         Root<ProductEntity> product = cq.from(ProductEntity.class);
 
         List<Predicate> predicates = createPredicates(cb, product, supplierId, brands, description, identifier, name, types);
         cq.where(predicates.toArray(new Predicate[0]));
+
+        Order order = getOrder(cb, product, orderField, orderDirection);
+        // Adicione a ordem à consulta
+        if (order != null) {
+            cq.orderBy(order);
+        }
 
         TypedQuery<ProductEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
@@ -117,6 +122,20 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         }
 
         return predicates;
+    }
+
+    private Order getOrder(CriteriaBuilder cb, Root<ProductEntity> product, String orderField, String orderDirection) {
+        if (orderField == null || orderDirection == null) {
+            return null;
+        }
+
+        Path<Object> field = product.get(orderField);
+        if (orderDirection.equalsIgnoreCase("ASC")) {
+            return cb.asc(field);
+        } else {
+            return cb.desc(field);
+        }
+
     }
 
     public List<ProductType> findProductTypes() {

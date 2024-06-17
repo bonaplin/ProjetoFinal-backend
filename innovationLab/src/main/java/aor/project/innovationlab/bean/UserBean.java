@@ -25,6 +25,7 @@ import jakarta.persistence.TransactionRequiredException;
 
 import java.time.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -571,7 +572,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public PaginatedResponse<Object> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize){
+    public PaginatedResponse<Object> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
@@ -604,9 +605,18 @@ public class UserBean {
         if(pageSize == null || pageSize < 0){
             pageSize = 10;
         }
+        if(orderDirection != null && !orderDirection.isEmpty() && orderField != null && !orderField.isEmpty()){
+            orderDirection = orderDirection.toLowerCase();
+            orderField = orderField.toLowerCase();
+            if (orderField.equals("privateprofile")) {
+                orderField = "privateProfile";
+            }
+            System.out.println(Color.PURPLE+orderField+Color.PURPLE);
+            validateOrderParameters(orderField, orderDirection);
+        }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
+        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField, orderDirection);
         List<UserEntity> users = usersResponse.getResults();
 
         if(emailUser.equalsIgnoreCase(email)){
@@ -647,6 +657,18 @@ public class UserBean {
                 break;
         }
         return response;
+    }
+
+    private void validateOrderParameters(String orderField, String orderDirection) {
+        List<String> allowedFields = Arrays.asList("username", "email", "firstname", "privateProfile");
+        List<String> allowedDirections = Arrays.asList("asc", "desc");
+
+        if(!allowedFields.contains(orderField)){
+            throw new IllegalArgumentException("Invalid order field");
+        }
+        if(!allowedDirections.contains(orderDirection)){
+            throw new IllegalArgumentException("Invalid order direction");
+        }
     }
 
 
