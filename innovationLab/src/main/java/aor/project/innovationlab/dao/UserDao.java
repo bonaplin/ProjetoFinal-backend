@@ -63,7 +63,8 @@ public class UserDao extends AbstractDao<UserEntity> {
         }
     }
 
-    public PaginatedResponse<UserEntity> findUsers(String username,
+    public PaginatedResponse<UserEntity> findUsers(Long id,
+                                                    String username,
                                                    String email,
                                                    String firstname,
                                                    String lastname,
@@ -92,6 +93,21 @@ public class UserDao extends AbstractDao<UserEntity> {
         // Adicione a ordem à consulta
         if (order != null) {
             cq.orderBy(order);
+        }
+        // Se um ID foi fornecido, retorne o usuário com esse ID
+        if (id != null) {
+            UserEntity userentity = em.find(UserEntity.class, id);
+            if (userentity != null) {
+                List<UserEntity> users = new ArrayList<>();
+                users.add(userentity);
+
+                // Construct the response
+                PaginatedResponse<UserEntity> response = new PaginatedResponse<>();
+                response.setResults(users);
+                response.setTotalPages(1); // Como apenas um usuário é retornado, o total de páginas é 1
+
+                return response;
+            }
         }
 
         TypedQuery<UserEntity> query = em.createQuery(cq);

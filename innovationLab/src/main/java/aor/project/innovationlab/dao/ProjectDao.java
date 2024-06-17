@@ -209,7 +209,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                     .when(cb.equal(project.get(orderField), ProjectStatus.PLANNING), 10)
                     .when(cb.equal(project.get(orderField), ProjectStatus.READY), 20)
                     .when(cb.equal(project.get(orderField), ProjectStatus.IN_PROGRESS), 30)
-                    .when(cb.equal(project.get(orderField), ProjectStatus.CANCELED), 40)
+                    .when(cb.equal(project.get(orderField), ProjectStatus.CANCELLED), 40)
                     .when(cb.equal(project.get(orderField), ProjectStatus.FINISHED), 50)
                     .otherwise(0)
                     .as(Integer.class);
