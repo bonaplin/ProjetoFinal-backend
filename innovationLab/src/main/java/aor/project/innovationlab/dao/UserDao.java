@@ -75,7 +75,9 @@ public class UserDao extends AbstractDao<UserEntity> {
                                                    List<String> skills,
                                                    List<String> interests,
                                                    Integer pageNumber,
-                                                   Integer pageSize) {
+                                                   Integer pageSize,
+                                                   String orderField,
+                                                   String orderDirection) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -85,6 +87,13 @@ public class UserDao extends AbstractDao<UserEntity> {
         List<Predicate> predicates = createPredicates(cb, user, username, email, firstname, lastname, role, active, confirmed, privateProfile, labs, skills, interests);
 
         cq.where(predicates.toArray(new Predicate[0]));
+        Order order = getOrder(cb, user, orderField, orderDirection);
+
+        // Adicione a ordem à consulta
+        if (order != null) {
+            cq.orderBy(order);
+        }
+
         TypedQuery<UserEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
         query.setMaxResults(pageSize);
@@ -106,6 +115,34 @@ public class UserDao extends AbstractDao<UserEntity> {
         response.setTotalPages(totalPages);
 
         return response;
+    }
+
+    private Order getOrder(CriteriaBuilder cb, Root<UserEntity> user, String orderField, String orderDirection) {
+        List<Order> orders = new ArrayList<>();
+
+        // Ordenar por username
+        if (orderField != null && orderField.equals("username") && orderDirection != null) {
+            if (orderDirection.equalsIgnoreCase("asc")) {
+                orders.add(cb.asc(user.get("username")));
+            } else if (orderDirection.equalsIgnoreCase("desc")) {
+                orders.add(cb.desc(user.get("username")));
+            }
+        }
+
+        // Ordenar por firstname
+        if (orderField != null && orderField.equals("firstname") && orderDirection != null) {
+            if (orderDirection.equalsIgnoreCase("asc")) {
+                orders.add(cb.asc(user.get("firstname")));
+            } else if (orderDirection.equalsIgnoreCase("desc")) {
+                orders.add(cb.desc(user.get("firstname")));
+            }
+        }
+
+        // Ordenar por privateProfile (publicos primeiro e privados depois)
+        orders.add(cb.asc(user.get("privateProfile")));
+
+        // Retorna a primeira ordem na lista. Se a lista estiver vazia, retorna null.
+        return orders.isEmpty() ? null : orders.get(0);
     }
 
     private List<Predicate> createPredicates(CriteriaBuilder cb, Root<UserEntity> user, String username, String email,

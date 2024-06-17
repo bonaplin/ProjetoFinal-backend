@@ -52,9 +52,11 @@ public class ProjectService {
                                 @QueryParam("role") ProjectUserType role,
                                 @QueryParam("page_number") Integer pageNumber,
                                 @QueryParam("page_size") Integer pageSize,
+                                @QueryParam("order_field") String orderField,
+                                @QueryParam("order_direction") String orderDirection,
                                 @HeaderParam("token") String auth) {
-        System.out.println(pageNumber + " " + pageSize);
-                PaginatedResponse<Object> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth, pageNumber, pageSize);
+        System.out.println(" orderDirection: " + orderDirection + " orderField " + orderField);
+                PaginatedResponse<Object> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, auth, pageNumber, pageSize, orderField,orderDirection);
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
         }

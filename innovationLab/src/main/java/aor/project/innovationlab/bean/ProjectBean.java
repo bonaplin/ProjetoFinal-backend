@@ -14,7 +14,9 @@ import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -26,6 +28,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -419,7 +422,8 @@ public class ProjectBean {
                                                  List<String> skill, List<String> interest,
                                                  String participantEmail,
                                                  ProjectUserType role,
-                                                 String auth, Integer pageNumber, Integer pageSize) {
+                                                 String auth, Integer pageNumber, Integer pageSize,
+                                                      String orderField, String orderDirection){
 
         String userEmail = null;
 
@@ -475,7 +479,16 @@ public class ProjectBean {
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
         participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
 
-        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        if(orderDirection != null && orderField != null){
+            orderDirection = orderDirection.toLowerCase();
+            orderField = orderField.toLowerCase();
+            if(orderField.equals("createddate")){
+                orderField = "createdDate";
+            }
+            validateOrderParameters(orderField, orderDirection,userEmail, auth);
+        }
+
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize,orderField,orderDirection);
         List<ProjectEntity> projects = projectsResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
@@ -501,6 +514,24 @@ public class ProjectBean {
                 response.setResults(new ArrayList<>());
         }
         return response;
+    }
+
+    private void validateOrderParameters(String orderField, String orderDirection,String userEmail, String token) {
+        String log = "Attempting to validate order parameters. Order field: " + orderField + ", Order direction: " + orderDirection;
+        List<String> allowedFields = List.of("createdDate", "name", "status", "vacancies"); // Adicione mais campos conforme necessário
+
+        // Verifica se orderField é válido
+        if (orderField != null && !orderField.isEmpty() && !allowedFields.contains(orderField)) {
+            LoggerUtil.logError(log,"OrderField is invalid",userEmail,token);
+            throw new IllegalArgumentException("Invalid order field. It should be one of " + allowedFields);
+        }
+
+        // Verifica se orderDirection é válido
+        if (orderDirection != null && !orderDirection.isEmpty() && !orderDirection.equalsIgnoreCase("asc") && !orderDirection.equalsIgnoreCase("desc")) {
+            LoggerUtil.logError(log,"OrderDirection is invalid",userEmail,token);
+            throw new IllegalArgumentException("Invalid order direction. It should be 'asc' or 'desc'.");
+        }
+        System.out.println("Order parameters are valid");
     }
 
 
