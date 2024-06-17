@@ -147,10 +147,12 @@ public class UserService {
                                 @QueryParam("interest") List<String> interest,
                                 @QueryParam("page_number") Integer pageNumber,
                                 @QueryParam("page_size") Integer pageSize,
+                                @QueryParam("order_field") String orderField,
+                                @QueryParam("order_direction") String orderDirection,
                                 @HeaderParam("token") String token) {
-        System.out.println(pageNumber + " " + pageSize + " ");
+        System.out.println(orderDirection + " & " + orderField);
 
-        PaginatedResponse<Object> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize);
+        PaginatedResponse<Object> dto = userBean.getUsers(token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField,orderDirection);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

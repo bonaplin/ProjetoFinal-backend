@@ -30,8 +30,10 @@ public class ProductService {
             @QueryParam("identifier") String identifier,
             @QueryParam("page_number") Integer pageNumber,
             @QueryParam("page_size") Integer pageSize,
+            @QueryParam("order_field") String orderField,
+            @QueryParam("order_direction") String orderDirection,
             @HeaderParam("token") String auth) {
-        PaginatedResponse<Object> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize);
+        PaginatedResponse<Object> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize, orderField, orderDirection);
 
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }

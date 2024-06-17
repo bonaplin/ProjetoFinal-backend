@@ -10,12 +10,15 @@ import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Local;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,152 +51,6 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         }
     }
 
-//    public PaginatedResponse<ProjectEntity> findProjects(String name,
-//                                                         List<ProjectStatus> status,
-//                                                         List<String> labs,
-//                                                         String creatorEmail,
-//                                                         List<String> skills,
-//                                                         List<String> interests,
-//                                                         String participantEmail,
-//                                                         ProjectUserType role,
-//                                                         String requestingUserEmail,
-//                                                         Integer pageNumber,
-//                                                         Integer pageSize) {
-//
-//        //Validate inputs
-//        name = InputSanitizerUtil.sanitizeInput(name);
-//        creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
-//        participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
-//
-//        if (skills != null) {
-//            skills = skills.stream()
-//                    .map(InputSanitizerUtil::sanitizeInput)
-//                    .collect(Collectors.toList());
-//        }
-//
-//        if (interests != null) {
-//            interests = interests.stream()
-//                    .map(InputSanitizerUtil::sanitizeInput)
-//                    .collect(Collectors.toList());
-//        }
-//
-//        //Validate email
-//        if(creatorEmail != null && !UserValidator.validateEmail(creatorEmail)){
-//            throw new IllegalArgumentException("Invalid creator email");
-//        }
-//        if(participantEmail != null && !UserValidator.validateEmail(participantEmail)){
-//            throw new IllegalArgumentException("Invalid participant email");
-//        }
-//
-//        //Create query and add predicates
-//        CriteriaBuilder cb = em.getCriteriaBuilder();
-//        CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
-//        Root<ProjectEntity> project = cq.from(ProjectEntity.class);
-//        List<Predicate> predicates = new ArrayList<>();
-//
-//        predicates.add(cb.isTrue(project.get("active")));
-//
-//        if (name != null) {
-//            predicates.add(cb.and(
-//                    cb.equal(project.get("name"), name),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//        if (status != null && !status.isEmpty()) {
-//            predicates.add(cb.and(
-//                    project.get("status").in(status),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//
-//        if (skills != null && !skills.isEmpty()) {
-//            for (String skill : skills) {
-//                Subquery<Long> skillSubquery = cq.subquery(Long.class);
-//                Root<ProjectSkillEntity> skillRoot = skillSubquery.from(ProjectSkillEntity.class);
-//                skillSubquery.select(skillRoot.get("project").get("id"));
-//                skillSubquery.where(cb.and(
-//                        cb.equal(skillRoot.get("skill").get("name"), skill),
-//                        cb.isTrue(skillRoot.get("skill").get("active"))
-//                ));
-//                predicates.add(cb.in(project.get("id")).value(skillSubquery));
-//            }
-//        }
-//        if (interests != null && !interests.isEmpty()) {
-//            for (String interest : interests) {
-//                Subquery<Long> interestSubquery = cq.subquery(Long.class);
-//                Root<ProjectInterestEntity> interestRoot = interestSubquery.from(ProjectInterestEntity.class);
-//                interestSubquery.select(interestRoot.get("project").get("id"));
-//                interestSubquery.where(cb.and(
-//                        cb.equal(interestRoot.get("interest").get("name"), interest),
-//                        cb.isTrue(interestRoot.get("interest").get("active")) // Verifica se o interesse está ativo
-//                ));
-//                predicates.add(cb.in(project.get("id")).value(interestSubquery));
-//            }
-//        }
-//        if (labs != null && !labs.isEmpty()) {
-//            predicates.add(project.get("lab").get("location").in(labs));
-//        }
-//        if (creatorEmail != null) {
-//            predicates.add(cb.and(
-//                    cb.equal(project.get("creator").get("email"), creatorEmail),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//        if (participantEmail != null) {
-//            // Join with ProjectUserEntity to get projects where the user is a participant
-//            Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers", JoinType.LEFT);
-//            predicates.add(cb.and(
-//                    cb.or(
-//                            cb.equal(userJoin.get("user").get("email"), participantEmail),
-//                            cb.equal(project.get("creator").get("email"), participantEmail)
-//                    ),
-//
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//            if(role != null){
-//                predicates.add(cb.equal(userJoin.get("role"), role));
-//            } else {
-//                predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
-//            }
-//        }
-//
-//        //Order by creator, participant, other
-//        Join<ProjectEntity, ProjectUserEntity> projectUserJoin = project.join("projectUsers");
-//        Join<ProjectUserEntity, UserEntity> userJoin = projectUserJoin.join("user");
-//
-//        System.out.println("Requesting user email: before: " + requestingUserEmail);
-//        if (requestingUserEmail != null) {
-//            System.out.println("Requesting user email: after: " + requestingUserEmail);
-//            //Create expression to order by creator, participant, other
-//            Expression<Integer> orderByExpression = cb.<Integer>selectCase()
-//                    .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1) // Se o user que faz o pedido é criador, atribui 1
-//                    .when(cb.equal(userJoin.get("email"), requestingUserEmail), 2) // Se o user que faz o pedido é participante, atribui 2
-//                    .otherwise(3) // Se o user que faz o pedido não é nem criador nem participante, atribui 3
-//                    .as(Integer.class); // Converte a Expression<Object> em uma Expression<Integer>
-//
-//            cq.orderBy(cb.asc(orderByExpression));
-//        }
-//        //Add predicates to query and return result
-//        cq.where(predicates.toArray(new Predicate[0]));
-//
-//        TypedQuery<ProjectEntity> query = em.createQuery(cq);
-//        query.setFirstResult((pageNumber - 1) * pageSize);
-//        query.setMaxResults(pageSize);
-//
-//        List<ProjectEntity> projects = query.getResultList();
-//
-//        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-//        countQuery.select(cb.count(countQuery.from(ProjectEntity.class)));
-//        Long count = em.createQuery(countQuery).getSingleResult();
-//        int totalPages = (int) Math.ceil((double) count / pageSize);
-//
-//        PaginatedResponse<ProjectEntity> response = new PaginatedResponse<>();
-//        response.setResults(projects);
-//        response.setTotalPages(totalPages);
-//
-//        return response;
-//    }
-
     public PaginatedResponse<ProjectEntity> findProjects(String name,
                                                          List<ProjectStatus> status,
                                                          List<String> labs,
@@ -204,16 +61,42 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                                          ProjectUserType role,
                                                          String requestingUserEmail,
                                                          Integer pageNumber,
-                                                         Integer pageSize) {
+                                                         Integer pageSize,
+                                                         String orderField,
+                                                         String orderDirection) {
 
         //Create query and add predicates
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
-        cq.distinct(true);
+//        cq.distinct(true);
         Root<ProjectEntity> project = cq.from(ProjectEntity.class);
 
         List<Predicate> predicates = createPredicatesWithoutJoin(cb, cq, project, name, status, labs, creatorEmail, skills, interests, participantEmail, role, requestingUserEmail);
         cq.where(predicates.toArray(new Predicate[0]));
+
+        Order order = getOrder(cb, project, orderField, orderDirection);
+        // Subquery to order by 1st creator, 2nd participant, 3rd others
+        if (requestingUserEmail != null) {
+            Subquery<Long> userSubquery = cq.subquery(Long.class);
+            Root<ProjectUserEntity> userRoot = userSubquery.from(ProjectUserEntity.class);
+            userSubquery.select(userRoot.get("project").get("id"));
+            userSubquery.where(cb.equal(userRoot.get("user").get("email"), requestingUserEmail));
+
+            Expression<Integer> orderByExpression = cb.<Integer>selectCase()
+                    .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1)
+                    .when(cb.exists(userSubquery), 2)
+                    .otherwise(3)
+                    .as(Integer.class);
+            if (order != null) {
+                System.out.println("ORDER BY: " + order + " " + orderByExpression);
+                cq.orderBy(order, cb.asc(orderByExpression));
+            } else {
+                System.out.println("ORDER BY: " + orderByExpression);
+                cq.orderBy(cb.asc(orderByExpression));
+            }
+        } else if (order != null) {
+            cq.orderBy(order);
+        }
 
         TypedQuery<ProjectEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
@@ -312,94 +195,62 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         return predicates;
     }
 
-//    private List<Predicate> createPredicates(CriteriaBuilder cb, CriteriaQuery<ProjectEntity> cq, Root<ProjectEntity> project, String name,
-//                                             List<ProjectStatus> status, List<String> labs, String creatorEmail,
-//                                             List<String> skills, List<String> interests, String participantEmail,
-//                                             ProjectUserType role, String requestingUserEmail) {
-//        List<Predicate> predicates = new ArrayList<>();
-//        predicates.add(cb.isTrue(project.get("active")));
-//
-//        if (name != null) {
-//            predicates.add(cb.and(
-//                    cb.equal(project.get("name"), name),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//        if (status != null && !status.isEmpty()) {
-//            predicates.add(cb.and(
-//                    project.get("status").in(status),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//        if (skills != null && !skills.isEmpty()) {
-//            for (String skill : skills) {
-//                Subquery<Long> skillSubquery = cq.subquery(Long.class);
-//                Root<ProjectSkillEntity> skillRoot = skillSubquery.from(ProjectSkillEntity.class);
-//                skillSubquery.select(skillRoot.get("project").get("id"));
-//                skillSubquery.where(cb.and(
-//                        cb.equal(skillRoot.get("skill").get("name"), skill),
-//                        cb.isTrue(skillRoot.get("skill").get("active"))
-//                ));
-//                predicates.add(cb.in(project.get("id")).value(skillSubquery));
-//            }
-//        }
-//        if (interests != null && !interests.isEmpty()) {
-//            for (String interest : interests) {
-//                Subquery<Long> interestSubquery = cq.subquery(Long.class);
-//                Root<ProjectInterestEntity> interestRoot = interestSubquery.from(ProjectInterestEntity.class);
-//                interestSubquery.select(interestRoot.get("project").get("id"));
-//                interestSubquery.where(cb.and(
-//                        cb.equal(interestRoot.get("interest").get("name"), interest),
-//                        cb.isTrue(interestRoot.get("interest").get("active")) // Verifica se o interesse está ativo
-//                ));
-//                predicates.add(cb.in(project.get("id")).value(interestSubquery));
-//            }
-//        }
-//        if (labs != null && !labs.isEmpty()) {
-//            predicates.add(project.get("lab").get("location").in(labs));
-//        }
-//        if (creatorEmail != null) {
-//            predicates.add(cb.and(
-//                    cb.equal(project.get("creator").get("email"), creatorEmail),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//        }
-//        if (participantEmail != null) {
-//            System.out.println("Participant email: " + participantEmail);
-//            // Join with ProjectUserEntity to get projects where the user is a participant
-//            Join<ProjectEntity, ProjectUserEntity> userJoin = project.join("projectUsers", JoinType.LEFT);
-//            predicates.add(cb.and(
-//                    cb.or(
-//                            cb.equal(userJoin.get("user").get("email"), participantEmail),
-//                            cb.equal(project.get("creator").get("email"), participantEmail)
-//                    ),
-//                    cb.isTrue(project.get("active")) // Verifica se o projeto está ativo
-//            ));
-//            if(role != null){
-//                predicates.add(cb.equal(userJoin.get("role"), role));
-//            } else {
-//                predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
-//            }
-//        }
-//
-//        //Order by creator, participant, other
-//        Join<ProjectEntity, ProjectUserEntity> projectUserJoin = project.join("projectUsers");
-//        Join<ProjectUserEntity, UserEntity> userJoin = projectUserJoin.join("user");
-//
-//        System.out.println("Requesting user email: before: " + requestingUserEmail);
-//        if (requestingUserEmail != null) {
-//            System.out.println("Requesting user email: after: " + requestingUserEmail);
-//            //Create expression to order by creator, participant, other
-//            Expression<Integer> orderByExpression = cb.<Integer>selectCase()
-//                    .when(cb.equal(project.get("creator").get("email"), requestingUserEmail), 1) // Se o user que faz o pedido é criador, atribui 1
-//                    .when(cb.equal(userJoin.get("email"), requestingUserEmail), 2) // Se o user que faz o pedido é participante, atribui 2
-//                    .otherwise(3) // Se o user que faz o pedido não é nem criador nem participante, atribui 3
-//                    .as(Integer.class); // Converte a Expression<Object> em uma Expression<Integer>
-//
-//            cq.orderBy(cb.asc(orderByExpression));
-//        }
-//
-//        return predicates;
-//    }
+    private Order getOrder(CriteriaBuilder cb, Root<ProjectEntity> project, String orderField, String orderDirection) {
+        if (orderField != null && !orderField.isEmpty() && orderDirection != null && !orderDirection.isEmpty()) {
+            Path<LocalDate> orderPath;
+            if (orderField.equals("createdDate")) {
+                // If the order field is 'createdDate', get the path as a LocalDate
+                orderPath = project.<LocalDate>get(orderField);
+            }
+        if (orderField.equals("status")) {
+            // Se o campo de ordenação é 'status', obtenha o valor do status como um Integer
+            Expression<Integer> statusValue = cb.<Integer>selectCase()
+                    .when(cb.equal(project.get(orderField), ProjectStatus.PLANNING), 10)
+                    .when(cb.equal(project.get(orderField), ProjectStatus.READY), 20)
+                    .when(cb.equal(project.get(orderField), ProjectStatus.IN_PROGRESS), 30)
+                    .when(cb.equal(project.get(orderField), ProjectStatus.CANCELED), 40)
+                    .when(cb.equal(project.get(orderField), ProjectStatus.FINISHED), 50)
+                    .otherwise(0)
+                    .as(Integer.class);
+
+            if (orderDirection.equalsIgnoreCase("asc")) {
+                return cb.asc(statusValue);
+            } else if (orderDirection.equalsIgnoreCase("desc")) {
+                return cb.desc(statusValue);
+            } else {
+                throw new IllegalArgumentException("Invalid order direction. It should be 'asc' or 'desc'.");
+            }
+        } else if(orderField.equals("vacancies")){
+            Subquery<Long> sq = cb.createQuery().subquery(Long.class);
+            Root<ProjectUserEntity> projectUser = sq.from(ProjectUserEntity.class);
+            sq.select(cb.count(projectUser)).where(cb.equal(projectUser.get("project"), project));
+
+            Expression<Number> vacancies = cb.diff(project.<Integer>get("maxParticipants"), sq.getSelection());
+
+            if (orderDirection.equalsIgnoreCase("asc")) {
+                return cb.asc(vacancies);
+            } else if (orderDirection.equalsIgnoreCase("desc")) {
+                return cb.desc(vacancies);
+            } else {
+                throw new IllegalArgumentException("Invalid order direction. It should be 'asc' or 'desc'.");
+            }
+        }
+
+
+        else {
+        orderPath = project.get(orderField);
+            }
+
+            if (orderDirection.equalsIgnoreCase("asc")) {
+                return cb.asc(orderPath);
+            } else if (orderDirection.equalsIgnoreCase("desc")) {
+                return cb.desc(orderPath);
+            } else {
+                throw new IllegalArgumentException("Invalid order direction. It should be 'asc' or 'desc'.");
+            }
+        }
+        return null;
+    }
+
 
 }

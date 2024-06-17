@@ -112,7 +112,7 @@ public class ProductBean {
     }
 
 
-    public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize) {
+    public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize, String orderField, String orderDirection){
         String log = "Attempt to get products";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(auth);
         if(sessionEntity == null) {
@@ -144,6 +144,15 @@ public class ProductBean {
             }
         }
 
+        if(orderDirection != null && orderField !=null && !orderDirection.isEmpty() && !orderField.isEmpty()){
+            orderDirection = orderDirection.toLowerCase();
+            orderField = orderField.toLowerCase();
+            validateOrderParameters(orderField, orderDirection, auth);
+        } else {
+            orderField = null;
+            orderDirection = null;
+        }
+
         if(pageNumber == null || pageNumber < 0){
             pageNumber = 1;
         }
@@ -151,7 +160,7 @@ public class ProductBean {
             pageSize = 10;
         }
 
-        PaginatedResponse<ProductEntity> productResponse = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize);
+        PaginatedResponse<ProductEntity> productResponse = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize, orderField,orderDirection);
         List<ProductEntity> products = productResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
@@ -171,6 +180,21 @@ public class ProductBean {
         }
         return response;
 
+    }
+
+    private void validateOrderParameters(String orderField, String orderDirection, String auth) {
+        String log= "Attempt to get products";
+        List<String> allowedFields = List.of("name", "brand", "type", "supplier", "identifier" );
+
+        if(orderField != null && !allowedFields.contains(orderField) &&!orderField.isEmpty()){
+            LoggerUtil.logError(log, "Invalid order field", null, auth);
+            throw new IllegalArgumentException("Invalid order field");
+        }
+
+        if(orderDirection != null && !List.of("asc", "desc").contains(orderDirection) && !orderDirection.isEmpty()){
+            LoggerUtil.logError(log, "Invalid order direction", null, auth);
+            throw new IllegalArgumentException("Invalid order direction");
+        }
     }
 
 
