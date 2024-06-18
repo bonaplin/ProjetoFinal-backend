@@ -572,7 +572,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public PaginatedResponse<Object> getUsers(String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
+    public PaginatedResponse<Object> getUsers(Long id, String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
@@ -616,7 +616,7 @@ public class UserBean {
         }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField, orderDirection);
+        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(id, username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField, orderDirection);
         List<UserEntity> users = usersResponse.getResults();
 
         if(emailUser.equalsIgnoreCase(email)){
