@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Startup;
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.Email;
 
 /**
  * Esta classe é responsável por inicializar o sistema.
@@ -32,7 +33,7 @@ public class StartupBean {
     private TaskBean taskBean;
 
     @Inject
-    private InterestBean interestBean;
+    private EmailBean emailBean;
 
     @Inject
     private ProjectBean projectBean;
@@ -46,6 +47,6 @@ public class StartupBean {
         productBean.createInitialData();
         projectBean.createInitialData();
         taskBean.createInitialData();
-//        interestBean.createInitialData();
+        emailBean.createInitialData();
     }
 }
