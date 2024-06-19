@@ -5,12 +5,10 @@ import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.lab.LabDto;
-import aor.project.innovationlab.dto.project.ProjectCardDto;
-import aor.project.innovationlab.dto.project.ProjectDto;
+import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
-import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
@@ -243,7 +241,7 @@ public class ProjectBean {
         }
     }
 
-    public void createProject(String token, ProjectDto projectDto){
+    public void createProject(String token, CreateProjectDto createProjectDto){
         String log = "Creating new project";
         if(token == null) {
             LoggerUtil.logError(log, "Token is required", null, null);
@@ -256,7 +254,7 @@ public class ProjectBean {
             throw new IllegalArgumentException("Invalid token");
         }
 
-        if(projectDto == null) {
+        if(createProjectDto == null) {
             LoggerUtil.logError(log, "More data is required", null, null);
             throw new IllegalArgumentException("More data is required");
         }
@@ -439,6 +437,7 @@ public class ProjectBean {
                                                  List<String> skill, List<String> interest,
                                                  String participantEmail,
                                                  ProjectUserType role,
+                                                 Long id,
                                                  String auth, Integer pageNumber, Integer pageSize) {
 
         String userEmail = null;
@@ -471,7 +470,7 @@ public class ProjectBean {
             pageSize = 10;
         }
 
-        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, id, pageNumber, pageSize);
         List<ProjectEntity> projects = projectsResponse.getResults();
 
 

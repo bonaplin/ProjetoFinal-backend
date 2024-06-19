@@ -56,6 +56,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                                          String participantEmail,
                                                          ProjectUserType role,
                                                          String requestingUserEmail,
+                                                         Long id,
                                                          Integer pageNumber,
                                                          Integer pageSize) {
 
@@ -152,6 +153,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                 predicates.add(cb.equal(userJoin.get("role"), role));
             } else {
                 predicates.add(userJoin.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL));
+            }
+
+
+            if (id != null) {
+                predicates.add(cb.equal(project.get("id"), id));
             }
         }
 
