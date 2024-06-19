@@ -29,7 +29,7 @@ public class ProjectService {
      * @param dtoType
      * @param name
      * @param status
-     * @param labId
+     * @param lab
      * @param creatorEmail
      * @param skill
      * @param interest
@@ -65,6 +65,15 @@ public class ProjectService {
         @Produces("application/json")
         public Response getFilterOptions(@HeaderParam("token") String token) {
             return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.filterOptions(token))).build();
+        }
+
+        @POST
+        @Path("/")
+        @Consumes("application/json")
+        public Response createProject(@HeaderParam("token") String token, ProjectDto projectDto) {
+
+            projectBean.createProject(token, projectDto);
+            return Response.status(200).entity("Project created successfully!").build();
         }
     }
 

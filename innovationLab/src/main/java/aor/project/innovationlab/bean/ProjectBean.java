@@ -14,6 +14,7 @@ import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -240,6 +241,28 @@ public class ProjectBean {
             //TESTE - add log ao add user
             logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId(), LogType.USER_JOIN);
         }
+    }
+
+    public void createProject(String token, ProjectDto projectDto){
+        String log = "Creating new project";
+        if(token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
+            throw new IllegalArgumentException("Token is required");
+        }
+
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        if(session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if(projectDto == null) {
+            LoggerUtil.logError(log, "More data is required", null, null);
+            throw new IllegalArgumentException("More data is required");
+        }
+
+
+
     }
 
     /**
