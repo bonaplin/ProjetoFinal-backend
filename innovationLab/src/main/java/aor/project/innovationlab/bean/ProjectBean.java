@@ -5,17 +5,16 @@ import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.lab.LabDto;
-import aor.project.innovationlab.dto.project.ProjectCardDto;
-import aor.project.innovationlab.dto.project.ProjectDto;
+import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
-import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.validator.UserValidator;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -245,6 +244,28 @@ public class ProjectBean {
         }
     }
 
+    public void createProject(String token, CreateProjectDto createProjectDto){
+        String log = "Creating new project";
+        if(token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
+            throw new IllegalArgumentException("Token is required");
+        }
+
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        if(session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if(createProjectDto == null) {
+            LoggerUtil.logError(log, "More data is required", null, null);
+            throw new IllegalArgumentException("More data is required");
+        }
+
+
+
+    }
+
     /**
      * Adiciona um recurso a um projeto
      * @param projectName - nome do projeto
@@ -419,6 +440,7 @@ public class ProjectBean {
                                                  List<String> skill, List<String> interest,
                                                  String participantEmail,
                                                  ProjectUserType role,
+                                                 Long id,
                                                  String auth, Integer pageNumber, Integer pageSize) {
 
         String userEmail = null;
@@ -475,7 +497,7 @@ public class ProjectBean {
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
         participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
 
-        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, pageNumber, pageSize);
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail,id, pageNumber, pageSize);
         List<ProjectEntity> projects = projectsResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
