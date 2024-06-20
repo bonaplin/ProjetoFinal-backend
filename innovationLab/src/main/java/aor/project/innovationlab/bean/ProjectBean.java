@@ -442,9 +442,8 @@ public class ProjectBean {
                                                  List<String> lab, String creatorEmail,
                                                  List<String> skill, List<String> interest,
                                                  String participantEmail,
-                                                 ProjectUserType role,
-                                                 Long id,
-                                                 String auth, Integer pageNumber, Integer pageSize) {
+                                                 ProjectUserType role, String orderField, String orderDirection,
+                                                 String auth, Integer pageNumber, Integer pageSize,Long id) {
 
         String userEmail = null;
 
@@ -495,13 +494,22 @@ public class ProjectBean {
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";
         }
+        
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
         participantEmail = InputSanitizerUtil.sanitizeInput(participantEmail);
 
-      
-        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, id, pageNumber, pageSize, null, null);
+        if(orderDirection != null && orderField != null){
+            orderDirection = orderDirection.toLowerCase();
+            orderField = orderField.toLowerCase();
+            if(orderField.equals("createddate")){
+                orderField = "createdDate";
+            }
+            validateOrderParameters(orderField, orderDirection,userEmail, auth);
+        }
+
+        PaginatedResponse<ProjectEntity> projectsResponse = projectDao.findProjects(name, status, lab, creatorEmail, skill, interest, participantEmail, role, userEmail, id, pageNumber, pageSize, orderField, orderDirection);
         List<ProjectEntity> projects = projectsResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();

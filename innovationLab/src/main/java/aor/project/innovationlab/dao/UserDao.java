@@ -94,7 +94,7 @@ public class UserDao extends AbstractDao<UserEntity> {
         if (order != null) {
             cq.orderBy(order);
         }
-        // Se um ID foi fornecido, retorne o usuário com esse ID
+        // Se um ID foi fornecido, retorne o user com esse ID
         if (id != null) {
             UserEntity userentity = em.find(UserEntity.class, id);
             if (userentity != null) {

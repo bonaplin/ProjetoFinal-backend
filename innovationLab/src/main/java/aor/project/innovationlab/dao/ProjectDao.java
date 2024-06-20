@@ -75,6 +75,21 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         List<Predicate> predicates = createPredicatesWithoutJoin(cb, cq, project, name, status, labs, creatorEmail, skills, interests, participantEmail, role, requestingUserEmail);
         cq.where(predicates.toArray(new Predicate[0]));
 
+        // Se o ID for fornecido, retorne o project com esse ID
+        if (id != null) {
+            ProjectEntity projectEntity = findProjectById(id);
+            if(projectEntity != null){
+                List<ProjectEntity> projects = new ArrayList<>();
+                projects.add(projectEntity);
+
+                PaginatedResponse<ProjectEntity> response = new PaginatedResponse<>();
+                response.setResults(projects);
+                response.setTotalPages(1);
+
+                return response;
+            }
+        }
+
         Order order = getOrder(cb, project, orderField, orderDirection);
         // Subquery to order by 1st creator, 2nd participant, 3rd others
         if (requestingUserEmail != null) {
