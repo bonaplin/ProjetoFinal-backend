@@ -275,7 +275,8 @@ public class EmailBean {
         }
         responseToDto.setGroupId(emailEntity.getGroupId());
         responseToDto.setId(emailEntity.getId());
-        responseToDto.setBody(emailDto.getBody());
+        String originalEmailBody = "<hr/> -- original -- <hr/>" + emailEntity.getBody();
+        responseToDto.setBody(emailDto.getBody() + originalEmailBody);
         responseToDto.setGroupId(emailEntity.getGroupId());
         EmailEntity responseEntity = responseToEntity(responseToDto);
         emailDao.persist(responseEntity);
