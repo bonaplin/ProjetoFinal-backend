@@ -494,6 +494,7 @@ public class ProjectBean {
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";
         }
+        
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
