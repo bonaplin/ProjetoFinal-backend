@@ -30,15 +30,36 @@ public class EmailDao extends AbstractDao<EmailEntity> {
                                                      Integer pageNumber,
                                                      Integer pageSize,
                                                      String orderField,
-                                                     String orderDirection) {
+                                                     String orderDirection,
+                                                     String userEmail,
+                                                     String searchText) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<EmailEntity> cq = cb.createQuery(EmailEntity.class);
         Root<EmailEntity> email = cq.from(EmailEntity.class);
 
         List<Predicate> predicates = createPredicates(cb, email, senderUser, receiverUser, groupId, id, isRead);
+        predicates.add(cb.or(
+                cb.and(cb.equal(email.get("sender").get("email"), userEmail), cb.isFalse(email.get("deletedBySender"))),
+                cb.and(cb.equal(email.get("receiver").get("email"), userEmail), cb.isFalse(email.get("deletedByReceiver")))
+        ));
+
+        if (searchText != null && !searchText.isEmpty()) {
+            Predicate searchTextCondition = cb.or(
+                    cb.like(email.get("subject"), "%" + searchText + "%"),
+                    cb.like(email.get("body"), "%" + searchText + "%"),
+                    cb.like(email.get("sender").get("email"), "%" + searchText + "%"),
+                    cb.like(email.get("receiver").get("email"), "%" + searchText + "%"),
+                    cb.like(email.get("sender").get("firstname"), "%" + searchText + "%"),
+                    cb.like(email.get("sender").get("lastname"), "%" + searchText + "%"),
+                    cb.like(email.get("receiver").get("firstname"), "%" + searchText + "%"),
+                    cb.like(email.get("receiver").get("lastname"), "%" + searchText + "%")
+            );
+            predicates.add(searchTextCondition);
+        }
+
         cq.where(predicates.toArray(new Predicate[0]));
 
-        Order order = getOrder(cb, email, orderField, orderDirection);
+        Order order = getOrder(cb, email);
         if (order != null) {
             cq.orderBy(order);
         }
@@ -88,16 +109,15 @@ public class EmailDao extends AbstractDao<EmailEntity> {
         return predicates;
     }
 
-    private Order getOrder(CriteriaBuilder cb, Root<EmailEntity> email, String orderField, String orderDirection) {
-        if (orderField == null || orderDirection == null) {
-            return null;
-        }
+    private Order getOrder(CriteriaBuilder cb, Root<EmailEntity> email) {
+        return cb.desc(email.get("sentDate"));
+    }
 
-        Path<Object> field = email.get(orderField);
-        if (orderDirection.equalsIgnoreCase("ASC")) {
-            return cb.asc(field);
-        } else {
-            return cb.desc(field);
+    public EmailEntity findEmailById(Long id) {
+        try{
+            return em.find(EmailEntity.class, id);
+        } catch (Exception e) {
+            return null;
         }
     }
 }
