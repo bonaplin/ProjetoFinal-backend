@@ -43,6 +43,12 @@ public class EmailEntity implements Serializable {
     @Column(name = "active", nullable = false, unique = false)
     private boolean active;
 
+    @Column(name = "deleted_by_sender")
+    private boolean deletedBySender;
+
+    @Column(name = "deleted_by_receiver")
+    private boolean deletedByReceiver;
+
 
     public String getBody() {
         return body;
@@ -116,10 +122,28 @@ public class EmailEntity implements Serializable {
         this.groupId = groupId;
     }
 
+    public boolean isDeletedByReceiver() {
+        return deletedByReceiver;
+    }
+
+    public void setDeletedByReceiver(boolean deletedByReceiver) {
+        this.deletedByReceiver = deletedByReceiver;
+    }
+
+    public boolean isDeletedBySender() {
+        return deletedBySender;
+    }
+
+    public void setDeletedBySender(boolean deletedBySender) {
+        this.deletedBySender = deletedBySender;
+    }
+
     @PrePersist
     public void prePersist() {
         this.active = true;
         this.isRead = false;
         this.sentDate = Instant.now();
+        this.deletedByReceiver = false;
+        this.deletedBySender = false;
     }
 }
