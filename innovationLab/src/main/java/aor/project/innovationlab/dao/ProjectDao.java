@@ -60,6 +60,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                                          String participantEmail,
                                                          ProjectUserType role,
                                                          String requestingUserEmail,
+                                                         Long id,
                                                          Integer pageNumber,
                                                          Integer pageSize,
                                                          String orderField,
