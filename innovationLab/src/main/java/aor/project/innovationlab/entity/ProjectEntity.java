@@ -36,7 +36,7 @@ public class ProjectEntity implements Serializable {
     @Column(name = "end_date", nullable = false, unique = false)
     private LocalDate endDate;
 
-    @Column(name = "finish_date", nullable = false, unique = false)
+    @Column(name = "finish_date", nullable = true, unique = false)
     private LocalDate finishDate;
 
     @ManyToOne
@@ -236,5 +236,9 @@ public class ProjectEntity implements Serializable {
 
     public void setProjectInterests(Set<ProjectInterestEntity> projectInterests) {
         this.projectInterests = projectInterests;
+    }
+
+    public void setCreatedDate(LocalDate createdDate) {
+        this.createdDate = createdDate;
     }
 }

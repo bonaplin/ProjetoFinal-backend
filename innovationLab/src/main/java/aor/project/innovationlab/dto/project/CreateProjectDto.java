@@ -11,7 +11,6 @@ public class CreateProjectDto {
 
     private String name;
     private String description;
-
     private LocalDate startDate;
     private LocalDate endDate;
     private long lab_id;
