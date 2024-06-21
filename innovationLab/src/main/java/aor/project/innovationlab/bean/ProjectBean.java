@@ -5,9 +5,11 @@ import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.lab.LabDto;
+import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
+import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.entity.*;
@@ -244,6 +246,11 @@ public class ProjectBean {
         }
     }
 
+    /**
+     * Cria um novo projeto
+     * @param token
+     * @param createProjectDto
+     */
     public void createProject(String token, CreateProjectDto createProjectDto){
         String log = "Creating new project";
         if(token == null) {
@@ -262,8 +269,84 @@ public class ProjectBean {
             throw new IllegalArgumentException("More data is required");
         }
 
+        ProjectEntity project = new ProjectEntity();
+
+        if (createProjectDto.getName() == null || createProjectDto.getName().isEmpty()) {
+            LoggerUtil.logError(log, "Project name is required", null, null);
+            throw new IllegalArgumentException("Project name is required");
+        } else {
+            project.setName(createProjectDto.getName());
+        }
 
 
+        project.setDescription(createProjectDto.getDescription());
+
+
+        if (createProjectDto.getStartDate() == null) {
+            LoggerUtil.logError(log, "Project start date is required", null, null);
+            throw new IllegalArgumentException("Project start date is required");
+        } else {
+            project.setStartDate(createProjectDto.getStartDate());
+        }
+
+        if (createProjectDto.getEndDate() == null) {
+            LoggerUtil.logError(log, "Project end date is required", null, null);
+            throw new IllegalArgumentException("Project end date is required");
+        } else {
+            project.setEndDate(createProjectDto.getEndDate());
+        }
+
+        if (createProjectDto.getLab_id() == 0) {
+            LoggerUtil.logError(log, "Project lab is required", null, null);
+            throw new IllegalArgumentException("Project lab is required");
+        } else {
+            int labId = (int) createProjectDto.getLab_id();
+            project.setLab(labDao.findLabById(labId));
+        }
+
+        project.setCreatedDate(createProjectDto.getStartDate());
+
+        project.setCreator(session.getUser());
+        project.setStatus(ProjectStatus.READY);
+
+        projectDao.persist(project);
+
+        if (createProjectDto.getUsers() != null) {
+
+            if (createProjectDto.getUsers().size() > project.getMaxParticipants()) {
+                throw new IllegalArgumentException("Cannot add more users than the maximum allowed participants for the project");
+            }
+
+            for (UserAddToProjectDto userDto : createProjectDto.getUsers()) {
+                UserEntity userEntity = userDao.findUserById(userDto.getUserId());
+                if (userEntity != null) {
+
+                    if (project.getProjectUsers().size() >= project.getMaxParticipants()) {
+                        throw new IllegalArgumentException("Project already has the maximum number of participants");
+                    }
+
+                    ProjectUserEntity projectUserEntity = new ProjectUserEntity();
+                    projectUserEntity.setProject(project);
+                    projectUserEntity.setUser(userEntity);
+                    projectUserEntity.setRole(ProjectUserType.valueOf("INVITED"));
+                    projectUserDao.persist(projectUserEntity);
+                }
+            }
+        }
+
+        if (createProjectDto.getResources() != null) {
+            for (ProductDto productDto : createProjectDto.getResources()) {
+                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
+                if (productEntity != null) {
+                    ProjectProductEntity projectProductEntity = new ProjectProductEntity();
+                    projectProductEntity.setProject(project);
+                    projectProductEntity.setProduct(productEntity);
+                    projectProductEntity.setStatus(ProductStatus.STOCK);
+                    projectProductEntity.setQuantity(1);
+                    projectProductDao.persist(projectProductEntity);
+                }
+            }
+        }
     }
 
     /**
