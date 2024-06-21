@@ -11,6 +11,7 @@ public class ProductDto {
     private String identifier;
     private int quantity;
     private int status;
+    private String notes;
 
     public ProductDto() {
     }
@@ -93,6 +94,14 @@ public class ProductDto {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     @Override

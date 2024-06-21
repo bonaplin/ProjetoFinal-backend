@@ -2,6 +2,7 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.TokenUtil;
 
 import aor.project.innovationlab.dto.session.SessionLoginDto;
@@ -83,6 +84,7 @@ public class SessionBean  {
             // Log the event
             System.out.println("Token not found: " + token);
             throw new IllegalArgumentException("Token not found");
+
         }
         if(sessionEntity.getExpirationDate().isBefore(Instant.now())) {
             // Log the event
@@ -233,5 +235,16 @@ public class SessionBean  {
             throw new IllegalArgumentException("Invalid authorization header");
         }
         return auth.substring("Bearer".length()).trim();
+    }
+
+    public void isAdmin(String token) {
+        UserEntity user = getUserByToken(token);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        UserType userType = user.getRole();
+        if (userType != UserType.ADMIN) {
+            throw new IllegalArgumentException("User is not an admin");
+        }
     }
 }

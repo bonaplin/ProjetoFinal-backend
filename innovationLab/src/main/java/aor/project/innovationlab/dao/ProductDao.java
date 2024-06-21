@@ -31,7 +31,7 @@ public class ProductDao extends AbstractDao<ProductEntity> {
             }
         }
 
-        public ProductEntity findProductById(int id) {
+        public ProductEntity findProductById(long id) {
             try {
                 return (ProductEntity) em.createNamedQuery("Product.findProductById").setParameter("id", id)
                         .getSingleResult();
@@ -60,12 +60,13 @@ public class ProductDao extends AbstractDao<ProductEntity> {
                                                          Integer pageNumber,
                                                          Integer pageSize,
                                                          String orderField,
-                                                         String orderDirection) {
+                                                         String orderDirection,
+                                                         Long id) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
         Root<ProductEntity> product = cq.from(ProductEntity.class);
 
-        List<Predicate> predicates = createPredicates(cb, product, supplierId, brands, description, identifier, name, types);
+        List<Predicate> predicates = createPredicates(cb, product, supplierId, brands, description, identifier, name, types, id);
         cq.where(predicates.toArray(new Predicate[0]));
 
         Order order = getOrder(cb, product, orderField, orderDirection);
@@ -83,7 +84,7 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         // Construct the count query
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<ProductEntity> countRoot = countQuery.from(ProductEntity.class);
-        List<Predicate> countPredicates = createPredicates(cb, countRoot, supplierId, brands, description, identifier, name, types);
+        List<Predicate> countPredicates = createPredicates(cb, countRoot, supplierId, brands, description, identifier, name, types, id);
 
         countQuery.select(cb.count(countRoot));
         countQuery.where(countPredicates.toArray(new Predicate[0]));
@@ -99,7 +100,7 @@ public class ProductDao extends AbstractDao<ProductEntity> {
 
     private List<Predicate> createPredicates(CriteriaBuilder cb, Root<ProductEntity> product, Long supplierId,
                                              List<String> brands, String description, String identifier,
-                                             String name, List<ProductType> types) {
+                                             String name, List<ProductType> types, Long id) {
         List<Predicate> predicates = new ArrayList<>();
 
         if (supplierId != null) {
@@ -119,6 +120,9 @@ public class ProductDao extends AbstractDao<ProductEntity> {
         }
         if (types != null && !types.isEmpty()) {
             predicates.add(product.get("type").in(types));
+        }
+        if(id != null) {
+            predicates.add(cb.equal(product.get("id"), id));
         }
 
         return predicates;

@@ -30,7 +30,7 @@ public class ProductEntity implements Serializable {
     private String brand;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, unique = false, updatable = true)
+    @Column(name = "type", nullable = false, unique = false, updatable = false)
     private ProductType type;
 
     @Column(name = "description", nullable = true, unique = false, updatable = true)

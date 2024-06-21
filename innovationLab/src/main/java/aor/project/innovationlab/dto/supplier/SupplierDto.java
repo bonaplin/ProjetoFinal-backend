@@ -1,7 +1,7 @@
 package aor.project.innovationlab.dto.supplier;
 
 public class SupplierDto {
-    private int id;
+    private long id;
     private String name;
     private String phone;
 
@@ -16,7 +16,7 @@ public class SupplierDto {
         return phone;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -28,7 +28,7 @@ public class SupplierDto {
         this.phone = phone;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
