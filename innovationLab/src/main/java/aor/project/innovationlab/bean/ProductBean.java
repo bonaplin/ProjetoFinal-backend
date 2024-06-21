@@ -14,6 +14,7 @@ import aor.project.innovationlab.entity.SupplierEntity;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.ejb.EJB;
@@ -52,6 +53,8 @@ public class ProductBean {
         productDto.setSupplierPhone(productEntity.getSupplier().getPhone());
         productDto.setQuantity(productEntity.getQuantity());
         productDto.setIdentifier(productEntity.getIdentifier());
+        productDto.setDescription(productEntity.getDescription());
+        productDto.setNotes(productEntity.getNotes());
         return productDto;
     }
 
@@ -64,6 +67,7 @@ public class ProductBean {
         productEntity.setSupplier(supplierDao.findSupplierByName(productDto.getSupplier()));
         productEntity.setQuantity(productDto.getQuantity());
         productEntity.setIdentifier(productDto.getIdentifier());
+        productEntity.setNotes(productDto.getNotes());
         return productEntity;
     }
 
@@ -112,7 +116,7 @@ public class ProductBean {
     }
 
 
-    public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize, String orderField, String orderDirection){
+    public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize, String orderField, String orderDirection, Long id){
         String log = "Attempt to get products";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(auth);
         if(sessionEntity == null) {
@@ -160,7 +164,7 @@ public class ProductBean {
             pageSize = 10;
         }
 
-        PaginatedResponse<ProductEntity> productResponse = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize, orderField,orderDirection);
+        PaginatedResponse<ProductEntity> productResponse = productDao.findProducts(supplierId, brands, null, identifier, name, typeEnums, pageNumber, pageSize, orderField,orderDirection, id);
         List<ProductEntity> products = productResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
@@ -198,4 +202,134 @@ public class ProductBean {
     }
 
 
+    public Object updateProduct(Long id, ProductDto dto, String token) {
+        String log = "Attempt to update product";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null) {
+            LoggerUtil.logError(log, "Unauthorized access", null, token);
+        }
+        sessionBean.isAdmin(token);
+
+        ProductEntity productEntity = productDao.findProductById(id);
+
+        if(productEntity == null) {
+            LoggerUtil.logError(log, "Product not found", null, token);
+        }
+        if(dto.getBrand() != null && !dto.getBrand().isEmpty()) {
+            productEntity.setBrand(dto.getBrand());
+        }
+        if(dto.getDescription() != null && !dto.getDescription().isEmpty()) {
+            productEntity.setDescription(dto.getDescription());
+        }
+        if(dto.getSupplier() != null && !dto.getSupplier().isEmpty()) {
+            SupplierEntity se = supplierDao.findSupplierByName(dto.getSupplier());
+            if(se == null) {
+                LoggerUtil.logError(log, "Supplier not found", null, token);
+                throw new IllegalArgumentException("Supplier not found");
+            }else{
+                productEntity.setSupplier(se);
+            }
+        }
+        if(dto.getNotes() != null && !dto.getNotes().isEmpty()) {
+            productEntity.setNotes(dto.getNotes());
+        }
+        if(dto.getQuantity() != 0 && dto.getQuantity() != productEntity.getQuantity() && dto.getQuantity() > 0){
+            productEntity.setQuantity(dto.getQuantity());
+        }
+
+        productDao.merge(productEntity);
+
+        return toDto(productEntity);
+
+    }
+
+    public Object disableProduct(Long id, String token) {
+        String log = "Attempt to disable product";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null) {
+            LoggerUtil.logError(log, "Unauthorized access", null, token);
+            throw new IllegalArgumentException("Unauthorized access");
+        }
+
+        sessionBean.isAdmin(token);
+
+        ProductEntity productEntity = productDao.findProductById(id);
+
+        if(productEntity == null) {
+            LoggerUtil.logError(log, "Product not found", null, token);
+            throw new IllegalArgumentException("Product not found");
+        }
+
+        productEntity.setQuantity(0);
+        productDao.merge(productEntity);
+
+        return toDto(productEntity);
+    }
+
+    public Object createProduct(ProductDto dto, String token) {
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logError("Attempt to create product", "Unauthorized access", null, token);
+            throw new IllegalArgumentException("Unauthorized access");
+        }
+
+        sessionBean.isAdmin(token);
+        if(dto == null) {
+            LoggerUtil.logError("Attempt to create product", "Product is required", null, token);
+            throw new IllegalArgumentException("Product is required");
+        }
+        if(dto.getName() == null || dto.getName().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Name is required", null, token);
+            throw new IllegalArgumentException("Name is required");
+        }
+
+        if(productDao.findProductByName(dto.getName()) != null) {
+            LoggerUtil.logError("Attempt to create product", "Product already exists", null, token);
+            throw new IllegalArgumentException("Product already exists");
+        }
+
+        if(dto.getBrand() == null || dto.getBrand().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Brand is required", null, token);
+            throw new IllegalArgumentException("Brand is required");
+        }
+
+        if(dto.getDescription() == null || dto.getDescription().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Description is required", null, token);
+            throw new IllegalArgumentException("Description is required");
+        }
+
+        if(dto.getType() == null || dto.getType().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Type is required", null, token);
+            throw new IllegalArgumentException("Type is required");
+        }
+
+        if(dto.getSupplier() == null || dto.getSupplier().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Supplier is required", null, token);
+            throw new IllegalArgumentException("Supplier is required");
+        }
+
+        if(dto.getQuantity() <= 0) {
+            LoggerUtil.logError("Attempt to create product", "Quantity is required", null, token);
+            throw new IllegalArgumentException("Quantity is required");
+        }
+
+        if(dto.getIdentifier() == null || dto.getIdentifier().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Identifier is required", null, token);
+            throw new IllegalArgumentException("Identifier is required");
+        }
+
+        if(productDao.findProductByIdentifier(dto.getIdentifier()) != null) {
+            LoggerUtil.logError("Attempt to create product", "Identifier already exists", null, token);
+            throw new IllegalArgumentException("Identifier already exists");
+        }
+
+        if(dto.getNotes() == null || dto.getNotes().isEmpty()) {
+            LoggerUtil.logError("Attempt to create product", "Notes is required", null, token);
+            throw new IllegalArgumentException("Notes is required");
+        }
+
+        ProductEntity productEntity = toentity(dto);
+        productDao.persist(productEntity);
+        return toDto(productEntity);
+    }
 }
