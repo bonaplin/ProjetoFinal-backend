@@ -311,13 +311,30 @@ public class ProjectBean {
 
         projectDao.persist(project);
 
+        addingUsersToCreatedProject(session, project, createProjectDto);
+
+        if (createProjectDto.getResources() != null) {
+            for (ProductDto productDto : createProjectDto.getResources()) {
+                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
+                if (productEntity != null) {
+                    ProjectProductEntity projectProductEntity = new ProjectProductEntity();
+                    projectProductEntity.setProject(project);
+                    projectProductEntity.setProduct(productEntity);
+                    projectProductEntity.setStatus(ProductStatus.STOCK);
+                    projectProductEntity.setQuantity(1);
+                    projectProductDao.persist(projectProductEntity);
+                }
+            }
+        }
+    }
+
+    private void addingUsersToCreatedProject(SessionEntity session, ProjectEntity project, CreateProjectDto createProjectDto) {
         ProjectUserEntity projectUserEntity = new ProjectUserEntity();
         projectUserEntity.setProject(project);
         projectUserEntity.setUser(session.getUser());
         projectUserEntity.setRole(ProjectUserType.MANAGER);
         projectUserEntity.setActive(true);
         projectUserDao.persist(projectUserEntity);
-
 
         if (createProjectDto.getUsers() != null) {
 
@@ -339,20 +356,6 @@ public class ProjectBean {
                     invitedUserEntity.setRole(ProjectUserType.INVITED);
                     invitedUserEntity.setActive(true);
                     projectUserDao.persist(invitedUserEntity);
-                }
-            }
-        }
-
-        if (createProjectDto.getResources() != null) {
-            for (ProductDto productDto : createProjectDto.getResources()) {
-                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
-                if (productEntity != null) {
-                    ProjectProductEntity projectProductEntity = new ProjectProductEntity();
-                    projectProductEntity.setProject(project);
-                    projectProductEntity.setProduct(productEntity);
-                    projectProductEntity.setStatus(ProductStatus.STOCK);
-                    projectProductEntity.setQuantity(1);
-                    projectProductDao.persist(projectProductEntity);
                 }
             }
         }
