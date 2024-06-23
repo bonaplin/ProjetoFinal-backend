@@ -311,6 +311,14 @@ public class ProjectBean {
 
         projectDao.persist(project);
 
+        ProjectUserEntity projectUserEntity = new ProjectUserEntity();
+        projectUserEntity.setProject(project);
+        projectUserEntity.setUser(session.getUser());
+        projectUserEntity.setRole(ProjectUserType.MANAGER);
+        projectUserEntity.setActive(true);
+        projectUserDao.persist(projectUserEntity);
+
+
         if (createProjectDto.getUsers() != null) {
 
             if (createProjectDto.getUsers().size() > project.getMaxParticipants()) {
@@ -325,11 +333,12 @@ public class ProjectBean {
                         throw new IllegalArgumentException("Project already has the maximum number of participants");
                     }
 
-                    ProjectUserEntity projectUserEntity = new ProjectUserEntity();
-                    projectUserEntity.setProject(project);
-                    projectUserEntity.setUser(userEntity);
-                    projectUserEntity.setRole(ProjectUserType.valueOf("INVITED"));
-                    projectUserDao.persist(projectUserEntity);
+                    ProjectUserEntity invitedUserEntity = new ProjectUserEntity();
+                    invitedUserEntity.setProject(project);
+                    invitedUserEntity.setUser(userEntity);
+                    invitedUserEntity.setRole(ProjectUserType.INVITED);
+                    invitedUserEntity.setActive(true);
+                    projectUserDao.persist(invitedUserEntity);
                 }
             }
         }
