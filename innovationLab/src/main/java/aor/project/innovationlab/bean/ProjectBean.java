@@ -314,6 +314,31 @@ public class ProjectBean {
 
         projectDao.persist(project);
 
+        addingUsersToCreatedProject(session, project, createProjectDto);
+
+        if (createProjectDto.getResources() != null) {
+            for (ProductDto productDto : createProjectDto.getResources()) {
+                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
+                if (productEntity != null) {
+                    ProjectProductEntity projectProductEntity = new ProjectProductEntity();
+                    projectProductEntity.setProject(project);
+                    projectProductEntity.setProduct(productEntity);
+                    projectProductEntity.setStatus(ProductStatus.STOCK);
+                    projectProductEntity.setQuantity(1);
+                    projectProductDao.persist(projectProductEntity);
+                }
+            }
+        }
+    }
+
+    private void addingUsersToCreatedProject(SessionEntity session, ProjectEntity project, CreateProjectDto createProjectDto) {
+        ProjectUserEntity projectUserEntity = new ProjectUserEntity();
+        projectUserEntity.setProject(project);
+        projectUserEntity.setUser(session.getUser());
+        projectUserEntity.setRole(ProjectUserType.MANAGER);
+        projectUserEntity.setActive(true);
+        projectUserDao.persist(projectUserEntity);
+
         if (createProjectDto.getUsers() != null) {
 
             if (createProjectDto.getUsers().size() > project.getMaxParticipants()) {
@@ -328,25 +353,12 @@ public class ProjectBean {
                         throw new IllegalArgumentException("Project already has the maximum number of participants");
                     }
 
-                    ProjectUserEntity projectUserEntity = new ProjectUserEntity();
-                    projectUserEntity.setProject(project);
-                    projectUserEntity.setUser(userEntity);
-                    projectUserEntity.setRole(ProjectUserType.valueOf("INVITED"));
-                    projectUserDao.persist(projectUserEntity);
-                }
-            }
-        }
-
-        if (createProjectDto.getResources() != null) {
-            for (ProductDto productDto : createProjectDto.getResources()) {
-                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
-                if (productEntity != null) {
-                    ProjectProductEntity projectProductEntity = new ProjectProductEntity();
-                    projectProductEntity.setProject(project);
-                    projectProductEntity.setProduct(productEntity);
-                    projectProductEntity.setStatus(ProductStatus.STOCK);
-                    projectProductEntity.setQuantity(1);
-                    projectProductDao.persist(projectProductEntity);
+                    ProjectUserEntity invitedUserEntity = new ProjectUserEntity();
+                    invitedUserEntity.setProject(project);
+                    invitedUserEntity.setUser(userEntity);
+                    invitedUserEntity.setRole(ProjectUserType.INVITED);
+                    invitedUserEntity.setActive(true);
+                    projectUserDao.persist(invitedUserEntity);
                 }
             }
         }
