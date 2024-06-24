@@ -1,6 +1,8 @@
 package aor.project.innovationlab.dto.project;
 
+import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductDto;
+import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserDto;
 
@@ -16,6 +18,8 @@ public class CreateProjectDto {
     private long lab_id;
     private List<UserAddToProjectDto> users;
     private List<ProductDto> resources;
+    private List<InterestDto> keywords;
+    private List<SkillDto> skills;
 
     public CreateProjectDto() {
     }
@@ -60,7 +64,7 @@ public class CreateProjectDto {
         this.lab_id = lab_id;
     }
 
-public List<UserAddToProjectDto> getUsers() {
+    public List<UserAddToProjectDto> getUsers() {
         return users;
     }
 
@@ -75,5 +79,21 @@ public List<UserAddToProjectDto> getUsers() {
 
     public void setResources(List<ProductDto> resources) {
         this.resources = resources;
+    }
+
+    public List<InterestDto> getKeywords() {
+        return keywords;
+    }
+
+    public void setKeywords(List<InterestDto> keywords) {
+        this.keywords = keywords;
+    }
+
+    public List<SkillDto> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(List<SkillDto> skills) {
+        this.skills = skills;
     }
 }
