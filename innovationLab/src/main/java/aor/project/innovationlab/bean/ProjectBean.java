@@ -258,20 +258,20 @@ public class ProjectBean {
      * @param token
      * @param createProjectDto
      */
-    public void createProject(String token, CreateProjectDto createProjectDto){
+    public void createProject(String token, CreateProjectDto createProjectDto) {
         String log = "Creating new project";
-        if(token == null) {
+        if (token == null) {
             LoggerUtil.logError(log, "Token is required", null, null);
             throw new IllegalArgumentException("Token is required");
         }
 
         SessionEntity session = sessionDao.findSessionByToken(token);
-        if(session == null) {
+        if (session == null) {
             LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
 
-        if(createProjectDto == null) {
+        if (createProjectDto == null) {
             LoggerUtil.logError(log, "More data is required", null, null);
             throw new IllegalArgumentException("More data is required");
         }
@@ -285,9 +285,12 @@ public class ProjectBean {
             project.setName(createProjectDto.getName());
         }
 
-        //TODO - verification needed here too cause description is obligatory
-        project.setDescription(createProjectDto.getDescription());
-
+        if (createProjectDto.getDescription() == null || createProjectDto.getDescription().isEmpty()) {
+            LoggerUtil.logError(log, "Project description is required", null, null);
+            throw new IllegalArgumentException("Project description is required");
+        } else {
+            project.setDescription(createProjectDto.getDescription());
+        }
 
         if (createProjectDto.getStartDate() == null) {
             LoggerUtil.logError(log, "Project start date is required", null, null);
@@ -328,8 +331,37 @@ public class ProjectBean {
                     projectProductEntity.setProject(project);
                     projectProductEntity.setProduct(productEntity);
                     projectProductEntity.setStatus(ProductStatus.STOCK);
-                    projectProductEntity.setQuantity(1);
+                    projectProductEntity.setQuantity(1); //TODO DUVIDAS AQUI
                     projectProductDao.persist(projectProductEntity);
+                }
+            }
+        } else {
+            LoggerUtil.logError(log, "At least one project keyword is required", session.getUser().getEmail(), token);
+            throw new IllegalArgumentException("At least one project keyword is required");
+        }
+
+        if (createProjectDto.getKeywords() != null) {
+            for (InterestDto keyword : createProjectDto.getKeywords()) {
+                InterestEntity interestEntity = interestDao.findInterestByName(keyword.getName());
+                if (interestEntity != null) {
+
+                    ProjectInterestEntity projectInterestEntity = new ProjectInterestEntity();
+                    projectInterestEntity.setProject(project);
+                    projectInterestEntity.setInterest(interestEntity);
+                    projectInterestDao.persist(projectInterestEntity);
+                }
+            }
+        }
+
+        if (createProjectDto.getSkills() != null) {
+            for (SkillDto skill : createProjectDto.getSkills()) {
+                SkillEntity skillEntity = skillDao.findSkillByName(skill.getName());
+                if (skillEntity != null) {
+
+                    ProjectSkillEntity projectSkillEntity = new ProjectSkillEntity();
+                    projectSkillEntity.setProject(project);
+                    projectSkillEntity.setSkill(skillEntity);
+                    projectSkillDao.persist(projectSkillEntity);
                 }
             }
         }
