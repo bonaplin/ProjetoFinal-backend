@@ -35,4 +35,24 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
         }
     }
 
+    public ProjectUserEntity findProjectUserByProjectIdAndUserId(long id, long id1) {
+        try{
+            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.user.id = :userId", ProjectUserEntity.class)
+                    .setParameter("projectId", id)
+                    .setParameter("userId", id1)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public ProjectUserEntity findProjectUserByToken(String tokenAuthorization) {
+        try {
+            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.tokenAuthorization = :tokenAuthorization", ProjectUserEntity.class)
+                    .setParameter("tokenAuthorization", tokenAuthorization)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

@@ -46,4 +46,10 @@ public class InterestDao extends AbstractDao<InterestEntity> {
         return em.createNamedQuery("Interest.getAllInterests")
                 .getResultList();
     }
+
+    public List<InterestEntity> getProjectInterests(long id) {
+        return em.createNamedQuery("Interest.getProjectInterests")
+                .setParameter("id", id)
+                .getResultList();
+    }
 }

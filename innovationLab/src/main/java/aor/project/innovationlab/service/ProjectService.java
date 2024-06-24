@@ -6,6 +6,7 @@ import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
 import aor.project.innovationlab.dto.project.ProjectDto;
+import aor.project.innovationlab.dto.project.ProjectInviteDto;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.utils.Color;
@@ -73,6 +74,28 @@ public class ProjectService {
         public Response getFilterOptions(@HeaderParam("token") String token) {
             return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.filterOptions(token))).build();
         }
+
+        @POST
+        @Path("/invite")
+        @Consumes("application/json")
+        public Response inviteToProject(@HeaderParam("token") String token, ProjectInviteDto projectInviteDto) {
+            projectBean.inviteToProject(token, projectInviteDto);
+            return Response.status(200).entity("Invitation sent successfully!").build();
+        }
+
+    @POST
+    @Path("/accept-invite/{tokenAuthorization}")
+    public Response acceptInvite(@PathParam("tokenAuthorization") String tokenAuthorization) {
+        projectBean.acceptInvite(tokenAuthorization);
+        return Response.status(200).entity("Invitation accepted successfully!").build();
+    }
+
+    @POST
+    @Path("/reject-invite/{tokenAuthorization}")
+    public Response rejectInvite(@PathParam("tokenAuthorization") String tokenAuthorization) {
+        projectBean.rejectInvite(tokenAuthorization);
+        return Response.status(200).entity("Invitation rejected successfully!").build();
+    }
 
         @POST
         @Path("/")

@@ -2,14 +2,13 @@ package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.entity.ProjectEntity;
+import aor.project.innovationlab.entity.ProjectSkillEntity;
 import aor.project.innovationlab.entity.SkillEntity;
+import aor.project.innovationlab.entity.UserSkillEntity;
 import aor.project.innovationlab.enums.SkillType;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,11 +53,17 @@ public class SkillDao extends AbstractDao<SkillEntity>{
             predicates.add(cb.equal(skill.get("skillType"), enumSkillType));
         }
         if(userEmail != null) {
-            predicates.add(cb.equal(skill.get("userSkills").get("user").get("email"), userEmail));
+            Join<SkillEntity, UserSkillEntity> userSkills = skill.join("userSkills");
+            predicates.add(cb.equal(userSkills.get("user").get("email"), userEmail));
+            predicates.add(cb.isTrue(userSkills.get("active")));
         }
         if(projectName != null) {
-            predicates.add(cb.equal(skill.get("projectSkills").get("project").get("name"), projectName));
+            Join<SkillEntity, ProjectSkillEntity> projectSkills = skill.join("projectSkills");
+            predicates.add(cb.equal(projectSkills.get("project").get("name"), projectName));
+            predicates.add(cb.isTrue(projectSkills.get("active")));
         }
+
+        predicates.add(cb.isTrue(skill.get("active")));
 
         cq.where(predicates.toArray(new Predicate[0]));
         return em.createQuery(cq).getResultList();

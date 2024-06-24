@@ -12,7 +12,7 @@ import java.util.List;
 @Table(name="skill")
 @NamedQuery(name = "Skill.findSkillByName", query = "SELECT s FROM SkillEntity s WHERE s.name = :name")
 @NamedQuery(name = "Skill.findSkillById", query = "SELECT s FROM SkillEntity s WHERE s.id = :id")
-@NamedQuery(name = "Skill.getUserSkills", query = "SELECT s FROM SkillEntity s JOIN s.userSkills us WHERE us.user.id = :id AND s.active = true")
+@NamedQuery(name = "Skill.getUserSkills", query = "SELECT s FROM SkillEntity s JOIN s.userSkills us WHERE us.user.id = :id AND s.active = true AND us.active = true")
 @NamedQuery(name = "Skill.getAllSkillType", query = "SELECT DISTINCT s.skillType FROM SkillEntity s")
 @NamedQuery(name = "Skill.findSkills", query = "SELECT s FROM SkillEntity s WHERE s.name = :name AND s.skillType = :type")
 @NamedQuery(name = "Skill.findSkillsByType", query = "SELECT s FROM SkillEntity s WHERE s.skillType = :type")

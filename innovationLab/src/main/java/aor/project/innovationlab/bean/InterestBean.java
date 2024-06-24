@@ -5,6 +5,7 @@ import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -228,6 +229,16 @@ public class InterestBean {
             return new ArrayList<>();
         }
         List<InterestEntity> interestEntities = interestDao.getUserInterests(user.getId());
+        System.out.println("InterestEntities: "+interestEntities.size());
+        return interestEntities.stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    public List<InterestDto> getProjectInterests(String projectName) {
+        ProjectEntity project = projectDao.findProjectByName(projectName);
+        if(project == null) {
+            return new ArrayList<>();
+        }
+        List<InterestEntity> interestEntities = interestDao.getProjectInterests(project.getId());
         return interestEntities.stream().map(this::toDto).collect(Collectors.toList());
     }
 
@@ -295,5 +306,10 @@ public class InterestBean {
 
         UserEntity user = session.getUser();
         removeInterestFromUser(user.getEmail(), interestDto.getName());
+    }
+
+    public List<InterestDto> getProjectInterests(String auth, String projectName) {
+        sessionBean.validateUserToken(auth);
+        return getProjectInterests(projectName);
     }
 }

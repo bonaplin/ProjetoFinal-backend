@@ -22,11 +22,15 @@ public class InterestService {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getInterests(@HeaderParam("token") String auth, @QueryParam("userEmail") String userEmail) {
+    public Response getInterests(@HeaderParam("token") String auth, @QueryParam("userEmail") String userEmail, @QueryParam("projectName") String projectName){
 //        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         List<InterestDto> interests = new ArrayList<>();
             if(userEmail != null){
                 interests = interestBean.getUserInterests(auth, userEmail);
+                return Response.status(200).entity(interests).build();
+            }
+            if(projectName != null){
+                interests = interestBean.getProjectInterests(auth, projectName);
                 return Response.status(200).entity(interests).build();
             }
             interests = interestBean.getAllInterests(auth);

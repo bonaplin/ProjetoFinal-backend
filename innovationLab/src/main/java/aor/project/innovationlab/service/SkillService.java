@@ -48,7 +48,7 @@ public class SkillService {
                                  @QueryParam("skillType") String skillType,
                                  @QueryParam("projectName") String projectName,
                                  @QueryParam("name") String name){
-        return Response.status(200).entity(skillBean.getSkills(name,skillType,userEmail,projectName)).build();
+        return Response.status(200).entity(skillBean.getSkills(auth,name,skillType,userEmail,projectName)).build();
     }
 
     @GET

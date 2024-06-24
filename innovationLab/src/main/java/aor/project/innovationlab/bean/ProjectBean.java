@@ -16,6 +16,7 @@ import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
+import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
@@ -85,6 +86,9 @@ public class ProjectBean {
 
     @Inject
     private SkillBean skillBean;
+
+    @Inject
+    private EmailBean emailBean;
 
     public ProjectBean() {
     }
@@ -651,5 +655,92 @@ public class ProjectBean {
     }
 
 
+    public void inviteToProject(String token, ProjectInviteDto projectInviteDto) {
+        sessionBean.validateUserToken(token);
 
+        if(projectInviteDto == null) {
+            throw new IllegalArgumentException("Project invite data is required");
+        }
+
+        if(projectInviteDto.getInvitedUserEmail() == null || projectInviteDto.getInvitedUserEmail().isEmpty()) {
+            throw new IllegalArgumentException("Invited user email is required");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectInviteDto.getId());
+        if(project == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity invitedUser = userDao.findUserByEmail(projectInviteDto.getInvitedUserEmail());
+        if(invitedUser == null) {
+            throw new IllegalArgumentException("Invited user not found");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(project.getId(), invitedUser.getId());
+        String tokenAuthorization = TokenUtil.generateToken();
+
+        if(projectUser != null) {
+            if(projectUser.isActive()) {
+                throw new IllegalArgumentException("User is already a participant in the project");
+            }
+            else {
+                projectUser.setActive(true);
+                projectUser.setRole(ProjectUserType.INVITED);
+                projectUser.setTokenAuthorization(tokenAuthorization);
+                projectUserDao.merge(projectUser);
+                return;
+            }
+        }
+
+        projectUser = new ProjectUserEntity();
+        projectUser.setProject(project);
+        projectUser.setUser(invitedUser);
+        projectUser.setRole(ProjectUserType.INVITED);
+        projectUser.setActive(true);
+        projectUser.setTokenAuthorization(tokenAuthorization);
+        projectUserDao.persist(projectUser);
+
+        String acceptLink = "https://localhost:8443/innovationLab/rest/projects/accept-invite" + tokenAuthorization;
+        String rejectLink = "https://localhost:8443/innovationLab/rest/projects/reject-invite" + tokenAuthorization;
+
+        String emailBody = emailBean.createEmailBody(project.getName(), acceptLink, rejectLink);
+
+        emailBean.sendEmailToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
+    }
+
+    public void acceptInvite(String tokenAuthorization) {
+        String log = "Accepting project invite";
+
+        if(tokenAuthorization == null || tokenAuthorization.isEmpty()) {
+            throw new IllegalArgumentException("Authorization token is required");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByToken(tokenAuthorization);
+        if(projectUser == null) {
+            LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
+            throw new IllegalArgumentException("Invalid authorization token");
+        }
+        LoggerUtil.logInfo(log, "Project invite accepted", projectUser.getUser().getEmail(), tokenAuthorization);
+        projectUser.setRole(ProjectUserType.NORMAL);
+        projectUser.setTokenAuthorization(null);
+        projectUserDao.merge(projectUser);
+    }
+
+    public void rejectInvite(String tokenAuthorization) {
+        String log = "Rejecting project invite";
+
+        if(tokenAuthorization == null || tokenAuthorization.isEmpty()) {
+            throw new IllegalArgumentException("Authorization token is required");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByToken(tokenAuthorization);
+        if(projectUser == null) {
+            LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
+            throw new IllegalArgumentException("Invalid authorization token");
+        }
+        LoggerUtil.logInfo(log, "Project invite rejected", projectUser.getUser().getEmail(), tokenAuthorization);
+        projectUser.setTokenAuthorization(null);
+        projectUser.setActive(false);
+        projectUserDao.merge(projectUser);
+    }
 }

@@ -31,6 +31,9 @@ public class ProjectUserEntity implements Serializable {
     @Column(name = "active", nullable = false)
     private boolean active;
 
+    @Column(name = "tokenAuthorization", nullable = true)
+    private String tokenAuthorization;
+
     public ProjectUserEntity() {
     }
 
@@ -72,5 +75,13 @@ public class ProjectUserEntity implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTokenAuthorization() {
+        return tokenAuthorization;
+    }
+
+    public void setTokenAuthorization(String tokenAuthorization) {
+        this.tokenAuthorization = tokenAuthorization;
     }
 }

@@ -290,7 +290,8 @@ public class SkillBean {
         UserEntity user = session.getUser();
         removeSkillFromUser(user.getEmail(), skillDto.getName());
     }
-    public List<?> getSkills(String name, String type, String userEmail, String projectName) {
+    public List<?> getSkills(String token, String name, String type, String userEmail, String projectName) {
+        sessionBean.validateUserToken(token);
         List<SkillEntity> skills = skillDao.findSkills(name, type, userEmail, projectName);
         return skills.stream().map(this::toDto).collect(Collectors.toList());
     }

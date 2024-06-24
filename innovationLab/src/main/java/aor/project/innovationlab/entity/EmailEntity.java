@@ -28,7 +28,7 @@ public class EmailEntity implements Serializable {
     @Column(name = "subject", nullable = false, unique = false)
     private String subject;
 
-    @Column(name = "body", nullable = false, unique = false)
+    @Column(name = "body", nullable = false, unique = false, length = 5000)
     private String body;
 
     @Column(name = "sent_date", nullable = false, unique = false)

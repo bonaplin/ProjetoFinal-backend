@@ -15,6 +15,7 @@ import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ public class EmailBean {
 
     @EJB
     private UserDao userDao;
+
+    @Inject
+    private SessionBean sessionBean;
 
 
     public EmailBean() {
@@ -282,4 +286,38 @@ public class EmailBean {
         emailDao.persist(responseEntity);
         return emailDto;
     }
+
+    public void sendEmailToUser(String token, String invitedUserEmail, String subject, String body) {
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        String from = sessionEntity.getUser().getEmail();
+
+        UserEntity userEntity = userDao.findUserByEmail(invitedUserEmail);
+
+        if(userEntity == null){
+            throw new IllegalArgumentException("User not found.");
+        }
+
+        String to = userEntity.getEmail();
+
+        EmailPageDto emailDto = new EmailPageDto();
+        emailDto.setFrom(from);
+        emailDto.setTo(to);
+        emailDto.setSubject(subject);
+        emailDto.setBody(body);
+
+        EmailEntity emailEntity = toEntity(emailDto);
+        emailDao.persist(emailEntity);
+    }
+
+    public String createEmailBody(String projectName, String acceptLink, String rejectLink) {
+        String body = "<p>Você foi convidado para o projeto " + projectName + ".</p>" +
+                "<p><a href='" + acceptLink + "'>Clique aqui</a> para aceitar o convite.</p>" +
+                "<p><a href='" + rejectLink + "'>Clique aqui</a> para recusar o convite.</p>";
+        return body;
+    }
+
 }
