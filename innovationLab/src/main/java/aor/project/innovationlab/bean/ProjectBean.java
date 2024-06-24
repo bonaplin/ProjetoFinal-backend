@@ -278,7 +278,7 @@ public class ProjectBean {
             project.setName(createProjectDto.getName());
         }
 
-
+        //TODO - verification needed here too cause description is obligatory
         project.setDescription(createProjectDto.getDescription());
 
 
