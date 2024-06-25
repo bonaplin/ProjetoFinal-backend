@@ -6,6 +6,7 @@ import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.product.ProductDto;
+import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
@@ -324,14 +325,14 @@ public class ProjectBean {
         addingUsersToCreatedProject(session, project, createProjectDto);
 
         if (createProjectDto.getResources() != null) {
-            for (ProductDto productDto : createProjectDto.getResources()) {
-                ProductEntity productEntity = productDao.findProductByIdentifier(productDto.getIdentifier());
+            for (ProductToCreateProjectDto productDto : createProjectDto.getResources()) {
+                ProductEntity productEntity = productDao.findProductById(productDto.getId());
                 if (productEntity != null) {
                     ProjectProductEntity projectProductEntity = new ProjectProductEntity();
                     projectProductEntity.setProject(project);
                     projectProductEntity.setProduct(productEntity);
                     projectProductEntity.setStatus(ProductStatus.STOCK);
-                    projectProductEntity.setQuantity(1); //TODO DUVIDAS AQUI
+                    projectProductEntity.setQuantity(productDto.getQuantity());
                     projectProductDao.persist(projectProductEntity);
                 }
             }
