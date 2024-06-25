@@ -679,6 +679,12 @@ public class ProjectBean {
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(project.getId(), invitedUser.getId());
         String tokenAuthorization = TokenUtil.generateToken();
 
+        String acceptLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization +"&accept=true";
+        String rejectLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization+ "&accept=false";
+        String projectLink = "https://localhost:3000/fica-lab/project/" + project.getId();
+
+        String emailBody = emailBean.createEmailBody(project.getName(),projectLink, acceptLink, rejectLink);
+
         if(projectUser != null) {
             if(projectUser.isActive()) {
                 throw new IllegalArgumentException("User is already a participant in the project");
@@ -688,25 +694,17 @@ public class ProjectBean {
                 projectUser.setRole(ProjectUserType.INVITED);
                 projectUser.setTokenAuthorization(tokenAuthorization);
                 projectUserDao.merge(projectUser);
-                return;
             }
+        }else{
+            projectUser = new ProjectUserEntity();
+            projectUser.setProject(project);
+            projectUser.setUser(invitedUser);
+            projectUser.setRole(ProjectUserType.INVITED);
+            projectUser.setActive(true);
+            projectUser.setTokenAuthorization(tokenAuthorization);
+            projectUserDao.persist(projectUser);
+            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
         }
-
-        projectUser = new ProjectUserEntity();
-        projectUser.setProject(project);
-        projectUser.setUser(invitedUser);
-        projectUser.setRole(ProjectUserType.INVITED);
-        projectUser.setActive(true);
-        projectUser.setTokenAuthorization(tokenAuthorization);
-        projectUserDao.persist(projectUser);
-
-        String acceptLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization +"&accept=true";
-        String rejectLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization+ "&accept=false";
-        String projectLink = "https://localhost:3000/fica-lab/project/" + project.getId();
-
-        String emailBody = emailBean.createEmailBody(project.getName(),projectLink, acceptLink, rejectLink);
-
-        emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
     }
 
     public void respondToInvite(String tokenAuthorization, String token, boolean accept) {

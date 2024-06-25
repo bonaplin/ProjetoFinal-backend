@@ -14,6 +14,8 @@ import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import aor.project.innovationlab.utils.ws.MessageType;
+import aor.project.innovationlab.websocket.bean.HandleWebSockets;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -38,6 +40,12 @@ public class EmailBean {
 
     @Inject
     private SessionBean sessionBean;
+
+    @Inject
+    private HandleWebSockets handleWebSockets;
+
+    @Inject
+    private WebSocketBean webSocketBean;
 
 
     public EmailBean() {
@@ -250,6 +258,9 @@ public class EmailBean {
             throw new IllegalArgumentException("User not allowed to delete email.");
         }
         emailDao.merge(emailEntity);
+
+        String emailDtoWithType = webSocketBean.addTypeToDtoJson(toDto(emailEntity), MessageType.EMAIL_DELETE);
+        webSocketBean.sendToUser(emailEntity.getSender().getEmail(), emailDtoWithType);
         return toDto(emailEntity);
     }
 
@@ -285,6 +296,11 @@ public class EmailBean {
         responseToDto.setGroupId(emailEntity.getGroupId());
         EmailEntity responseEntity = responseToEntity(responseToDto);
         emailDao.persist(responseEntity);
+
+        String emailDtoWithType = webSocketBean.addTypeToDtoJson(responseToDto, MessageType.EMAIL_RESPONSE_FROM);
+        webSocketBean.sendToUser(emailEntity.getSender().getEmail(), emailDtoWithType);
+        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(responseToDto, MessageType.EMAIL_RESPONSE_TO);
+        webSocketBean.sendToUser(emailEntity.getReceiver().getEmail(), emailDtoWithType2);
         return emailDto;
     }
 
@@ -312,6 +328,11 @@ public class EmailBean {
 
         EmailEntity emailEntity = toEntity(emailDto);
         emailDao.persist(emailEntity);
+
+        String emailDtoWithType = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_INVITE_RECEIVER);
+        webSocketBean.sendToUser(invitedUserEmail, emailDtoWithType);
+        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_INVITE_SEND);
+        webSocketBean.sendToUser(from, emailDtoWithType2);
     }
 
     public String createEmailBody( String projectName,String projectLink, String acceptLink, String rejectLink) {
@@ -338,6 +359,11 @@ public class EmailBean {
 
         EmailEntity emailEntity = emailSendtoEntity(emailDto, fromUser);
         emailDao.persist(emailEntity);
+
+        String emailDtoWithType = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_SEND_TO);
+        webSocketBean.sendToUser(to, emailDtoWithType);
+        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_SEND_FROM);
+        webSocketBean.sendToUser(fromUser.getEmail(), emailDtoWithType2);
     }
 
     private EmailEntity emailSendtoEntity(EmailSendDto emailDto, UserEntity fromUser){

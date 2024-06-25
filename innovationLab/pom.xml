@@ -86,6 +86,13 @@
             <version>${jjwt.version}</version>
         </dependency>
 
+        <!--    gson    -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
         <!--	Parameter names	-->
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
