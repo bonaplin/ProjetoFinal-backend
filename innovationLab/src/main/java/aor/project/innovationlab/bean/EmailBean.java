@@ -7,6 +7,7 @@ import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
+import aor.project.innovationlab.dto.emails.EmailSendDto;
 import aor.project.innovationlab.email.EmailDto;
 import aor.project.innovationlab.entity.EmailEntity;
 import aor.project.innovationlab.entity.SessionEntity;
@@ -287,7 +288,7 @@ public class EmailBean {
         return emailDto;
     }
 
-    public void sendEmailToUser(String token, String invitedUserEmail, String subject, String body) {
+    public void sendEmailInviteToUser(String token, String invitedUserEmail, String subject, String body) {
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
             throw new IllegalArgumentException("Session not found.");
@@ -313,11 +314,41 @@ public class EmailBean {
         emailDao.persist(emailEntity);
     }
 
-    public String createEmailBody(String projectName, String acceptLink, String rejectLink) {
-        String body = "<p>Você foi convidado para o projeto " + projectName + ".</p>" +
-                "<p><a href='" + acceptLink + "'>Clique aqui</a> para aceitar o convite.</p>" +
-                "<p><a href='" + rejectLink + "'>Clique aqui</a> para recusar o convite.</p>";
+    public String createEmailBody( String projectName,String projectLink, String acceptLink, String rejectLink) {
+        String body = "<p>You're invited to join the project <a href='" + projectLink + "'>"+projectName+"</a></p>" +
+                "<p><a href='" + acceptLink + "'>Accept the invitation</a></p>" +
+                "<p><a href='" + rejectLink + "'>Reject the invitation</a></p>";
         return body;
     }
+
+    public void sendMailToUser(String token, String to, String subject, String body) {
+        System.out.println("Sending email");
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        UserEntity fromUser = sessionEntity.getUser();
+        UserEntity toUser = userDao.findUserByEmail(to);
+        if(toUser == null){
+            throw new IllegalArgumentException("User not found.");
+        }
+
+        EmailSendDto emailDto = new EmailSendDto(body, to, subject);
+
+        EmailEntity emailEntity = emailSendtoEntity(emailDto, fromUser);
+        emailDao.persist(emailEntity);
+    }
+
+    private EmailEntity emailSendtoEntity(EmailSendDto emailDto, UserEntity fromUser){
+        EmailEntity entity = new EmailEntity();
+        entity.setSender(fromUser);
+        entity.setReceiver(userDao.findUserByEmail(emailDto.getTo()));
+        entity.setSubject(emailDto.getSubject());
+        entity.setBody(emailDto.getBody());
+        System.out.println("Email entity" );
+        return entity;
+    }
+
 
 }

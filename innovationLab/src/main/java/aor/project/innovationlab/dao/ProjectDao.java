@@ -268,5 +268,29 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         return null;
     }
 
+    public List<ProjectEntity> getProjectsForInvitation(String creatorEmail, String userEmail) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
+        Root<ProjectEntity> project = cq.from(ProjectEntity.class);
 
+        Predicate creatorPredicate = cb.equal(project.get("creator").get("email"), creatorEmail);
+        Predicate activePredicate = cb.isTrue(project.get("active"));
+
+        // Subquery to check if the user is already associated with the project
+        Subquery<Long> userSubquery = cq.subquery(Long.class);
+        Root<ProjectUserEntity> userRoot = userSubquery.from(ProjectUserEntity.class);
+        userSubquery.select(userRoot.get("project").get("id"));
+        Predicate userPredicate = cb.and(
+                cb.equal(userRoot.get("user").get("email"), userEmail),
+                cb.isTrue(userRoot.get("active"))
+        );
+        userSubquery.where(userPredicate);
+
+        // Exclude projects where the user is already associated
+        Predicate notAssociatedPredicate = cb.not(project.get("id").in(userSubquery));
+
+        cq.where(cb.and(creatorPredicate, activePredicate, notAssociatedPredicate));
+
+        return em.createQuery(cq).getResultList();
+    }
 }

@@ -111,17 +111,6 @@ public class UserService {
         return Response.status(200).entity("Visiblity changed successfully.").build();
     }
 
-
-//    @GET
-//    @Path("/")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response getUser(@HeaderParam("Authorization") String auth, @QueryParam("email") String email) {
-//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-//        UserOwnerProfileDto dto = userBean.getUserProfile(token, email);
-//        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
-//
-//    }
-
     @POST
     @Path("/confirm-account")
     @Produces(MediaType.APPLICATION_JSON)
