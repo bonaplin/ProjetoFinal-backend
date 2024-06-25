@@ -700,47 +700,90 @@ public class ProjectBean {
         projectUser.setTokenAuthorization(tokenAuthorization);
         projectUserDao.persist(projectUser);
 
-        String acceptLink = "https://localhost:8443/innovationLab/rest/projects/accept-invite" + tokenAuthorization;
-        String rejectLink = "https://localhost:8443/innovationLab/rest/projects/reject-invite" + tokenAuthorization;
+        String acceptLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization +"&accept=true";
+        String rejectLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization+ "&accept=false";
+        String projectLink = "https://localhost:3000/fica-lab/project/" + project.getId();
 
-        String emailBody = emailBean.createEmailBody(project.getName(), acceptLink, rejectLink);
+        String emailBody = emailBean.createEmailBody(project.getName(),projectLink, acceptLink, rejectLink);
 
-        emailBean.sendEmailToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
+        emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
     }
 
-    public void acceptInvite(String tokenAuthorization) {
-        String log = "Accepting project invite";
+    public void respondToInvite(String tokenAuthorization, String token, boolean accept) {
+        String log = "Responding to project invite";
 
-        if(tokenAuthorization == null || tokenAuthorization.isEmpty()) {
-            throw new IllegalArgumentException("Authorization token is required");
-        }
+        try {
+            if(tokenAuthorization == null || tokenAuthorization.isEmpty()) {
+                throw new IllegalArgumentException("Authorization token is required");
+            }
 
-        ProjectUserEntity projectUser = projectUserDao.findProjectUserByToken(tokenAuthorization);
-        if(projectUser == null) {
-            LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
-            throw new IllegalArgumentException("Invalid authorization token");
+            ProjectUserEntity projectUser = projectUserDao.findProjectUserByToken(tokenAuthorization);
+            if(projectUser == null) {
+                LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
+                throw new IllegalArgumentException("Invalid authorization token");
+            }
+
+            SessionEntity session = sessionDao.findSessionByToken(token);
+            if(session == null) {
+                System.out.println(Color.RED + "Invalid user token" + Color.RED);
+                LoggerUtil.logError(log, "Invalid user token", null, token);
+                throw new IllegalArgumentException("Invalid user token");
+            }
+
+            if(!projectUser.getUser().getEmail().equals(session.getUser().getEmail())) {
+                LoggerUtil.logError(log, "User is not authorized to respond to this invite", session.getUser().getEmail(), tokenAuthorization);
+                throw new IllegalArgumentException("User is not authorized to respond to this invite");
+            }
+
+            if(accept) {
+                acceptInvite(projectUser, log, tokenAuthorization);
+            } else {
+                rejectInvite(projectUser, log, tokenAuthorization);
+            }
+        } catch (IllegalArgumentException e) {
+            LoggerUtil.logError(log, e.getMessage(), null, tokenAuthorization);
         }
+    }
+
+    private void acceptInvite(ProjectUserEntity projectUser, String log, String tokenAuthorization) {
         LoggerUtil.logInfo(log, "Project invite accepted", projectUser.getUser().getEmail(), tokenAuthorization);
         projectUser.setRole(ProjectUserType.NORMAL);
         projectUser.setTokenAuthorization(null);
         projectUserDao.merge(projectUser);
     }
 
-    public void rejectInvite(String tokenAuthorization) {
-        String log = "Rejecting project invite";
-
-        if(tokenAuthorization == null || tokenAuthorization.isEmpty()) {
-            throw new IllegalArgumentException("Authorization token is required");
-        }
-
-        ProjectUserEntity projectUser = projectUserDao.findProjectUserByToken(tokenAuthorization);
-        if(projectUser == null) {
-            LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
-            throw new IllegalArgumentException("Invalid authorization token");
-        }
+    private void rejectInvite(ProjectUserEntity projectUser, String log, String tokenAuthorization) {
         LoggerUtil.logInfo(log, "Project invite rejected", projectUser.getUser().getEmail(), tokenAuthorization);
         projectUser.setTokenAuthorization(null);
         projectUser.setActive(false);
         projectUserDao.merge(projectUser);
+    }
+
+    public List<IdNameDto> getProjectsForInvitation(String token, String email) {
+
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        if(session == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if(email == null || email.isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        if(!UserValidator.validateEmail(email)) {
+            throw new IllegalArgumentException("Invalid email");
+        }
+
+        UserEntity user = userDao.findUserByEmail(email);
+        if(user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        String creatorEmail = sessionDao.findSessionByToken(token).getUser().getEmail();
+
+        List<ProjectEntity> projects = projectDao.getProjectsForInvitation(creatorEmail, email);
+        return projects.stream()
+                .map(project -> new IdNameDto((int) project.getId(), project.getName()))
+                .collect(Collectors.toList());
     }
 }

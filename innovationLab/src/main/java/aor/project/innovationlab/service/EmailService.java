@@ -5,6 +5,7 @@ import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
+import aor.project.innovationlab.dto.emails.EmailSendDto;
 import aor.project.innovationlab.email.EmailDto;
 import aor.project.innovationlab.email.EmailSender;
 import aor.project.innovationlab.utils.Color;
@@ -75,7 +76,7 @@ public class EmailService {
         return Response.status(200).entity(JsonUtils.convertObjectToJson(email)).build();
     }
 
-    @Path("/{id}")
+    @Path("/delete/{id}")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -92,5 +93,14 @@ public class EmailService {
         System.out.println("body: " + emailDto.getBody());
         EmailResponseDto email = emailBean.sendEmailResponse(id, emailDto, token);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(email)).build();
+    }
+
+    @Path("/send")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sendEmail(@HeaderParam("token") String token, EmailSendDto emailDto) {
+        emailBean.sendMailToUser(token, emailDto.getTo(), emailDto.getSubject(), emailDto.getBody());
+        return Response.status(200).entity("Email sent successfully.").build();
     }
 }

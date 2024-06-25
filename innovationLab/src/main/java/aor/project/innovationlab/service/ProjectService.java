@@ -2,6 +2,7 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.ProjectBean;
 import aor.project.innovationlab.bean.SessionBean;
+import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectCardDto;
@@ -83,19 +84,13 @@ public class ProjectService {
             return Response.status(200).entity("Invitation sent successfully!").build();
         }
 
-    @POST
-    @Path("/accept-invite/{tokenAuthorization}")
-    public Response acceptInvite(@PathParam("tokenAuthorization") String tokenAuthorization) {
-        projectBean.acceptInvite(tokenAuthorization);
-        return Response.status(200).entity("Invitation accepted successfully!").build();
-    }
+        @POST
+        @Path("/invite/{tokenAuthorization}/{accept}")
+        public Response acceptInvite(@PathParam("tokenAuthorization") String tokenAuthorization, @PathParam("accept") boolean accept, @HeaderParam("token") String token){
+            projectBean.respondToInvite(tokenAuthorization, token, accept);
+            return Response.status(200).build();
+        }
 
-    @POST
-    @Path("/reject-invite/{tokenAuthorization}")
-    public Response rejectInvite(@PathParam("tokenAuthorization") String tokenAuthorization) {
-        projectBean.rejectInvite(tokenAuthorization);
-        return Response.status(200).entity("Invitation rejected successfully!").build();
-    }
 
         @POST
         @Path("/")
@@ -106,6 +101,15 @@ public class ProjectService {
 
             projectBean.createProject(token, CreateProjectDto);
             return Response.status(200).entity("Project created successfully!").build();
+        }
+
+        @GET
+        @Path("/invite-projects")
+        @Produces("application/json")
+        @Consumes("application/json")
+        public Response getProjectsForInvitation(@HeaderParam("token") String token, @QueryParam("email") String email) {
+            List<IdNameDto> projects = projectBean.getProjectsForInvitation(token, email);
+            return Response.ok().entity(JsonUtils.convertObjectToJson(projects)).build();
         }
     }
 
