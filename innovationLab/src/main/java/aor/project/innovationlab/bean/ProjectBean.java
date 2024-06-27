@@ -18,6 +18,7 @@ import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import aor.project.innovationlab.utils.ws.MessageType;
 import aor.project.innovationlab.validator.UserValidator;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
@@ -244,8 +245,8 @@ public class ProjectBean {
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 
-            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Hello, this is a notification by Admin", NotificationType.MESSAGE, name);
-            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Olá ric",NotificationType.INVITE,null);
+            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Hello, this is a notification by Admin", NotificationType.INVITE, name);
+            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Olá ric", NotificationType.INVITE,null);
 
 
             //TESTE - add log ao add user
@@ -703,8 +704,11 @@ public class ProjectBean {
             projectUser.setActive(true);
             projectUser.setTokenAuthorization(tokenAuthorization);
             projectUserDao.persist(projectUser);
-            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
+//            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
+            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getName());
         }
+
+
     }
 
     public void respondToInvite(String tokenAuthorization, String token, boolean accept) {

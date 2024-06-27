@@ -3,6 +3,7 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.utils.JsonUtils;
 import aor.project.innovationlab.utils.ws.MessageType;
 import aor.project.innovationlab.websocket.Notifier;
@@ -107,7 +108,7 @@ public class WebSocketBean {
      * @param <T> - generic type
      * @return - JSON string with type
      */
-    public <T> String addTypeToDtoJson(T dto, MessageType mt) {
+    public <T> String addTypeToDtoJson(T dto, NotificationType mt) {
         // Convert the DTO to a JSON string
         String json = JsonUtils.convertDtoToJson(dto);
 

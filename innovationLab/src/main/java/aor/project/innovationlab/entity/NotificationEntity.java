@@ -37,11 +37,26 @@ public class NotificationEntity implements Serializable {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private NotificationType type;
+    private NotificationType notificationType;
+
+    @Column(name = "is_read", nullable = false)
+    private boolean read = false;
 
     public NotificationEntity() {
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public boolean isRead() {
+        return read;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
     }
 
     public String getContent() {
@@ -96,12 +111,12 @@ public class NotificationEntity implements Serializable {
         this.active = active;
     }
 
-    public NotificationType getType() {
-        return type;
+    public NotificationType getNotificationType() {
+        return notificationType;
     }
 
-    public void setType(NotificationType type) {
-        this.type = type;
+    public void setNotificationType(NotificationType notificationType) {
+        this.notificationType = notificationType;
     }
 
     @PrePersist

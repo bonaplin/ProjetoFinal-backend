@@ -13,6 +13,7 @@ import aor.project.innovationlab.email.EmailDto;
 import aor.project.innovationlab.entity.EmailEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.utils.ws.MessageType;
@@ -47,6 +48,9 @@ public class EmailBean {
 
     @Inject
     private WebSocketBean webSocketBean;
+
+    @Inject
+    private NotificationBean notificationBean;
 
 
     public EmailBean() {
@@ -265,8 +269,6 @@ public class EmailBean {
         }
         emailDao.merge(emailEntity);
 
-        String emailDtoWithType = webSocketBean.addTypeToDtoJson(toDto(emailEntity), MessageType.EMAIL_DELETE);
-        webSocketBean.sendToUser(emailEntity.getSender().getEmail(), emailDtoWithType);
         return toDto(emailEntity);
     }
 
@@ -303,10 +305,8 @@ public class EmailBean {
         EmailEntity responseEntity = responseToEntity(responseToDto);
         emailDao.persist(responseEntity);
 
-        String emailDtoWithType = webSocketBean.addTypeToDtoJson(responseToDto, MessageType.EMAIL_RESPONSE_FROM);
-        webSocketBean.sendToUser(emailEntity.getSender().getEmail(), emailDtoWithType);
-        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(responseToDto, MessageType.EMAIL_RESPONSE_TO);
-        webSocketBean.sendToUser(emailEntity.getReceiver().getEmail(), emailDtoWithType2);
+        notificationBean.sendNotification(emailEntity.getReceiver().getEmail(), emailEntity.getSender().getEmail(), "You have received an email from " + emailEntity.getReceiver().getEmail(), NotificationType.NEW_MAIL, null);
+
         return emailDto;
     }
 
@@ -335,10 +335,8 @@ public class EmailBean {
         EmailEntity emailEntity = toEntity(emailDto);
         emailDao.persist(emailEntity);
 
-        String emailDtoWithType = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_INVITE_RECEIVER);
-        webSocketBean.sendToUser(invitedUserEmail, emailDtoWithType);
-        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_INVITE_SEND);
-        webSocketBean.sendToUser(from, emailDtoWithType2);
+
+        notificationBean.sendNotification(from, to, "You have received an email from " + from, NotificationType.NEW_MAIL, null);
     }
 
     public String createEmailBody( String projectName,String projectLink, String acceptLink, String rejectLink) {
@@ -366,10 +364,7 @@ public class EmailBean {
         EmailEntity emailEntity = emailSendtoEntity(emailDto, fromUser);
         emailDao.persist(emailEntity);
 
-        String emailDtoWithType = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_SEND_TO);
-        webSocketBean.sendToUser(to, emailDtoWithType);
-        String emailDtoWithType2 = webSocketBean.addTypeToDtoJson(emailDto, MessageType.EMAIL_SEND_FROM);
-        webSocketBean.sendToUser(fromUser.getEmail(), emailDtoWithType2);
+        notificationBean.sendNotification(fromUser.getEmail(), to, "You have received an email from " + fromUser.getEmail(), NotificationType.NEW_MAIL, null);
     }
 
     private EmailEntity emailSendtoEntity(EmailSendDto emailDto, UserEntity fromUser){
