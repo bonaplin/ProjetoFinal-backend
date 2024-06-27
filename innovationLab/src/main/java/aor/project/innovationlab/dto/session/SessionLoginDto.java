@@ -3,6 +3,8 @@ package aor.project.innovationlab.dto.session;
 public class SessionLoginDto {
     private String token;
     private String email;
+    private long unreadNotifications;
+    private long unreadEmails;
 
     public SessionLoginDto() {
     }
@@ -25,5 +27,21 @@ public class SessionLoginDto {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public long getUnreadNotifications() {
+        return unreadNotifications;
+    }
+
+    public void setUnreadNotifications(long unreadNotifications) {
+        this.unreadNotifications = unreadNotifications;
+    }
+
+    public long getUnreadEmails() {
+        return unreadEmails;
+    }
+
+    public void setUnreadEmails(long unreadEmails) {
+        this.unreadEmails = unreadEmails;
     }
 }

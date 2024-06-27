@@ -4,6 +4,7 @@ import aor.project.innovationlab.dao.EmailDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
@@ -52,7 +53,7 @@ public class EmailBean {
     }
 
 
-    public PaginatedResponse<Object> getEmails(
+    public PagAndUnreadResponse<Object> getEmails(
             String dtoType,
             String from,
             String to,
@@ -85,7 +86,7 @@ public class EmailBean {
             pageNumber = 1;
         }
         if(pageSize == null || pageSize < 0){
-            pageSize = 10;
+            pageSize = 5;
         }
         if(orderDirection != null && !orderDirection.isEmpty() && orderField != null && !orderField.isEmpty()){
             orderDirection = orderDirection.toLowerCase();
@@ -94,12 +95,12 @@ public class EmailBean {
         }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        PaginatedResponse<EmailEntity> emailsResponse = emailDao.findEmails(senderUser, receiverUser, groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, emailUser, searchText);
+        PagAndUnreadResponse<EmailEntity> emailsResponse = emailDao.findEmails(senderUser, receiverUser, groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, emailUser, searchText);
         List<EmailEntity> emails = emailsResponse.getResults();
 
         // If the user's email does not match either the sender or receiver, return an empty array
         if (!emailUser.equals(from) && !emailUser.equals(to)) {
-            return new PaginatedResponse<>(new ArrayList<>(), 0);
+            return new PagAndUnreadResponse<>(new ArrayList<>(),0,0L);
         }
 
 
@@ -107,8 +108,9 @@ public class EmailBean {
             dtoType = "EmailPageDto";
         }
 
-        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        PagAndUnreadResponse<Object> response = new PagAndUnreadResponse<>();
         response.setTotalPages(emailsResponse.getTotalPages());
+        response.setUnreadCount(emailsResponse.getUnreadCount());
 
         switch(dtoType) {
 
@@ -122,6 +124,10 @@ public class EmailBean {
                 break;
         }
         return response;
+    }
+
+    public long getUnreadEmails(String email){
+        return emailDao.countUnreadEmails(email);
     }
 
     private EmailPageDto toDto(EmailEntity emailEntity) {
