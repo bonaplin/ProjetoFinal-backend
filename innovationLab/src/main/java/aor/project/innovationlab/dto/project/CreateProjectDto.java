@@ -2,6 +2,7 @@ package aor.project.innovationlab.dto.project;
 
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductDto;
+import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserDto;
@@ -17,7 +18,7 @@ public class CreateProjectDto {
     private LocalDate endDate;
     private long lab_id;
     private List<UserAddToProjectDto> users;
-    private List<ProductDto> resources;
+    private List<ProductToCreateProjectDto> resources;
     private List<InterestDto> keywords;
     private List<SkillDto> skills;
 
@@ -73,11 +74,11 @@ public class CreateProjectDto {
     }
 
 
-    public List<ProductDto> getResources() {
+    public List<ProductToCreateProjectDto> getResources() {
         return resources;
     }
 
-    public void setResources(List<ProductDto> resources) {
+    public void setResources(List<ProductToCreateProjectDto> resources) {
         this.resources = resources;
     }
 
