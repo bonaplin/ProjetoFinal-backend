@@ -38,6 +38,9 @@ public class StartupBean {
     @Inject
     private ProjectBean projectBean;
 
+    @Inject
+    private AppConfigBean appConfigBean;
+
     @PostConstruct
     public void init() {
         labBean.createInitialData();
@@ -48,5 +51,6 @@ public class StartupBean {
         projectBean.createInitialData();
         taskBean.createInitialData();
         emailBean.createInitialData();
+        appConfigBean.createInitialData();
     }
 }

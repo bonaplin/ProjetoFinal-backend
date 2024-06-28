@@ -1,18 +1,14 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.EmailBean;
-import aor.project.innovationlab.dto.IdNameDto;
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
 import aor.project.innovationlab.dto.emails.EmailSendDto;
 import aor.project.innovationlab.email.EmailDto;
 import aor.project.innovationlab.email.EmailSender;
-import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.ejb.EJB;
-import jakarta.validation.constraints.Email;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;

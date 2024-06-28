@@ -1,4 +1,4 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.response;
 
 public class ContentUnreadResponse {
     private long unreadCount;

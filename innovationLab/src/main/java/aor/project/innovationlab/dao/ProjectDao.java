@@ -1,6 +1,6 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;

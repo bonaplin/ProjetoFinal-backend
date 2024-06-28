@@ -1,7 +1,7 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.ProductBean;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;

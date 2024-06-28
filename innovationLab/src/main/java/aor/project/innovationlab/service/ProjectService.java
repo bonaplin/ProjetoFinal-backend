@@ -2,8 +2,8 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.ProjectBean;
 import aor.project.innovationlab.bean.SessionBean;
-import aor.project.innovationlab.dto.IdNameDto;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
 import aor.project.innovationlab.enums.ProjectStatus;

@@ -1,17 +1,12 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.NotificationBean;
-import aor.project.innovationlab.dto.ContentUnreadResponse;
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
-import aor.project.innovationlab.dto.notification.NotificationDto;
+import aor.project.innovationlab.dto.response.ContentUnreadResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
-
-import java.util.List;
 
 @Path("/notifications")
 public class NotificationService {

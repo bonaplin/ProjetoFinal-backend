@@ -1,7 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;

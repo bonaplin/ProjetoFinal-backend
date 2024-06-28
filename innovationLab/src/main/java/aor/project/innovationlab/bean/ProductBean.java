@@ -3,8 +3,8 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.ProductDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.SupplierDao;
-import aor.project.innovationlab.dto.IdNameDto;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.product.filter.FilterOptionsProductDto;
 import aor.project.innovationlab.entity.ProductEntity;
@@ -162,6 +162,7 @@ public class ProductBean {
         List<ProductEntity> products = productResponse.getResults();
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setUserType(sessionEntity.getUser().getRole().getValue());
         response.setTotalPages(productResponse.getTotalPages());
 
         if(dtoType == null || dtoType.isEmpty()){

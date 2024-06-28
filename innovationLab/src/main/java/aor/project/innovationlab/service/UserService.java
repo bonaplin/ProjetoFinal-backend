@@ -3,7 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 //import aor.project.innovationlab.utils.jwt.JwtBean;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;

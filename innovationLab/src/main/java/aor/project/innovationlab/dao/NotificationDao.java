@@ -1,10 +1,8 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.entity.NotificationEntity;
-import aor.project.innovationlab.entity.ProjectEntity;
 import aor.project.innovationlab.entity.UserEntity;
-import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -49,7 +47,7 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.asc(notification.get("read")), cb.desc(notification.get("instant")));
+        cq.orderBy(cb.desc(notification.get("instant")));
 
         TypedQuery<NotificationEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
