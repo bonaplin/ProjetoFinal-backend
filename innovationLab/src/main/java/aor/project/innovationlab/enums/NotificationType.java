@@ -1,8 +1,10 @@
 package aor.project.innovationlab.enums;
 
 public enum NotificationType {
+    NOTIFICATION(1),
     MESSAGE(10),
-    INVITE(20);
+    INVITE(20),
+    NEW_MAIL(100);
 
     private final int value;
 

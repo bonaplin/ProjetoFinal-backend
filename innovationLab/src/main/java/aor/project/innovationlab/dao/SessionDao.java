@@ -1,8 +1,11 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.SessionEntity;
+import aor.project.innovationlab.entity.UserEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
+
+import java.util.List;
 
 @Stateless
 public class SessionDao extends AbstractDao<SessionEntity> {
@@ -45,4 +48,7 @@ public class SessionDao extends AbstractDao<SessionEntity> {
     }
 
 
+    public List<String> findUserTokens(UserEntity user) {
+        return em.createNamedQuery("Session.findUserTokens").setParameter("user", user).getResultList();
+    }
 }

@@ -1,9 +1,11 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.EmailEntity;
 import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.utils.Color;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
@@ -22,17 +24,17 @@ public class EmailDao extends AbstractDao<EmailEntity> {
     }
 
 
-    public PaginatedResponse<EmailEntity> findEmails(UserEntity senderUser,
-                                                     UserEntity receiverUser,
-                                                     Long groupId,
-                                                     Long id,
-                                                     Boolean isRead,
-                                                     Integer pageNumber,
-                                                     Integer pageSize,
-                                                     String orderField,
-                                                     String orderDirection,
-                                                     String userEmail,
-                                                     String searchText) {
+    public PagAndUnreadResponse<EmailEntity> findEmails(UserEntity senderUser,
+                                                        UserEntity receiverUser,
+                                                        Long groupId,
+                                                        Long id,
+                                                        Boolean isRead,
+                                                        Integer pageNumber,
+                                                        Integer pageSize,
+                                                        String orderField,
+                                                        String orderDirection,
+                                                        String userEmail,
+                                                        String searchText) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<EmailEntity> cq = cb.createQuery(EmailEntity.class);
         Root<EmailEntity> email = cq.from(EmailEntity.class);
@@ -79,9 +81,15 @@ public class EmailDao extends AbstractDao<EmailEntity> {
         Long count = em.createQuery(countQuery).getSingleResult();
         int totalPages = (int) Math.ceil((double) count / pageSize);
 
-        PaginatedResponse<EmailEntity> response = new PaginatedResponse<>();
+        long unreadCount = 0;
+        if(receiverUser != null){
+            unreadCount = countUnreadEmails(userEmail);
+        }
+        System.out.println("unreadCount: " + unreadCount);
+        PagAndUnreadResponse<EmailEntity> response = new PagAndUnreadResponse<>();
         response.setResults(emails);
         response.setTotalPages(totalPages);
+        response.setUnreadCount(unreadCount);
 
         return response;
     }
@@ -119,5 +127,19 @@ public class EmailDao extends AbstractDao<EmailEntity> {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public long countUnreadEmails(String userEmail) {
+        UserEntity receiverUser = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class)
+                .setParameter("email", userEmail)
+                .getSingleResult();
+        System.out.println("receiverUser: " + receiverUser.getEmail());
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<EmailEntity> countRoot = countQuery.from(EmailEntity.class);
+        List<Predicate> countPredicates = createPredicates(cb, countRoot, null, receiverUser, null, null, false);
+        countQuery.select(cb.count(countRoot));
+        countQuery.where(countPredicates.toArray(new Predicate[0]));
+        return em.createQuery(countQuery).getSingleResult();
     }
 }

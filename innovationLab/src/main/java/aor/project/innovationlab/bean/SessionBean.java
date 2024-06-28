@@ -16,9 +16,11 @@ import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.exception.ConstraintViolationException;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -30,6 +32,8 @@ public class SessionBean  {
     private UserDao userDao;
     @EJB
     private SessionDao sessionDao;
+    @Inject
+    private EmailBean emailBean;
 //
 //    @EJB
 //    private JwtBean jwtService;
@@ -136,6 +140,9 @@ public class SessionBean  {
             SessionLoginDto sessionLoginDto = new SessionLoginDto();
             sessionLoginDto.setToken(createSession(userEntity));
             sessionLoginDto.setEmail(userEntity.getEmail());
+            sessionLoginDto.setUnreadNotifications(0);
+            System.out.println(Color.CYAN+"Unread emails: " + emailBean.getUnreadEmails(userEntity.getEmail())+Color.CYAN);
+            sessionLoginDto.setUnreadEmails(emailBean.getUnreadEmails(userEntity.getEmail()));
             return sessionLoginDto;
         }
         return null;

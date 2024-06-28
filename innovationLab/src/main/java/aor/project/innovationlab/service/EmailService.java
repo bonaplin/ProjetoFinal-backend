@@ -2,6 +2,7 @@ package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.EmailBean;
 import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
@@ -63,7 +64,7 @@ public class EmailService {
             @QueryParam("search") String searchText,
             @HeaderParam("token") String token
     ) {
-        PaginatedResponse<Object> dto = emailBean.getEmails(dtoType, from, to,groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, searchText, token);
+        PagAndUnreadResponse<Object> dto = emailBean.getEmails(dtoType, from, to,groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, searchText, token);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 

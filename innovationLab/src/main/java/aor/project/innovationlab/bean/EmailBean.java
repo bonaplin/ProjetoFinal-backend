@@ -4,6 +4,7 @@ import aor.project.innovationlab.dao.EmailDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.emails.EmailPageDto;
 import aor.project.innovationlab.dto.emails.EmailResponseDto;
@@ -12,8 +13,11 @@ import aor.project.innovationlab.email.EmailDto;
 import aor.project.innovationlab.entity.EmailEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
+import aor.project.innovationlab.utils.ws.MessageType;
+import aor.project.innovationlab.websocket.bean.HandleWebSockets;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -39,12 +43,21 @@ public class EmailBean {
     @Inject
     private SessionBean sessionBean;
 
+    @Inject
+    private HandleWebSockets handleWebSockets;
+
+    @Inject
+    private WebSocketBean webSocketBean;
+
+    @Inject
+    private NotificationBean notificationBean;
+
 
     public EmailBean() {
     }
 
 
-    public PaginatedResponse<Object> getEmails(
+    public PagAndUnreadResponse<Object> getEmails(
             String dtoType,
             String from,
             String to,
@@ -77,7 +90,7 @@ public class EmailBean {
             pageNumber = 1;
         }
         if(pageSize == null || pageSize < 0){
-            pageSize = 10;
+            pageSize = 5;
         }
         if(orderDirection != null && !orderDirection.isEmpty() && orderField != null && !orderField.isEmpty()){
             orderDirection = orderDirection.toLowerCase();
@@ -86,12 +99,12 @@ public class EmailBean {
         }
 
         String emailUser = sessionEntity.getUser().getEmail();
-        PaginatedResponse<EmailEntity> emailsResponse = emailDao.findEmails(senderUser, receiverUser, groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, emailUser, searchText);
+        PagAndUnreadResponse<EmailEntity> emailsResponse = emailDao.findEmails(senderUser, receiverUser, groupId, id,isRead, pageNumber, pageSize, orderField, orderDirection, emailUser, searchText);
         List<EmailEntity> emails = emailsResponse.getResults();
 
         // If the user's email does not match either the sender or receiver, return an empty array
         if (!emailUser.equals(from) && !emailUser.equals(to)) {
-            return new PaginatedResponse<>(new ArrayList<>(), 0);
+            return new PagAndUnreadResponse<>(new ArrayList<>(),0,0L);
         }
 
 
@@ -99,8 +112,9 @@ public class EmailBean {
             dtoType = "EmailPageDto";
         }
 
-        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        PagAndUnreadResponse<Object> response = new PagAndUnreadResponse<>();
         response.setTotalPages(emailsResponse.getTotalPages());
+        response.setUnreadCount(emailsResponse.getUnreadCount());
 
         switch(dtoType) {
 
@@ -114,6 +128,10 @@ public class EmailBean {
                 break;
         }
         return response;
+    }
+
+    public long getUnreadEmails(String email){
+        return emailDao.countUnreadEmails(email);
     }
 
     private EmailPageDto toDto(EmailEntity emailEntity) {
@@ -250,6 +268,7 @@ public class EmailBean {
             throw new IllegalArgumentException("User not allowed to delete email.");
         }
         emailDao.merge(emailEntity);
+
         return toDto(emailEntity);
     }
 
@@ -285,6 +304,9 @@ public class EmailBean {
         responseToDto.setGroupId(emailEntity.getGroupId());
         EmailEntity responseEntity = responseToEntity(responseToDto);
         emailDao.persist(responseEntity);
+
+        notificationBean.sendNotification(emailEntity.getReceiver().getEmail(), emailEntity.getSender().getEmail(), "You have received an email from " + emailEntity.getReceiver().getEmail(), NotificationType.NEW_MAIL, null);
+
         return emailDto;
     }
 
@@ -312,6 +334,9 @@ public class EmailBean {
 
         EmailEntity emailEntity = toEntity(emailDto);
         emailDao.persist(emailEntity);
+
+
+        notificationBean.sendNotification(from, to, "You have received an email from " + from, NotificationType.NEW_MAIL, null);
     }
 
     public String createEmailBody( String projectName,String projectLink, String acceptLink, String rejectLink) {
@@ -338,6 +363,8 @@ public class EmailBean {
 
         EmailEntity emailEntity = emailSendtoEntity(emailDto, fromUser);
         emailDao.persist(emailEntity);
+
+        notificationBean.sendNotification(fromUser.getEmail(), to, "You have received an email from " + fromUser.getEmail(), NotificationType.NEW_MAIL, null);
     }
 
     private EmailEntity emailSendtoEntity(EmailSendDto emailDto, UserEntity fromUser){

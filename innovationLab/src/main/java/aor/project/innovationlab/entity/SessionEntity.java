@@ -11,6 +11,7 @@ import java.time.Instant;
 @NamedQuery(name = "Session.findSessionByEmail", query = "SELECT s FROM SessionEntity s WHERE s.user.email = :email")
 @NamedQuery(name = "Session.findSessionByUserId", query = "SELECT s FROM SessionEntity s WHERE s.user.id = :userId")
 @NamedQuery(name = "Session.findUserByToken", query = "SELECT s.user FROM SessionEntity s WHERE s.token = :token")
+@NamedQuery(name = "Session.findUserTokens", query = "SELECT s.token FROM SessionEntity s WHERE s.user = :user AND s.active = true")
 public class SessionEntity implements Serializable{
 
     @Id
