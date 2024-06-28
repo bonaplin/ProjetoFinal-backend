@@ -2,10 +2,7 @@ package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.ProjectUserType;
 import aor.project.innovationlab.enums.UserType;
-import aor.project.innovationlab.utils.InputSanitizerUtil;
-import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
@@ -68,7 +65,7 @@ public class UserDao extends AbstractDao<UserEntity> {
                                                    String email,
                                                    String firstname,
                                                    String lastname,
-                                                   UserType role,
+                                                   String role,
                                                    Boolean active,
                                                    Boolean confirmed,
                                                    Boolean privateProfile,
@@ -162,7 +159,7 @@ public class UserDao extends AbstractDao<UserEntity> {
     }
 
     private List<Predicate> createPredicates(CriteriaBuilder cb, Root<UserEntity> user, String username, String email,
-                                             String firstname, String lastname, UserType role, Boolean active,
+                                             String firstname, String lastname, String role, Boolean active,
                                              Boolean confirmed, Boolean privateProfile, List<String> labs,
                                              List<String> skills, List<String> interests) {
         List<Predicate> predicates = new ArrayList<>();
@@ -186,7 +183,7 @@ public class UserDao extends AbstractDao<UserEntity> {
             predicates.add(cb.equal(user.get("lastname"), lastname));
         }
         if (role != null) {
-            predicates.add(cb.equal(user.get("role"), role));
+            predicates.add(cb.equal(user.get("role"), UserType.fromString(role)));
         }
         if (confirmed != null) {
             predicates.add(cb.equal(user.get("confirmed"), confirmed));

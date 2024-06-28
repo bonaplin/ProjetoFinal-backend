@@ -42,11 +42,11 @@ public class LogEntity implements Serializable {
 
     @Enumerated
     @Column(name = "new_user_type")
-    private UserType newUserType;
+    private UserType newUserTestType;
 
     @Enumerated
     @Column(name = "old_user_type")
-    private UserType oldUserType;
+    private UserType oldUserTestType;
 
 
 
@@ -199,7 +199,7 @@ public class LogEntity implements Serializable {
 
     private boolean isProjectChangeValid() {
         return project != null &&
-                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
+                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
     }
 
     private boolean isProjectStateChangeValid() {
@@ -214,16 +214,16 @@ public class LogEntity implements Serializable {
 
     private boolean isTaskAffected() {
         return task != null &&
-                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
+                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
     }
 
     private boolean isUserAffected() {
         return affectedUser != null &&
-                newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
+                newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
     }
 
     private boolean isUserChangeValid() {
-        return affectedUser != null && oldUserType != null && newUserType != null &&
+        return affectedUser != null && oldUserTestType != null && newUserTestType != null &&
                 newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null;
     }
 

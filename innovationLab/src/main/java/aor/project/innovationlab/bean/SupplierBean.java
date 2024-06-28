@@ -2,14 +2,11 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.SupplierDao;
 import aor.project.innovationlab.dto.supplier.SupplierDto;
-import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.SupplierEntity;
 import aor.project.innovationlab.entity.UserEntity;
-import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
@@ -70,7 +67,7 @@ public class SupplierBean {
         else if(dtoType.equalsIgnoreCase("SupplierDto")) {
             dto = "SupplierDto";
         }
-//        if(!userEntity.getRole().equals(UserType.ADMIN)) {
+//        if(!userEntity.getRole().equals(UserTestType.ADMIN)) {
 //            LoggerUtil.logError(log, "User is not an admin",null,token);
 //            throw new RuntimeException("User dont have permission to access this resource");
 //        }

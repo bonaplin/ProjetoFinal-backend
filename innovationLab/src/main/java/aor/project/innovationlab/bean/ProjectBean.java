@@ -4,8 +4,6 @@ import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
-import aor.project.innovationlab.dto.lab.LabDto;
-import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
@@ -19,20 +17,15 @@ import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
-import aor.project.innovationlab.utils.ws.MessageType;
 import aor.project.innovationlab.validator.UserValidator;
-import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -224,7 +217,7 @@ public class ProjectBean {
             project.setLab(labDao.findLabByLocation(location));
             projectDao.persist(project);
             // create the entity project - creator
-            addUserToProject(name, creatorEmail, ProjectUserType.MANAGER);
+            addUserToProject(name, creatorEmail, UserType.MANAGER);
 
             addInterestToProject(name, "Interest1");
             addInterestToProject(name, "Interest2");
@@ -234,7 +227,7 @@ public class ProjectBean {
             addResourceToProjectByNames(name, "Product 2");
             addResourceToProjectByNames(name, "Product 3");
 
-            addUserToProject(name, "joao@joao", ProjectUserType.NORMAL);
+            addUserToProject(name, "joao@joao", UserType.NORMAL);
             addSkillToProject(name, "Assembly");
             addSkillToProject(name, "macOS");
             addSkillToProject(name, "IntelIJ");
@@ -373,7 +366,7 @@ public class ProjectBean {
         ProjectUserEntity projectUserEntity = new ProjectUserEntity();
         projectUserEntity.setProject(project);
         projectUserEntity.setUser(session.getUser());
-        projectUserEntity.setRole(ProjectUserType.MANAGER);
+        projectUserEntity.setRole(UserType.MANAGER);
         projectUserEntity.setActive(true);
         projectUserDao.persist(projectUserEntity);
 
@@ -394,7 +387,7 @@ public class ProjectBean {
                     ProjectUserEntity invitedUserEntity = new ProjectUserEntity();
                     invitedUserEntity.setProject(project);
                     invitedUserEntity.setUser(userEntity);
-                    invitedUserEntity.setRole(ProjectUserType.INVITED);
+                    invitedUserEntity.setRole(UserType.INVITED);
                     invitedUserEntity.setActive(true);
                     projectUserDao.persist(invitedUserEntity);
                 }
@@ -475,7 +468,7 @@ public class ProjectBean {
         projectDao.merge(project);
     }
 
-    public void addUserToProject(String projectName, String userEmail, ProjectUserType role) {
+    public void addUserToProject(String projectName, String userEmail, UserType role) {
         ProjectEntity project = projectDao.findProjectByName(projectName);
         if(project == null) {
             return;
@@ -571,12 +564,12 @@ public class ProjectBean {
     }
 
     public PaginatedResponse<Object> getProjectsByDto(String dtoType, String name,
-                                                 List<ProjectStatus> status,
-                                                 List<String> lab, String creatorEmail,
-                                                 List<String> skill, List<String> interest,
-                                                 String participantEmail,
-                                                 ProjectUserType role, String orderField, String orderDirection,
-                                                 String auth, Integer pageNumber, Integer pageSize,Long id) {
+                                                      List<ProjectStatus> status,
+                                                      List<String> lab, String creatorEmail,
+                                                      List<String> skill, List<String> interest,
+                                                      String participantEmail,
+                                                      UserType role, String orderField, String orderDirection,
+                                                      String auth, Integer pageNumber, Integer pageSize, Long id) {
 
         String userEmail = null;
 
@@ -647,6 +640,19 @@ public class ProjectBean {
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(projectsResponse.getTotalPages());
+        System.out.println("User email: " + userEmail);
+        if(userEmail != null && id != null){
+            ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
+            if(pue != null){
+                response.setUserType(pue.getRole().getValue());
+            }else{
+                response.setUserType(UserType.GUEST.getValue());
+            }
+        }
+        else {
+            response.setUserType(UserType.GUEST.getValue());
+        }
+
 
         switch (dtoType) {
             case "ProjectCardDto":
@@ -725,7 +731,7 @@ public class ProjectBean {
             }
             else {
                 projectUser.setActive(true);
-                projectUser.setRole(ProjectUserType.INVITED);
+                projectUser.setRole(UserType.INVITED);
                 projectUser.setTokenAuthorization(tokenAuthorization);
                 projectUserDao.merge(projectUser);
             }
@@ -733,7 +739,7 @@ public class ProjectBean {
             projectUser = new ProjectUserEntity();
             projectUser.setProject(project);
             projectUser.setUser(invitedUser);
-            projectUser.setRole(ProjectUserType.INVITED);
+            projectUser.setRole(UserType.INVITED);
             projectUser.setActive(true);
             projectUser.setTokenAuthorization(tokenAuthorization);
             projectUserDao.persist(projectUser);
@@ -782,7 +788,7 @@ public class ProjectBean {
 
     private void acceptInvite(ProjectUserEntity projectUser, String log, String tokenAuthorization) {
         LoggerUtil.logInfo(log, "Project invite accepted", projectUser.getUser().getEmail(), tokenAuthorization);
-        projectUser.setRole(ProjectUserType.NORMAL);
+        projectUser.setRole(UserType.NORMAL);
         projectUser.setTokenAuthorization(null);
         projectUserDao.merge(projectUser);
     }

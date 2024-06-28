@@ -5,6 +5,7 @@ import java.util.List;
 public class PaginatedResponse<T> {
     private List<T> results;
     private int totalPages;
+    private int userType;
 
 
     public PaginatedResponse() {
@@ -29,5 +30,13 @@ public class PaginatedResponse<T> {
 
     public void setTotalPages(int totalPages) {
         this.totalPages = totalPages;
+    }
+
+    public int getUserType() {
+        return userType;
+    }
+
+    public void setUserType(int userType) {
+        this.userType = userType;
     }
 }

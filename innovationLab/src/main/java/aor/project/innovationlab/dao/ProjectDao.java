@@ -1,26 +1,16 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
-import aor.project.innovationlab.enums.ProjectUserType;
-import aor.project.innovationlab.utils.Color;
-import aor.project.innovationlab.utils.InputSanitizerUtil;
-import aor.project.innovationlab.utils.PasswordUtil;
-import aor.project.innovationlab.validator.UserValidator;
-import jakarta.ejb.EJB;
-import jakarta.ejb.Local;
+import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.Stateless;
-import jakarta.inject.Inject;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Stateless
 public class ProjectDao extends AbstractDao<ProjectEntity> {
@@ -58,7 +48,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                                                          List<String> skills,
                                                          List<String> interests,
                                                          String participantEmail,
-                                                         ProjectUserType role,
+                                                         UserType role,
                                                          String requestingUserEmail,
                                                          Long id,
                                                          Integer pageNumber,
@@ -138,10 +128,10 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         return response;
     }
 
-    private List<Predicate> createPredicatesWithoutJoin(CriteriaBuilder cb,CriteriaQuery<ProjectEntity> cq, Root<ProjectEntity> project, String name,
+    private List<Predicate> createPredicatesWithoutJoin(CriteriaBuilder cb, CriteriaQuery<ProjectEntity> cq, Root<ProjectEntity> project, String name,
                                                         List<ProjectStatus> status, List<String> labs, String creatorEmail,
                                                         List<String> skills, List<String> interests, String participantEmail,
-                                                        ProjectUserType role, String requestingUserEmail) {
+                                                        UserType role, String requestingUserEmail) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(project.get("active")));
 
@@ -202,7 +192,7 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
             if(role != null){
                 rolePredicate = cb.equal(userRoot.get("role"), role);
             } else {
-                rolePredicate = userRoot.get("role").in(ProjectUserType.MANAGER, ProjectUserType.NORMAL);
+                rolePredicate = userRoot.get("role").in(UserType.MANAGER, UserType.NORMAL);
             }
             userSubquery.where(cb.and(emailPredicate, activePredicate, rolePredicate));
             predicates.add(cb.in(project.get("id")).value(userSubquery));
