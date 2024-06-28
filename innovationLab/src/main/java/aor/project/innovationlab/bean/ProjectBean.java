@@ -640,7 +640,7 @@ public class ProjectBean {
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(projectsResponse.getTotalPages());
-        System.out.println("User email: " + userEmail);
+        
         if(userEmail != null && id != null){
             ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
             if(pue != null){
