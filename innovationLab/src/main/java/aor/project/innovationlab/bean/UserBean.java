@@ -17,7 +17,6 @@ import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
@@ -305,7 +304,7 @@ public class UserBean {
         user.setPassword(PasswordUtil.hashPassword(password));
         user.setActive(true);
         user.setConfirmed(false);
-        user.setRole(UserType.USER);
+        user.setRole(UserType.NORMAL);
         return user;
     }
 
@@ -572,7 +571,7 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
-    public PaginatedResponse<Object> getUsers(Long id, String token, String dtoType, String username, String email, String firstname, String lastname, UserType role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
+    public PaginatedResponse<Object> getUsers(Long id, String token, String dtoType, String username, String email, String firstname, String lastname, String role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
         String log = "Attempt to get users";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){

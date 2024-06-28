@@ -5,12 +5,9 @@ import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.IdNameDto;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
-import aor.project.innovationlab.dto.project.ProjectCardDto;
-import aor.project.innovationlab.dto.project.ProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
 import aor.project.innovationlab.enums.ProjectStatus;
-import aor.project.innovationlab.enums.ProjectUserType;
-import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -53,7 +50,7 @@ public class ProjectService {
                                 @QueryParam("skill") List<String> skill,
                                 @QueryParam("interest") List<String> interest,
                                 @QueryParam("participant_email") String participantEmail,
-                                @QueryParam("role") ProjectUserType role,
+                                @QueryParam("role") UserType role,
                                 @QueryParam("id") Long id,
                                 @QueryParam("page_number") Integer pageNumber,
                                 @QueryParam("page_size") Integer pageSize,

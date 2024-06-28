@@ -2,11 +2,9 @@ package aor.project.innovationlab.utils.populator;
 
 import aor.project.innovationlab.bean.UserBean;
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.user.UserDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.SkillType;
 import aor.project.innovationlab.enums.UserType;
-import aor.project.innovationlab.utils.PasswordUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
@@ -51,7 +49,7 @@ public class PopulatorBean {
         userEntity.setFirstname(userDto.getFirstname());
         userEntity.setLastname(userDto.getLastname());
         userEntity.setPhone(userDto.getPhone());
-        userEntity.setRole(UserType.USER);
+        userEntity.setRole(UserType.NORMAL);
         userEntity.setActive(true);
         userEntity.setConfirmed(true);
         userEntity.setPrivateProfile(random.nextBoolean());

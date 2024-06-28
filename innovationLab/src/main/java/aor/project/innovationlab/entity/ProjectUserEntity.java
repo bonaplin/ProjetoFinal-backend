@@ -1,6 +1,6 @@
 package aor.project.innovationlab.entity;
 
-import aor.project.innovationlab.enums.ProjectUserType;
+import aor.project.innovationlab.enums.UserType;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -26,7 +26,7 @@ public class ProjectUserEntity implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private ProjectUserType role;
+    private UserType role;
 
     @Column(name = "active", nullable = false)
     private boolean active;
@@ -53,11 +53,11 @@ public class ProjectUserEntity implements Serializable {
         this.user = user;
     }
 
-    public ProjectUserType getRole() {
+    public UserType getRole() {
         return role;
     }
 
-    public void setRole(ProjectUserType role) {
+    public void setRole(UserType role) {
         this.role = role;
     }
 

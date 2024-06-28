@@ -12,10 +12,8 @@ import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.enums.TokenStatus;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
-import io.jsonwebtoken.Claims;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.exception.ConstraintViolationException;
@@ -23,7 +21,6 @@ import org.hibernate.exception.ConstraintViolationException;
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
 
 @Stateless
 public class SessionBean  {

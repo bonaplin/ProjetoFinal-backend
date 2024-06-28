@@ -3,7 +3,7 @@
 //import aor.project.innovationlab.bean.SessionBean;
 //import aor.project.innovationlab.dao.UserDao;
 //import aor.project.innovationlab.entity.UserEntity;
-//import aor.project.innovationlab.enums.UserType;
+//import aor.project.innovationlab.enums.UserTestType;
 //import aor.project.innovationlab.utils.logs.LoggerUtil;
 //import io.jsonwebtoken.*;
 //import io.jsonwebtoken.security.Keys;
@@ -54,7 +54,7 @@
 //     * @param type
 //     * @return
 //     */
-//    public String generateToken(String email, UserType type) {
+//    public String generateToken(String email, UserTestType type) {
 //
 //        Instant exp = sessionBean.generateExpirationDate();
 //

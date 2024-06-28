@@ -1,7 +1,13 @@
 package aor.project.innovationlab.enums;
 
 public enum UserType {
-    ADMIN(10), USER(20);
+    ADMIN(1),
+    NORMAL(10),
+    MANAGER(20),
+    GUEST(30),
+    PROPOSED(40),
+    INVITED(50);
+
 
     private final int value;
 
@@ -14,9 +20,18 @@ public enum UserType {
     }
 
     public static UserType fromValue(int value) {
-        for (UserType userType : UserType.values()) {
-            if (userType.getValue() == value) {
-                return userType;
+        for (UserType type : UserType.values()) {
+            if (type.getValue() == value) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    public static UserType fromString(String value) {
+        for (UserType type : UserType.values()) {
+            if (type.name().equals(value)) {
+                return type;
             }
         }
         return null;

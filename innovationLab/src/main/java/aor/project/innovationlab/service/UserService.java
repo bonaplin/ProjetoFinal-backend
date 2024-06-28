@@ -8,7 +8,6 @@ import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.password.UserRecoverPasswordDto;
-import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -128,7 +127,7 @@ public class UserService {
                                 @QueryParam("email") String email,
                                 @QueryParam("firstname") String firstname,
                                 @QueryParam("lastname") String lastname,
-                                @QueryParam("role") UserType role,
+                                @QueryParam("role") String role,
                                 @QueryParam("active") Boolean active,
                                 @QueryParam("confirmed") Boolean confirmed,
                                 @QueryParam("privateProfile") Boolean privateProfile,
