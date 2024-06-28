@@ -4,6 +4,7 @@ import aor.project.innovationlab.dao.NotificationDao;
 import aor.project.innovationlab.dao.ProjectDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.dto.ContentUnreadResponse;
 import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.notification.NotificationDto;
 import aor.project.innovationlab.entity.NotificationEntity;
@@ -128,7 +129,7 @@ public class NotificationBean {
         return response;
     }
 
-    public NotificationDto markNotificationAsRead(String token, long id) {
+    public ContentUnreadResponse markNotificationAsRead(String token, long id) {
         SessionEntity session = sessionDao.findSessionByToken(token);
 
         if(session == null) {
@@ -136,6 +137,7 @@ public class NotificationBean {
         }
         String receiverEmail = session.getUser().getEmail();
 
+        System.out.println(receiverEmail);
         NotificationEntity notification = notificationDao.findNotificationById(id);
 
         if(notification == null) {
@@ -149,6 +151,9 @@ public class NotificationBean {
         notification.setRead(true);
         notificationDao.merge(notification);
 
-        return toDto(notification);
+        ContentUnreadResponse response = new ContentUnreadResponse();
+        response.setContent(toDto(notification));
+        response.setUnreadCount(notificationDao.countUnreadNotifications(receiverEmail, false));
+        return response;
     }
 }

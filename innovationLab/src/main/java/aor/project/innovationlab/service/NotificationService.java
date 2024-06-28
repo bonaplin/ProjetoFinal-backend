@@ -1,6 +1,7 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.NotificationBean;
+import aor.project.innovationlab.dto.ContentUnreadResponse;
 import aor.project.innovationlab.dto.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.notification.NotificationDto;
 import aor.project.innovationlab.utils.JsonUtils;
@@ -29,7 +30,9 @@ public class NotificationService {
     @PUT
     @Path("/{id}")
     public Response markAsRead(@HeaderParam ("token") String token, @PathParam("id") Long id){
-        NotificationDto dto = notificationBean.markNotificationAsRead(token, id);
+        System.out.println("markAsRead"+id);
+        ContentUnreadResponse dto = notificationBean.markNotificationAsRead(token, id);
+        System.out.println("markAsRead"+dto);
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 }
