@@ -10,7 +10,7 @@ public class NotificationDto {
     private String receiverEmail;
     private String content;
     private int notificationType;
-    private String projectName;
+    private long projectId;
     private Instant instant;
     private boolean read;
     private String senderName;
@@ -99,11 +99,11 @@ public class NotificationDto {
         this.receiverEmail = receiverEmail;
     }
 
-    public String getProjectName() {
-        return projectName;
+    public long getProjectId() {
+        return projectId;
     }
 
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
+    public void setProjectId(long projectId) {
+        this.projectId = projectId;
     }
 }

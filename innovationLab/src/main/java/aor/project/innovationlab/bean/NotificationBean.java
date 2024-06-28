@@ -52,20 +52,20 @@ public class NotificationBean {
      * @param ne
      * @return
      */
-    private NotificationDto toDto ( NotificationEntity ne, Instant instant){
+    private NotificationDto toDto ( NotificationEntity ne){
         NotificationDto dto = new NotificationDto();
         dto.setId(ne.getId());
         dto.setSenderEmail(ne.getSender().getEmail());
         dto.setReceiverEmail(ne.getReceiver().getEmail());
         dto.setContent(ne.getContent());
-        dto.setInstant(instant);
+        dto.setInstant(ne.getInstant());
         dto.setRead(ne.isRead());
         dto.setNotificationType(ne.getNotificationType().getValue());
         dto.setSenderName(ne.getSender().getFirstname());
         dto.setSenderImg(ne.getSender().getProfileImagePath());
 
         if(ne.getProject() != null) {
-            dto.setProjectName(ne.getProject().getName());
+            dto.setProjectId(ne.getProject().getId());
         }
         return dto;
     }
@@ -76,9 +76,8 @@ public class NotificationBean {
      * @param receiverEmail - email of receiver
      * @param content - content of notification
      * @param type - type of notification
-     * @param projectName - name of project if notification is related to project
      */
-    public void sendNotification(String senderEmail, String receiverEmail, String content, NotificationType type, String projectName) {
+    public void sendNotification(String senderEmail, String receiverEmail, String content, NotificationType type, Long projectId) {
         UserEntity sender = userDao.findUserByEmail(senderEmail);
         UserEntity receiver = userDao.findUserByEmail(receiverEmail);
 
@@ -91,19 +90,15 @@ public class NotificationBean {
         notification.setReceiver(receiver);
         notification.setContent(content);
         notification.setNotificationType(type);
-        if(projectName != null) {
-            ProjectEntity project = projectDao.findProjectByName(projectName);
-
+        if(projectId != null) {
+            ProjectEntity project = projectDao.findProjectById(projectId);
             if(project == null) {
                 return;
             }
-
             notification.setProject(project);
         }
         notificationDao.persist(notification);
-        Instant instant = notification.getInstant();
-
-        NotificationDto dto = toDto(notification, instant);
+        NotificationDto dto = toDto(notification);
 
         String notificationJson = webSocketBean.addTypeToDtoJson(dto, NotificationType.NOTIFICATION);
         webSocketBean.sendToUser(receiverEmail, notificationJson);
@@ -128,12 +123,12 @@ public class NotificationBean {
         PagAndUnreadResponse<Object> response = new PagAndUnreadResponse<>();
         response.setTotalPages(notifications.getTotalPages());
         response.setUnreadCount(notifications.getUnreadCount());
-        response.setResults(notifications.getResults().stream().map(ne -> toDto(ne, ne.getInstant())).collect(Collectors.toList()));
+        response.setResults(notifications.getResults().stream().map(this::toDto).collect(Collectors.toList()));
 
         return response;
     }
 
-    public void markNotificationAsRead(Long id, String token) {
+    public NotificationDto markNotificationAsRead(String token, long id) {
         SessionEntity session = sessionDao.findSessionByToken(token);
 
         if(session == null) {
@@ -153,5 +148,7 @@ public class NotificationBean {
 
         notification.setRead(true);
         notificationDao.merge(notification);
+
+        return toDto(notification);
     }
 }

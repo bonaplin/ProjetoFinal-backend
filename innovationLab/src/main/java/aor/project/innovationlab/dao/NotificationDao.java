@@ -49,23 +49,24 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.desc(notification.get("instant")));
+        cq.orderBy(cb.asc(notification.get("read")), cb.desc(notification.get("instant")));
 
         TypedQuery<NotificationEntity> query = em.createQuery(cq);
         query.setFirstResult((pageNumber - 1) * pageSize);
         query.setMaxResults(pageSize);
 
-        long unreadCount = countUnreadNotifications(receiverEmail);
+        long unreadCount = countUnreadNotifications(receiverEmail, false); // Conta as notificações não lidas
+        long totalCount = countUnreadNotifications(receiverEmail, true); // Conta todas as notificações
         System.out.println("Unread count: " + unreadCount);
         PagAndUnreadResponse<NotificationEntity> response = new PagAndUnreadResponse<>();
         response.setResults(query.getResultList());
         response.setUnreadCount(unreadCount);
-        response.setTotalPages((int) Math.ceil((double) unreadCount / pageSize));
+        response.setTotalPages((int) Math.ceil((double) totalCount / pageSize));
 
         return response;
     }
 
-    public Long countUnreadNotifications(String receiverEmail) {
+    public Long countUnreadNotifications(String receiverEmail, boolean read) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<NotificationEntity> notification = cq.from(NotificationEntity.class);
@@ -75,7 +76,10 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
             Join<NotificationEntity, UserEntity> receiver = notification.join("receiver");
             predicates.add(cb.equal(receiver.get("email"), receiverEmail));
         }
-        predicates.add(cb.isFalse(notification.get("read")));
+
+        if(!read){
+            predicates.add(cb.isFalse(notification.get("read")));
+        }
 
         cq.select(cb.count(notification)).where(predicates.toArray(new Predicate[0]));
 

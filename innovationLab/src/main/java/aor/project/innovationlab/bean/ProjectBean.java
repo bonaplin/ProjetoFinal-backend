@@ -108,7 +108,6 @@ public class ProjectBean {
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
         dto.setLab_id(entity.getLab().getId());
-
         return dto;
     }
 
@@ -245,8 +244,9 @@ public class ProjectBean {
             messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
             messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
 
-            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Hello, this is a notification by Admin", NotificationType.INVITE, name);
-            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Olá ric", NotificationType.INVITE,null);
+            ProjectEntity pe = projectDao.findProjectByName(name);
+            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
+            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
 
 
             //TESTE - add log ao add user
@@ -705,7 +705,7 @@ public class ProjectBean {
             projectUser.setTokenAuthorization(tokenAuthorization);
             projectUserDao.persist(projectUser);
 //            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
-            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getName());
+            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getId());
         }
 
 
