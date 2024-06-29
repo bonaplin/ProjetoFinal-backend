@@ -23,9 +23,7 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -235,9 +233,9 @@ public class ProjectBean {
             addInterestToProject(name, "Interest4");
             addInterestToProject(name, "Interest5");
             addInterestToProject(name, "Interest6");
-            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
-            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
-
+//            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
+//            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
+            sendrandommessages(project.getId());
             ProjectEntity pe = projectDao.findProjectByName(name);
             notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
             notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
@@ -246,6 +244,29 @@ public class ProjectBean {
             //TESTE - add log ao add user
             logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId(), LogType.USER_JOIN);
         }
+    }
+
+    public void sendrandommessages (long id){
+        ProjectEntity project = projectDao.findProjectById(id);
+        Set<ProjectUserEntity> pu = project.getProjectUsers();
+
+        List<ProjectUserEntity> userList = new ArrayList<>(pu);
+
+        Random r = new Random();
+
+        int numMessages = r.nextInt(userList.size()) + 20;
+
+        for (int i = 0; i < numMessages; i++) {
+            // Selecione um usuário aleatório
+            UserEntity randomUser = userList.get(r.nextInt(userList.size())).getUser();
+
+            // Gere uma mensagem aleatória
+            String randomMessage = "Hello, this is a random message for user " + randomUser.getEmail();
+
+            // Envie a mensagem
+            messageBean.sendMessage(randomUser.getEmail(), id, randomMessage);
+        }
+
     }
 
     /**
@@ -825,6 +846,40 @@ public class ProjectBean {
         List<ProjectEntity> projects = projectDao.getProjectsForInvitation(creatorEmail, email);
         return projects.stream()
                 .map(project -> new IdNameDto((int) project.getId(), project.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public Object getProjectMessages(String token, Long id) {
+
+        SessionEntity su = sessionDao.findSessionByToken(token);
+        if(su == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+        UserEntity user = userDao.findUserByEmail(su.getUser().getEmail());
+        if(user == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(id);
+        if(project == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
+        if(projectUser == null) {
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        if(!projectUser.isActive()) {
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        List<MessageEntity> messages = project.getMessages().stream()
+                .filter(MessageEntity::isActive)
+                .collect(Collectors.toList());
+
+        return messages.stream()
+                .map(messageBean::toDto)
                 .collect(Collectors.toList());
     }
 }
