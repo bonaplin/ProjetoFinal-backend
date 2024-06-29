@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.SessionEntity;
+import aor.project.innovationlab.entity.SkillEntity;
 import aor.project.innovationlab.entity.UserEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
@@ -50,5 +51,16 @@ public class SessionDao extends AbstractDao<SessionEntity> {
 
     public List<String> findUserTokens(UserEntity user) {
         return em.createNamedQuery("Session.findUserTokens").setParameter("user", user).getResultList();
+    }
+
+    /**
+     * Find inactive sessions list.
+     *
+     * @return the list
+     */
+
+    public List<SessionEntity> findInactiveSessions() {
+        return em.createNamedQuery("Session.findInactiveSessions").getResultList();
+
     }
 }

@@ -4,22 +4,17 @@ import aor.project.innovationlab.dao.NotificationDao;
 import aor.project.innovationlab.dao.ProjectDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
+import aor.project.innovationlab.dto.response.ContentUnreadResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.dto.notification.NotificationDto;
 import aor.project.innovationlab.entity.NotificationEntity;
 import aor.project.innovationlab.entity.ProjectEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.enums.NotificationType;
-import aor.project.innovationlab.utils.ws.MessageType;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -128,7 +123,7 @@ public class NotificationBean {
         return response;
     }
 
-    public NotificationDto markNotificationAsRead(String token, long id) {
+    public ContentUnreadResponse markNotificationAsRead(String token, long id) {
         SessionEntity session = sessionDao.findSessionByToken(token);
 
         if(session == null) {
@@ -136,6 +131,7 @@ public class NotificationBean {
         }
         String receiverEmail = session.getUser().getEmail();
 
+        System.out.println(receiverEmail);
         NotificationEntity notification = notificationDao.findNotificationById(id);
 
         if(notification == null) {
@@ -149,6 +145,9 @@ public class NotificationBean {
         notification.setRead(true);
         notificationDao.merge(notification);
 
-        return toDto(notification);
+        ContentUnreadResponse response = new ContentUnreadResponse();
+        response.setContent(toDto(notification));
+        response.setUnreadCount(notificationDao.countUnreadNotifications(receiverEmail, false));
+        return response;
     }
 }

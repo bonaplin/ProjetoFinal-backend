@@ -1,6 +1,6 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.Stateless;
@@ -211,6 +211,15 @@ public class UserDao extends AbstractDao<UserEntity> {
         }
 
         return predicates;
+    }
+
+    public UserEntity findUserByUsername(String username) {
+        try {
+            return (UserEntity) em.createNamedQuery("User.findUserByUsername").setParameter("username", username)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 }
 

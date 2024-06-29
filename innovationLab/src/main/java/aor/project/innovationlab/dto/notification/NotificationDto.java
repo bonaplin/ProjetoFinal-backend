@@ -106,4 +106,20 @@ public class NotificationDto {
     public void setProjectId(long projectId) {
         this.projectId = projectId;
     }
+
+    @Override
+    public String toString() {
+        return "NotificationDto{" +
+                "id=" + id +
+                ", senderEmail='" + senderEmail + '\'' +
+                ", receiverEmail='" + receiverEmail + '\'' +
+                ", content='" + content + '\'' +
+                ", notificationType=" + notificationType +
+                ", projectId=" + projectId +
+                ", instant=" + instant +
+                ", read=" + read +
+                ", senderName='" + senderName + '\'' +
+                ", senderImg='" + senderImg + '\'' +
+                '}';
+    }
 }

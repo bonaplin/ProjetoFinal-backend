@@ -1,7 +1,10 @@
 package aor.project.innovationlab.bean;
 
+import aor.project.innovationlab.dao.AppConfigDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.entity.SkillEntity;
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.TokenUtil;
 
@@ -13,6 +16,7 @@ import aor.project.innovationlab.utils.PasswordUtil;
 import aor.project.innovationlab.enums.TokenStatus;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Schedule;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.PersistenceException;
@@ -21,35 +25,53 @@ import org.hibernate.exception.ConstraintViolationException;
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 @Stateless
 public class SessionBean  {
 
+    @EJB
+    private AppConfigDao appConfigDao;
     @EJB
     private UserDao userDao;
     @EJB
     private SessionDao sessionDao;
     @Inject
     private EmailBean emailBean;
+    @Inject
+    private NotificationBean notificationBean;
 //
 //    @EJB
 //    private JwtBean jwtService;
 
-    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 60;
+//    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 60;
+
+
+//    /**
+//     * Method to set the default expiration time of a token
+//     * It sets the default expiration time of a token in minutes
+//     * @param minutes
+//     * @param token
+//     */
+//    private void setDefaultTokenExpirationMinutes(int minutes, String token){
+//        TokenStatus tokenStatus = isValidUserByToken(token);
+//        if(!tokenStatus.equals(TokenStatus.VALID)) return;
+//
+//        //TODO: verify if the user has permission to change the expiration time
+//
+//        DEFAULT_TOKEN_EXPIRATION_MINUTES = minutes;
+//    }
 
     /**
-     * Method to set the default expiration time of a token
-     * It sets the default expiration time of a token in minutes
-     * @param minutes
-     * @param token
+     * Method to get the default expiration time of a token
+     * @return
      */
-    private void setDefaultTokenExpirationMinutes(int minutes, String token){
-        TokenStatus tokenStatus = isValidUserByToken(token);
-        if(!tokenStatus.equals(TokenStatus.VALID)) return;
-
-        //TODO: verify if the user has permission to change the expiration time
-
-        DEFAULT_TOKEN_EXPIRATION_MINUTES = minutes;
+    public int getDefaultTokenExpirationMinutes(){
+        return appConfigDao.findLastConfig().getTimeOut();
+    }
+    public int getAdminTokenExpirationMinutes(){
+        return appConfigDao.findLastConfig().getTimeOutAdmin();
     }
 
     /**
@@ -85,7 +107,6 @@ public class SessionBean  {
             // Log the event
             System.out.println("Token not found: " + token);
             throw new IllegalArgumentException("Token not found");
-
         }
         if(sessionEntity.getExpirationDate().isBefore(Instant.now())) {
             // Log the event
@@ -97,14 +118,17 @@ public class SessionBean  {
             System.out.println("Token not active: " + token);
             throw new IllegalArgumentException("Token not active");
         }
-        // If the token is valid, update its expiration date
-        updateTokenExpiration(sessionEntity);
+        if(sessionEntity.getUser().getRole() == UserType.ADMIN) {
+            sessionEntity.getUser().setTokenExpiration(Instant.now().plus(Duration.ofMinutes(getAdminTokenExpirationMinutes())));
+        }else {
+            sessionEntity.getUser().setTokenExpiration(Instant.now().plus(Duration.ofMinutes(getDefaultTokenExpirationMinutes())));
+        }
     }
 
-    private void updateTokenExpiration(SessionEntity sessionEntity) {
-        sessionEntity.setExpirationDate(generateExpirationDate());
-        sessionDao.merge(sessionEntity);
-    }
+//    private void updateTokenExpiration(SessionEntity sessionEntity) {
+//        sessionEntity.setExpirationDate(generateExpirationDate());
+//        sessionDao.merge(sessionEntity);
+//    }
 
     /**
      * Method to login a user
@@ -209,7 +233,7 @@ public class SessionBean  {
      * @return
      */
     public Instant generateExpirationDate() {
-        return Instant.now().plus(Duration.ofMinutes(DEFAULT_TOKEN_EXPIRATION_MINUTES));
+        return Instant.now().plus(Duration.ofMinutes(getDefaultTokenExpirationMinutes()));
     }
 
 //    public void generateSessionToken(UserEntity userEntity) {
@@ -249,6 +273,21 @@ public class SessionBean  {
         UserType userType = user.getRole();
         if (userType != UserType.ADMIN) {
             throw new IllegalArgumentException("User is not an admin");
+        }
+    }
+
+    /**
+     * Method to remove expired sessions
+     */
+    @Schedule(hour = "*", minute = "*/1", persistent = false)
+    public void removeExpiredSessions() {
+        System.out.println("Removing expired sessions");
+        List<SessionEntity> inactiveSessions = sessionDao.findInactiveSessions();
+        for (SessionEntity session : inactiveSessions) {
+            System.out.println("Removing session: " + session.getToken());
+            notificationBean.sendNotification("admin@admin",session.getUser().getEmail(),"logout" , NotificationType.LOGOUT,null);
+            session.setActive(false);
+            sessionDao.merge(session);
         }
     }
 }

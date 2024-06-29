@@ -3,11 +3,12 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 //import aor.project.innovationlab.utils.jwt.JwtBean;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.password.UserRecoverPasswordDto;
+import aor.project.innovationlab.dto.user.password.UserVerifyTokenDto;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -145,6 +146,21 @@ public class UserService {
         PaginatedResponse<Object> dto = userBean.getUsers(id,token,dtoType, username, email, firstname, lastname, role, active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField,orderDirection);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
+
+    @POST
+    @Path("/verify-token")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response verifyToken(@HeaderParam("token") String token) {
+        try{
+            sessionBean.validateUserToken(token);
+        }
+        catch (Exception e){
+            return Response.status(401).entity("Invalid token").build();
+        }
+        return Response.status(200).build();
+    }
+
 
 
 

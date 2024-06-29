@@ -1,9 +1,9 @@
-package aor.project.innovationlab.dto;
+package aor.project.innovationlab.dto.response;
 
 
 import java.util.List;
 
-public class PagAndUnreadResponse<T> extends PaginatedResponse<T>{
+public class PagAndUnreadResponse<T> extends PaginatedResponse<T> {
 
     private Long unreadCount;
 

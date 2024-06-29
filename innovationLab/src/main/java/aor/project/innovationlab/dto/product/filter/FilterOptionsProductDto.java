@@ -1,6 +1,6 @@
 package aor.project.innovationlab.dto.product.filter;
 
-import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.response.IdNameDto;
 
 import java.util.List;
 

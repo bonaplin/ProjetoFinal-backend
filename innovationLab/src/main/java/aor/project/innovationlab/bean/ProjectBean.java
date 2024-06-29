@@ -1,8 +1,8 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.IdNameDto;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
@@ -640,7 +640,7 @@ public class ProjectBean {
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(projectsResponse.getTotalPages());
-        
+
         if(userEmail != null && id != null){
             ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
             if(pue != null){

@@ -1,15 +1,11 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.entity.EmailEntity;
-import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.entity.UserEntity;
-import aor.project.innovationlab.utils.Color;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
-import jakarta.validation.constraints.Email;
 
 import java.util.ArrayList;
 import java.util.List;

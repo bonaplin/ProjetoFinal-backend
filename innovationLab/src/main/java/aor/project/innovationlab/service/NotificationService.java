@@ -1,16 +1,12 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.NotificationBean;
-import aor.project.innovationlab.dto.PagAndUnreadResponse;
-import aor.project.innovationlab.dto.notification.NotificationDto;
+import aor.project.innovationlab.dto.response.ContentUnreadResponse;
+import aor.project.innovationlab.dto.response.PagAndUnreadResponse;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
-
-import java.util.List;
 
 @Path("/notifications")
 public class NotificationService {
@@ -29,7 +25,9 @@ public class NotificationService {
     @PUT
     @Path("/{id}")
     public Response markAsRead(@HeaderParam ("token") String token, @PathParam("id") Long id){
-        NotificationDto dto = notificationBean.markNotificationAsRead(token, id);
+        System.out.println("markAsRead"+id);
+        ContentUnreadResponse dto = notificationBean.markNotificationAsRead(token, id);
+        System.out.println("markAsRead"+dto);
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
     }
 }

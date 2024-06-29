@@ -1,9 +1,8 @@
 package aor.project.innovationlab.dto.project.filter;
 
-import aor.project.innovationlab.dto.IdNameDto;
+import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
-import aor.project.innovationlab.enums.ProjectStatus;
 
 import java.util.List;
 

@@ -1,8 +1,7 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.dto.PaginatedResponse;
+import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.entity.ProductEntity;
-import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.enums.ProductType;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;

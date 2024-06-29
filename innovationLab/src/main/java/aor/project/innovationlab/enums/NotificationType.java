@@ -4,7 +4,8 @@ public enum NotificationType {
     NOTIFICATION(1),
     MESSAGE(10),
     INVITE(20),
-    NEW_MAIL(100);
+    NEW_MAIL(100),
+    LOGOUT(200);
 
     private final int value;
 
