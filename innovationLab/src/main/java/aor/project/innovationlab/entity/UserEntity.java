@@ -15,6 +15,7 @@ import java.util.Set;
 @NamedQuery(name = "User.findUserByEmail", query = "SELECT u FROM UserEntity u WHERE u.email = :email")
 @NamedQuery(name = "User.findUserById", query = "SELECT u FROM UserEntity u WHERE u.id = :id")
 @NamedQuery(name = "User.findUserByToken", query = "SELECT u FROM UserEntity u WHERE u.tokenVerification = :token")
+@NamedQuery(name = "User.findUserByTokenAndEmail", query = "SELECT u FROM UserEntity u WHERE u.tokenVerification = :token AND u.email = :email")
 public class UserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
