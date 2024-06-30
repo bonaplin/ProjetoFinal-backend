@@ -78,16 +78,6 @@ public class MessageBean {
         messageDao.persist(message);
     }
 
-    public void removeMessage(long messageId) {
-            MessageEntity message = messageDao.findMessageById(messageId);
-            if(message == null) {
-                return;
-            }
-            message.setActive(false);
-            messageDao.merge(message);
-    }
-
-
     public PaginatedResponse<Object> getProjectMessages(String token, Long id, Integer pageNumber, Integer pageSize) {
         String log = "Attempting to get messages for project with id: " + id;
         String msg="";
@@ -137,21 +127,6 @@ public class MessageBean {
         response.setResults(messages.stream().map(this::toDto).collect(Collectors.toList()));
 
         return response;
-    }
-
-    public void sendMessageToProject(String senderEmail, long id, MessageDto dto) {
-        // Get all users in the project
-        Set<ProjectUserEntity> projectUsers = projectDao.findProjectById(id).getProjectUsers();
-        // Send the message to all active users in the project
-        for(ProjectUserEntity projectUser : projectUsers) {
-            if(projectUser.isActive()) {
-                // Check if the project window is open for the user
-                if (!webSocketBean.isProjectWindowOpen(projectUser.getUser().getEmail(), id)) {
-                    // If the project window is not open, send a notification
-//                    notificationBean.sendNotification(projectUser.getUser().getEmail(), "New message in project " + id);
-                }
-            }
-        }
     }
 
 }

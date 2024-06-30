@@ -443,42 +443,6 @@ public class UserBean {
         }
     }
 
-//    public UserOwnerProfileDto getUserProfile(String token, String email) {
-//        String log = "Attempt to get user profile";
-//        UserEntity userEntity = userDao.findUserByEmail(email);
-//        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-//        sessionBean.validateUserToken(token);
-//        if (userEntity == null){
-//            LoggerUtil.logError(log,"User not found.",email,token);
-//            throw new IllegalArgumentException("User not found");
-//        }
-//        if(sessionEntity == null){
-//            LoggerUtil.logError(log,"Session not found.",email,token);
-//            throw new IllegalArgumentException("Session not found");
-//        }
-//
-//        long userId = sessionEntity.getUser().getId();
-//
-//        UserOwnerProfileDto userOwnerProfileDto = new UserOwnerProfileDto();
-//
-//        userOwnerProfileDto.setUsername(userEntity.getUsername());
-////        userOwnerProfileDto.setEmail(userEntity.getEmail());
-//        userOwnerProfileDto.setFirstname(userEntity.getFirstname());
-//        userOwnerProfileDto.setLastname(userEntity.getLastname());
-//        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
-//        userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
-//        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
-//        if(!userEntity.getPrivateProfile() || userId == userEntity.getId()){
-//            userOwnerProfileDto.setRole(userEntity.getRole().getValue());
-////            userOwnerProfileDto.setPhone(userEntity.getPhone());
-//            userOwnerProfileDto.setLab((userEntity.getLab().getId()));
-//            userOwnerProfileDto.setAbout(userEntity.getAbout());
-//
-//        }
-//        LoggerUtil.logInfo(log,"User profile retrieved",email,token);
-//        return userOwnerProfileDto;
-//    }
-
     public void confirmAccount(String token, UserConfirmAccountDto dto) {
         String log = "Attempt to confirm account";
         UserEntity userToConfirm = userDao.findUserByToken(token);

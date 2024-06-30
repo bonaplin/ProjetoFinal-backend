@@ -11,6 +11,7 @@ import aor.project.innovationlab.websocket.Notifier;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Singleton;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.websocket.EncodeException;
@@ -22,7 +23,7 @@ import java.util.*;
 /**
  * Bean for sending messages to user tokens
  */
-@Stateless
+@Singleton
 public class WebSocketBean {
 
     @EJB
@@ -125,7 +126,7 @@ public class WebSocketBean {
         return jsonObject.toString();
     }
 
-    public synchronized void openProjectWindow(String token, Long projectId) {
+    public void openProjectWindow(String token, Long projectId) {
         Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
         if (openProjectWindows == null) {
             openProjectWindows = new HashSet<>();
@@ -135,16 +136,43 @@ public class WebSocketBean {
         System.out.println(Color.PURPLE + "Project "+projectId+" window opened for user with token: " + token + Color.RESET);
     }
 
-    public synchronized void closeProjectWindow(String token, Long projectId) {
+    public void closeProjectWindow(String token, Long projectId) {
         Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
+        System.out.println("Open project windows before closing: " + openProjectWindows);
         if (openProjectWindows != null) {
-            openProjectWindows.remove(projectId);
+            boolean isRemoved = openProjectWindows.remove(projectId);
+            System.out.println("Is project window removed: " + isRemoved);
         }
+        System.out.println("Open project windows after closing: " + openProjectWindows);
         System.out.println(Color.BLUE + "Project "+projectId+" window closed for user with token: " + token + Color.RESET);
     }
 
-    public boolean isProjectWindowOpen(String token, Long projectId) {
-        Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
-        return openProjectWindows != null && openProjectWindows.contains(projectId);
+    public List<String> isProjectWindowOpen(String email, Long projectId) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        List<String> usertokens = sessionDao.findUserTokens(user);
+        List<String> openProjectWindowTokens = new ArrayList<>();
+
+        for (String token : usertokens) {
+            Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
+            if (openProjectWindows != null && openProjectWindows.contains(projectId)) {
+                openProjectWindowTokens.add(token);
+            }
+        }
+        return openProjectWindowTokens;
+    }
+
+    public void sendToUserToken(String t, String jsonWithAddedTypePM) {
+        Session session = notifier.getSessions().get(t);
+        if (session != null) {
+            try {
+                session.getBasicRemote().sendObject(jsonWithAddedTypePM);
+            } catch (IOException e) {
+            } catch (EncodeException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

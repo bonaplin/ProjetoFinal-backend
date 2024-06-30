@@ -588,28 +588,28 @@ public class ProjectBean {
     }
 
 
-    public void alertWsProjectIsOpen(String token, Long projectId) {
-        System.out.println("Alerting WS that project is open");
-        SessionEntity se = sessionDao.findSessionByToken(token);
-        if(se == null) {
-            return;
-        }
-
-        ProjectEntity project = projectDao.findProjectById(projectId);
-        if (project == null) {
-            return;
-        }
-
-        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, se.getUser().getId());
-
-        if (pue == null) {
-            return;
-        }
-
-        String userEmail = se.getUser().getEmail();
-
-        webSocketBean.isProjectWindowOpen(userEmail, projectId);
-    }
+//    public void alertWsProjectIsOpen(String token, Long projectId) {
+//        System.out.println("Alerting WS that project is open");
+//        SessionEntity se = sessionDao.findSessionByToken(token);
+//        if(se == null) {
+//            return;
+//        }
+//
+//        ProjectEntity project = projectDao.findProjectById(projectId);
+//        if (project == null) {
+//            return;
+//        }
+//
+//        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, se.getUser().getId());
+//
+//        if (pue == null) {
+//            return;
+//        }
+//
+//        String userEmail = se.getUser().getEmail();
+//
+//        webSocketBean.isProjectWindowOpen(userEmail, projectId);
+//    }
 
     public PaginatedResponse<Object> getProjectsByDto(String dtoType, String name,
                                                       List<ProjectStatus> status,
@@ -690,10 +690,8 @@ public class ProjectBean {
         response.setTotalPages(projectsResponse.getTotalPages());
 
         if(userEmail != null && id != null){
-            System.out.println("User email: " + userEmail + " Project id: " + id);
             ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
             if(pue != null && pue.isActive()){
-                System.out.println("User is active in project");
                 webSocketBean.openProjectWindow(auth, id);
             }
             if(pue != null){

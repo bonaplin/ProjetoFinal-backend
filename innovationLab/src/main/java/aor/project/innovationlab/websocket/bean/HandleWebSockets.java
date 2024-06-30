@@ -23,6 +23,7 @@ import jakarta.json.Json;
 import jakarta.websocket.Session;
 
 import java.time.Instant;
+import java.util.List;
 
 @Stateless
 public class HandleWebSockets {
@@ -45,7 +46,7 @@ public class HandleWebSockets {
     NotificationBean notificationBean;
     @EJB
     NotificationDao notificationDao;
-    @Inject
+    @EJB
     WebSocketBean webSocketBean;
 
     public void handleWebSocketJSON(Session session, String json) {
@@ -61,29 +62,9 @@ public class HandleWebSockets {
             case PROJECT_MESSAGE:
                 handleNewMessage(session, jsonObject);
                 break;
-            case PROJECT_OPEN:
-                handleProjectOpen(session, jsonObject);
-                break;
-                case PROJECT_CLOSE:
+            case PROJECT_CLOSE:
                 handleProjectClose(session, jsonObject);
                 break;
-        }
-    }
-
-    private void handleProjectOpen(Session session, JsonObject jsonObject){
-        try {
-            long id = jsonObject.get("id").getAsLong();
-            String token = session.getPathParameters().get("token");
-            ProjectEntity project = projectDao.findProjectById(id);
-            if(project == null) return;
-
-            ProjectUserEntity projectUser = projectDao.findProjectUserByProjectAndUserId(project.getId(), sessionDao.findSessionByToken(token).getUser().getId());
-            if(projectUser == null) return;
-            webSocketBean.openProjectWindow(token, id);
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -107,13 +88,10 @@ public class HandleWebSockets {
 //    //MESSAGE -     - MESSAGE -     - MESSAGE -     - MESSAGE -     - MESSAGE
     private void handleNewMessage(Session session, JsonObject jsonObject) {
         try {
-            MessageDto dto = JsonUtils.convertJsonStringToObject(jsonObject.toString(), MessageDto.class);
-
             String messageContent = jsonObject.get("message").getAsString();
             String userEmail = jsonObject.get("sendUser").getAsString();
             String projectId = jsonObject.get("projectId").getAsString();
             long id = Long.parseLong(projectId);
-
 
             String token = session.getPathParameters().get("token");
 
@@ -133,15 +111,21 @@ public class HandleWebSockets {
             response.setCreatedAt(messageEntity.getInstant());
             response.setUserEmail(messageEntity.getUser().getEmail());
             response.setId(messageEntity.getId());
+            response.setUserFirstName(messageEntity.getUser().getFirstname());
             response.setProjectId(messageEntity.getProject().getId());
 
-            String jsonWithAddedTypePM = WebSocketBean.addTypeToDtoJson(response, NotificationType.PROJECT_MESSAGE);
+            String jsonWithAddedTypePM = WebSocketBean.addTypeToDtoJson(response, NotificationType.MESSAGE);
 
 
             //verifica se os users tem o projeto aberto:
             for (ProjectUserEntity projectUser : project.getProjectUsers()) {
-                if (webSocketBean.isProjectWindowOpen(projectUser.getUser().getEmail(), id)) {
-                    webSocketBean.sendToUser(projectUser.getUser().getEmail(), jsonWithAddedTypePM);
+                String email = projectUser.getUser().getEmail();
+                List<String> openProjectWindowTokens = webSocketBean.isProjectWindowOpen(email, id);
+                if (!openProjectWindowTokens.isEmpty()) {
+                    System.out.println("Project Window is open");
+                    for (String t : openProjectWindowTokens) {
+                        webSocketBean.sendToUserToken(t, jsonWithAddedTypePM);
+                    }
                 }else {
                     NotificationEntity notification = new NotificationEntity();
                     notification.setProject(project);
@@ -150,7 +134,6 @@ public class HandleWebSockets {
                     notification.setContent("New Message from " + sender + " at " + messageEntity.getInstant().toString());
                     notification.setNotificationType(NotificationType.PROJECT_MESSAGE);
                     notificationDao.persist(notification);
-                    System.out.println("Notification: " + notification.getNotificationType());
                     NotificationDto ndto = notificationBean.toDto(notification);
                     String jsonWithAddedTypeN = WebSocketBean.addTypeToDtoJson(ndto, NotificationType.NOTIFICATION);
                     webSocketBean.sendToUser(projectUser.getUser().getEmail(), jsonWithAddedTypeN);
