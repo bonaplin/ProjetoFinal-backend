@@ -229,7 +229,6 @@ public class InterestBean {
             return new ArrayList<>();
         }
         List<InterestEntity> interestEntities = interestDao.getUserInterests(user.getId());
-        System.out.println("InterestEntities: "+interestEntities.size());
         return interestEntities.stream().map(this::toDto).collect(Collectors.toList());
     }
 

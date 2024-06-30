@@ -31,7 +31,6 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
 
     public PagAndUnreadResponse<NotificationEntity> findNotifications(String receiverEmail, Integer pageNumber, Integer pageSize) {
 
-        System.out.println(receiverEmail);
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<NotificationEntity> cq = cb.createQuery(NotificationEntity.class);
         Root<NotificationEntity> notification = cq.from(NotificationEntity.class);
@@ -42,7 +41,6 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
             predicates.add(cb.equal(receiver.get("email"), receiverEmail));
         }
 
-        System.out.println("NotificationDao.findNotifications");
         predicates.add(cb.isTrue(notification.get("active")));
 
         cq.where(predicates.toArray(new Predicate[0]));
@@ -55,7 +53,6 @@ public class NotificationDao extends AbstractDao<NotificationEntity> {
 
         long unreadCount = countUnreadNotifications(receiverEmail, false); // Conta as notificações não lidas
         long totalCount = countUnreadNotifications(receiverEmail, true); // Conta todas as notificações
-        System.out.println("Unread count: " + unreadCount);
         PagAndUnreadResponse<NotificationEntity> response = new PagAndUnreadResponse<>();
         response.setResults(query.getResultList());
         response.setUnreadCount(unreadCount);

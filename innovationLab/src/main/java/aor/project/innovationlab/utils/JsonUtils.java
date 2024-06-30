@@ -1,5 +1,6 @@
 package aor.project.innovationlab.utils;
 
+import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.utils.ws.MessageType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -57,10 +58,13 @@ public class JsonUtils {
     public static JsonObject convertJsonStringToJsonObject(String jsonString) {
         return gson.fromJson(jsonString, JsonObject.class);
     }
+    public static <T> T convertJsonStringToObject(String jsonString, Class<T> classOfT) {
+        return gson.fromJson(jsonString, classOfT);
+    }
 
-    public static MessageType getMessageTypeFromJson(String jsonString) {
+    public static NotificationType getMessageTypeFromJson(String jsonString) {
         JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
         int typeValue = jsonObject.get("type").getAsInt();
-        return MessageType.fromValue(typeValue);
+        return NotificationType.fromValue(typeValue);
     }
 }

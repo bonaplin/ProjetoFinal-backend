@@ -41,6 +41,17 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         }
     }
 
+    public ProjectUserEntity findProjectUserByProjectAndUserId(long p, long u) {
+        try{
+            return (ProjectUserEntity) em.createNamedQuery("ProjectUserEntity.findProjectUserByProjectAndUserId")
+                    .setParameter("projectId", p)
+                    .setParameter("userId", u)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public PaginatedResponse<ProjectEntity> findProjects(String name,
                                                          List<ProjectStatus> status,
                                                          List<String> labs,
@@ -94,10 +105,8 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                     .otherwise(3)
                     .as(Integer.class);
             if (order != null) {
-                System.out.println("ORDER BY: " + order + " " + orderByExpression);
                 cq.orderBy(order, cb.asc(orderByExpression));
             } else {
-                System.out.println("ORDER BY: " + orderByExpression);
                 cq.orderBy(cb.asc(orderByExpression));
             }
         } else if (order != null) {

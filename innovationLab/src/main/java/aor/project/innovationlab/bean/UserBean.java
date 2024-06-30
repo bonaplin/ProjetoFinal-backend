@@ -221,7 +221,6 @@ public class UserBean {
             LoggerUtil.logError(log,"UserLogInDto is null.",null,null);
             throw new IllegalArgumentException("Please fill all the fields.");
         }
-        System.out.println(Color.PURPLE+userLogInDto.getEmail()+Color.PURPLE);
         String email = userLogInDto.getEmail();
         String password = userLogInDto.getPassword();
         String confirmPassword = userLogInDto.getConfirmPassword();
@@ -246,8 +245,7 @@ public class UserBean {
         UserValidator.validatePassword(password);
         UserEntity user = createUserEntity(email, password);
         persistUser(user);
-        System.out.println(Color.PURPLE+user.getEmail()+Color.PURPLE);
-        
+
         String newToken = generateVerificationToken(user);
         EmailSender.sendVerificationEmail(email, newToken);
         return true;
@@ -286,7 +284,6 @@ public class UserBean {
             throw new IllegalArgumentException("Invalid email format!");
         }
         if(!UserValidator.validatePassword(password)) {
-            System.out.println(Color.RED+password+ Color.RED);
             LoggerUtil.logError(log,"Invalid password format!",email,null);
             throw new IllegalArgumentException("Invalid password format!");
         }
@@ -446,42 +443,6 @@ public class UserBean {
         }
     }
 
-//    public UserOwnerProfileDto getUserProfile(String token, String email) {
-//        String log = "Attempt to get user profile";
-//        UserEntity userEntity = userDao.findUserByEmail(email);
-//        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-//        sessionBean.validateUserToken(token);
-//        if (userEntity == null){
-//            LoggerUtil.logError(log,"User not found.",email,token);
-//            throw new IllegalArgumentException("User not found");
-//        }
-//        if(sessionEntity == null){
-//            LoggerUtil.logError(log,"Session not found.",email,token);
-//            throw new IllegalArgumentException("Session not found");
-//        }
-//
-//        long userId = sessionEntity.getUser().getId();
-//
-//        UserOwnerProfileDto userOwnerProfileDto = new UserOwnerProfileDto();
-//
-//        userOwnerProfileDto.setUsername(userEntity.getUsername());
-////        userOwnerProfileDto.setEmail(userEntity.getEmail());
-//        userOwnerProfileDto.setFirstname(userEntity.getFirstname());
-//        userOwnerProfileDto.setLastname(userEntity.getLastname());
-//        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
-//        userOwnerProfileDto.setPrivateProfile(userEntity.getPrivateProfile());
-//        userOwnerProfileDto.setImagePath(userEntity.getProfileImagePath());
-//        if(!userEntity.getPrivateProfile() || userId == userEntity.getId()){
-//            userOwnerProfileDto.setRole(userEntity.getRole().getValue());
-////            userOwnerProfileDto.setPhone(userEntity.getPhone());
-//            userOwnerProfileDto.setLab((userEntity.getLab().getId()));
-//            userOwnerProfileDto.setAbout(userEntity.getAbout());
-//
-//        }
-//        LoggerUtil.logInfo(log,"User profile retrieved",email,token);
-//        return userOwnerProfileDto;
-//    }
-
     public void confirmAccount(String token, UserConfirmAccountDto dto) {
         String log = "Attempt to confirm account";
         UserEntity userToConfirm = userDao.findUserByToken(token);
@@ -565,7 +526,6 @@ public class UserBean {
                 LoggerUtil.logError(log,"Lab not found with id: "+dto.getLab(),userEntity.getEmail(),token);
                 throw new IllegalArgumentException("Lab not found.");
             }
-            System.out.println(Color.PURPLE+"lab"+lab.getLocation()+Color.PURPLE);
             userEntity.setLab(lab);
         }
         if(dto.getAbout() != null){
@@ -701,6 +661,5 @@ public class UserBean {
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
         userEntity.setPrivateProfile(dto.getPrivateProfile());
         userDao.merge(userEntity);
-        System.out.println(Color.PURPLE+userEntity.getPrivateProfile()+Color.PURPLE);
     }
 }

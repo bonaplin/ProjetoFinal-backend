@@ -7,6 +7,8 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "project_user")
+@NamedQuery(name = "ProjectUserEntity.findAll", query = "SELECT p FROM ProjectUserEntity p")
+@NamedQuery(name = "ProjectUserEntity.findProjectUserByProjectAndUserId", query = "SELECT p FROM ProjectUserEntity p WHERE p.project.id = :projectId AND p.user.id = :userId")
 public class ProjectUserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

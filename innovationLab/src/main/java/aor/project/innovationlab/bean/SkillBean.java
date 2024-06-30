@@ -76,9 +76,6 @@ public class SkillBean {
         createSkillIfNotExists("Assembly", SkillType.HARDWARE);
         createSkillIfNotExists("macOS", SkillType.SOFTWARE);
         createSkillIfNotExists("IntelIJ", SkillType.TOOLS);
-
-        System.out.println("Initial skills created");
-
     }
 
     private void createSkillIfNotExists(String name, SkillType type) {

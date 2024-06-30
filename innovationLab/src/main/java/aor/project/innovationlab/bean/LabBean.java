@@ -39,7 +39,6 @@ public class LabBean {
         createLabIfNotExists("Leiria");
         createLabIfNotExists("Porto");
         createLabIfNotExists("Lisboa");
-        System.out.println("Initial labs created");
     }
 
     private void createLabIfNotExists(String location) {

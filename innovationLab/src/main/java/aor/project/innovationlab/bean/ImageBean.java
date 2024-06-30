@@ -62,7 +62,6 @@ public class ImageBean {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(Color.RED+"Image saved to: "+path+Color.RED);
         return path;
     }
 
@@ -148,7 +147,6 @@ public class ImageBean {
             throw new IllegalArgumentException("User not found with token: " + token);
         }
 
-        System.out.println("User found with token: " + token);
         long userId = userEntity.getId();
 
 //        String imageType = "image/" + getFileExtension(IMAGE_TYPE);

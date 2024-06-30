@@ -4,24 +4,26 @@ import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.UserDao;
 import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.enums.NotificationType;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
 import aor.project.innovationlab.utils.ws.MessageType;
 import aor.project.innovationlab.websocket.Notifier;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Singleton;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.websocket.EncodeException;
 import jakarta.websocket.Session;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * Bean for sending messages to user tokens
  */
-@Stateless
+@Singleton
 public class WebSocketBean {
 
     @EJB
@@ -32,6 +34,9 @@ public class WebSocketBean {
 
     @Inject
     private Notifier notifier;
+
+    private Map<String, Set<Long>> openProjectWindowsByUser = new HashMap<>();
+
 
     /**
      * Send message to user tokens by username
@@ -46,7 +51,6 @@ public class WebSocketBean {
                 try {
                     session.getBasicRemote().sendObject(messageJson);
                 } catch (IOException e) {
-                    System.out.println("Something went wrong!");
                 } catch (EncodeException e) {
                     throw new RuntimeException(e);
                 }
@@ -108,7 +112,7 @@ public class WebSocketBean {
      * @param <T> - generic type
      * @return - JSON string with type
      */
-    public <T> String addTypeToDtoJson(T dto, NotificationType mt) {
+    public static <T> String addTypeToDtoJson(T dto, NotificationType mt) {
         // Convert the DTO to a JSON string
         String json = JsonUtils.convertDtoToJson(dto);
 
@@ -118,6 +122,57 @@ public class WebSocketBean {
         // Add the "type" property to the JsonObject
         jsonObject.addProperty("type", mt.getValue());
         // Convert the JsonObject to a JSON string and return it
+        System.out.println("JSON: " + jsonObject.toString());
         return jsonObject.toString();
+    }
+
+    public void openProjectWindow(String token, Long projectId) {
+        Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
+        if (openProjectWindows == null) {
+            openProjectWindows = new HashSet<>();
+            openProjectWindowsByUser.put(token, openProjectWindows);
+        }
+        openProjectWindows.add(projectId);
+        System.out.println(Color.PURPLE + "Project "+projectId+" window opened for user with token: " + token + Color.RESET);
+    }
+
+    public void closeProjectWindow(String token, Long projectId) {
+        Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
+        System.out.println("Open project windows before closing: " + openProjectWindows);
+        if (openProjectWindows != null) {
+            boolean isRemoved = openProjectWindows.remove(projectId);
+            System.out.println("Is project window removed: " + isRemoved);
+        }
+        System.out.println("Open project windows after closing: " + openProjectWindows);
+        System.out.println(Color.BLUE + "Project "+projectId+" window closed for user with token: " + token + Color.RESET);
+    }
+
+    public List<String> isProjectWindowOpen(String email, Long projectId) {
+        UserEntity user = userDao.findUserByEmail(email);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        List<String> usertokens = sessionDao.findUserTokens(user);
+        List<String> openProjectWindowTokens = new ArrayList<>();
+
+        for (String token : usertokens) {
+            Set<Long> openProjectWindows = openProjectWindowsByUser.get(token);
+            if (openProjectWindows != null && openProjectWindows.contains(projectId)) {
+                openProjectWindowTokens.add(token);
+            }
+        }
+        return openProjectWindowTokens;
+    }
+
+    public void sendToUserToken(String t, String jsonWithAddedTypePM) {
+        Session session = notifier.getSessions().get(t);
+        if (session != null) {
+            try {
+                session.getBasicRemote().sendObject(jsonWithAddedTypePM);
+            } catch (IOException e) {
+            } catch (EncodeException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

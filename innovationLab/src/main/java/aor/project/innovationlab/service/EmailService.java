@@ -87,7 +87,6 @@ public class EmailService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response sendEmailResponse(@PathParam("id") Long id, @HeaderParam("token") String token, EmailResponseDto emailDto) {
-        System.out.println("body: " + emailDto.getBody());
         EmailResponseDto email = emailBean.sendEmailResponse(id, emailDto, token);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(email)).build();
     }

@@ -1,5 +1,6 @@
 package aor.project.innovationlab.service;
 
+import aor.project.innovationlab.bean.MessageBean;
 import aor.project.innovationlab.bean.ProjectBean;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.response.IdNameDto;
@@ -23,6 +24,9 @@ public class ProjectService {
 
     @Inject
     private SessionBean sessionBean;
+
+    @Inject
+    private MessageBean messageBean;
 
     /**
      * Get projects by dto, this method is used to get projects by a specific dto
@@ -57,11 +61,8 @@ public class ProjectService {
                                 @QueryParam("order_field") String orderField,
                                 @QueryParam("order_direction") String orderDirection,
                                 @HeaderParam("token") String auth) {
-        System.out.println(" orderDirection: " + orderDirection + " orderField " + orderField);
 
         PaginatedResponse<Object> dto = projectBean.getProjectsByDto(dtoType, name, status, lab, creatorEmail, skill, interest, participantEmail, role, orderField, orderDirection, auth, pageNumber, pageSize, id);
-
-
 
                 return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
         }
@@ -107,6 +108,21 @@ public class ProjectService {
         public Response getProjectsForInvitation(@HeaderParam("token") String token, @QueryParam("email") String email) {
             List<IdNameDto> projects = projectBean.getProjectsForInvitation(token, email);
             return Response.ok().entity(JsonUtils.convertObjectToJson(projects)).build();
+        }
+
+        @GET
+        @Path("/{id}/messages")
+        @Produces("application/json")
+        public Response getProjectMessages(@HeaderParam("token") String token, @PathParam("id") Long id) {
+            return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.getProjectMessages(token, id))).build();
+        }
+
+        @GET
+        @Path("/{id}/msg")
+        @Produces("application/json")
+        public Response getProjectMsg(@HeaderParam("token") String token, @PathParam("id") Long id, @QueryParam("page_number") Integer pageNumber, @QueryParam("page_size") Integer pageSize) {
+            PaginatedResponse<Object> dto = messageBean.getProjectMessages(token, id, pageNumber, pageSize);
+            return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
         }
     }
 

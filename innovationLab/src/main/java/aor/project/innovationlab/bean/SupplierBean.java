@@ -32,7 +32,6 @@ public class SupplierBean {
         createSupplierIfNotExists("Supplier 8", "987654321");
         createSupplierIfNotExists("Supplier 9", "123456789");
         createSupplierIfNotExists("Supplier 10", "987654321");
-        System.out.println("Initial suppliers created");
     }
 
     public void createSupplierIfNotExists(String name, String phone) {

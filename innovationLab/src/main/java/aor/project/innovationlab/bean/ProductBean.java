@@ -118,7 +118,6 @@ public class ProductBean {
         }
 
         Long supplierId = null;
-        System.out.println(supplierName);
         if(supplierName != null) {
             SupplierEntity supplier = supplierDao.findSupplierByName(supplierName.toUpperCase());
             if(supplier == null) {
@@ -130,11 +129,8 @@ public class ProductBean {
 
         List<ProductType> typeEnums = new ArrayList<>();
         if (types != null) {
-            System.out.println("os types são: " + types);
             for (String type : types) {
-                System.out.println("type:" + type);
                 if (ProductType.contains(type.toUpperCase())) {
-                    System.out.println("tem este:" + type);
                     typeEnums.add(ProductType.valueOf(type.toUpperCase()));
                 } else {
                     LoggerUtil.logError(log, "Invalid product type", null, auth);
