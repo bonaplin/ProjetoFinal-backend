@@ -105,10 +105,8 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
                     .otherwise(3)
                     .as(Integer.class);
             if (order != null) {
-                System.out.println("ORDER BY: " + order + " " + orderByExpression);
                 cq.orderBy(order, cb.asc(orderByExpression));
             } else {
-                System.out.println("ORDER BY: " + orderByExpression);
                 cq.orderBy(cb.asc(orderByExpression));
             }
         } else if (order != null) {

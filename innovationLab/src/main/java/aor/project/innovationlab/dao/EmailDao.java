@@ -81,7 +81,6 @@ public class EmailDao extends AbstractDao<EmailEntity> {
         if(receiverUser != null){
             unreadCount = countUnreadEmails(userEmail);
         }
-        System.out.println("unreadCount: " + unreadCount);
         PagAndUnreadResponse<EmailEntity> response = new PagAndUnreadResponse<>();
         response.setResults(emails);
         response.setTotalPages(totalPages);
@@ -129,7 +128,6 @@ public class EmailDao extends AbstractDao<EmailEntity> {
         UserEntity receiverUser = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class)
                 .setParameter("email", userEmail)
                 .getSingleResult();
-        System.out.println("receiverUser: " + receiverUser.getEmail());
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<EmailEntity> countRoot = countQuery.from(EmailEntity.class);

@@ -83,6 +83,9 @@ public class ProjectBean {
     @Inject
     private EmailBean emailBean;
 
+    @Inject
+    private WebSocketBean webSocketBean;
+
     public ProjectBean() {
     }
 
@@ -584,6 +587,30 @@ public class ProjectBean {
         return dto;
     }
 
+
+    public void alertWsProjectIsOpen(String token, Long projectId) {
+        System.out.println("Alerting WS that project is open");
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            return;
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (project == null) {
+            return;
+        }
+
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, se.getUser().getId());
+
+        if (pue == null) {
+            return;
+        }
+
+        String userEmail = se.getUser().getEmail();
+
+        webSocketBean.isProjectWindowOpen(userEmail, projectId);
+    }
+
     public PaginatedResponse<Object> getProjectsByDto(String dtoType, String name,
                                                       List<ProjectStatus> status,
                                                       List<String> lab, String creatorEmail,
@@ -663,7 +690,12 @@ public class ProjectBean {
         response.setTotalPages(projectsResponse.getTotalPages());
 
         if(userEmail != null && id != null){
+            System.out.println("User email: " + userEmail + " Project id: " + id);
             ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
+            if(pue != null && pue.isActive()){
+                System.out.println("User is active in project");
+                webSocketBean.openProjectWindow(auth, id);
+            }
             if(pue != null){
                 response.setUserType(pue.getRole().getValue());
             }else{
@@ -712,7 +744,6 @@ public class ProjectBean {
             LoggerUtil.logError(log,"OrderDirection is invalid",userEmail,token);
             throw new IllegalArgumentException("Invalid order direction. It should be 'asc' or 'desc'.");
         }
-        System.out.println("Order parameters are valid");
     }
 
 
@@ -787,7 +818,6 @@ public class ProjectBean {
 
             SessionEntity session = sessionDao.findSessionByToken(token);
             if(session == null) {
-                System.out.println(Color.RED + "Invalid user token" + Color.RED);
                 LoggerUtil.logError(log, "Invalid user token", null, token);
                 throw new IllegalArgumentException("Invalid user token");
             }

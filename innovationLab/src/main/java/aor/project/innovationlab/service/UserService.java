@@ -37,7 +37,6 @@ public class UserService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllUsers(@HeaderParam("token") String auth , @PathParam("id") String id) {
         String token = sessionBean.getTokenFromAuthorizationHeader(auth);
-        System.out.println("BATEU com "+token + " e id "+id);
         return Response.ok("BATEU com "+token).build();
     }
 

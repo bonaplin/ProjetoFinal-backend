@@ -68,7 +68,7 @@ public class EmailBean {
         String log = "Attempt to get emails";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
-            System.out.println("UPS");
+
             LoggerUtil.logError(log,"Session not found.",null,token);
             throw new IllegalArgumentException("Session not found.");
         }

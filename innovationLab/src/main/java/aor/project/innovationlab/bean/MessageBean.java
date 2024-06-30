@@ -13,6 +13,7 @@ import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -30,6 +31,12 @@ public class MessageBean {
     @EJB
     private SessionDao sessionDao;
 
+    @Inject
+    private NotificationBean notificationBean;
+
+    @Inject
+    private WebSocketBean webSocketBean;
+
     public MessageBean() {
     }
 
@@ -42,6 +49,20 @@ public class MessageBean {
         dto.setMessage(me.getMessage());
         dto.setCreatedAt(me.getInstant());
         return dto;
+    }
+
+
+    public MessageEntity toEntity(MessageDto dto) {
+        MessageEntity message = new MessageEntity();
+        UserEntity sender = userDao.findUserByEmail(dto.getUserEmail());
+        ProjectEntity project = projectDao.findProjectById(dto.getId());
+        if(sender == null || project == null) {
+            return null;
+        }
+        message.setUser(sender);
+        message.setMessage(dto.getMessage());
+        message.setProject(project);
+        return message;
     }
 
     public void sendMessage(String senderEmail, long id, String content) {
@@ -117,4 +138,20 @@ public class MessageBean {
 
         return response;
     }
+
+    public void sendMessageToProject(String senderEmail, long id, MessageDto dto) {
+        // Get all users in the project
+        Set<ProjectUserEntity> projectUsers = projectDao.findProjectById(id).getProjectUsers();
+        // Send the message to all active users in the project
+        for(ProjectUserEntity projectUser : projectUsers) {
+            if(projectUser.isActive()) {
+                // Check if the project window is open for the user
+                if (!webSocketBean.isProjectWindowOpen(projectUser.getUser().getEmail(), id)) {
+                    // If the project window is not open, send a notification
+//                    notificationBean.sendNotification(projectUser.getUser().getEmail(), "New message in project " + id);
+                }
+            }
+        }
+    }
+
 }

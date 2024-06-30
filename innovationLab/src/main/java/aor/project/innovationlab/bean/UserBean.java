@@ -221,7 +221,6 @@ public class UserBean {
             LoggerUtil.logError(log,"UserLogInDto is null.",null,null);
             throw new IllegalArgumentException("Please fill all the fields.");
         }
-        System.out.println(Color.PURPLE+userLogInDto.getEmail()+Color.PURPLE);
         String email = userLogInDto.getEmail();
         String password = userLogInDto.getPassword();
         String confirmPassword = userLogInDto.getConfirmPassword();
@@ -246,8 +245,7 @@ public class UserBean {
         UserValidator.validatePassword(password);
         UserEntity user = createUserEntity(email, password);
         persistUser(user);
-        System.out.println(Color.PURPLE+user.getEmail()+Color.PURPLE);
-        
+
         String newToken = generateVerificationToken(user);
         EmailSender.sendVerificationEmail(email, newToken);
         return true;
@@ -286,7 +284,6 @@ public class UserBean {
             throw new IllegalArgumentException("Invalid email format!");
         }
         if(!UserValidator.validatePassword(password)) {
-            System.out.println(Color.RED+password+ Color.RED);
             LoggerUtil.logError(log,"Invalid password format!",email,null);
             throw new IllegalArgumentException("Invalid password format!");
         }
@@ -565,7 +562,6 @@ public class UserBean {
                 LoggerUtil.logError(log,"Lab not found with id: "+dto.getLab(),userEntity.getEmail(),token);
                 throw new IllegalArgumentException("Lab not found.");
             }
-            System.out.println(Color.PURPLE+"lab"+lab.getLocation()+Color.PURPLE);
             userEntity.setLab(lab);
         }
         if(dto.getAbout() != null){
@@ -701,6 +697,5 @@ public class UserBean {
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
         userEntity.setPrivateProfile(dto.getPrivateProfile());
         userDao.merge(userEntity);
-        System.out.println(Color.PURPLE+userEntity.getPrivateProfile()+Color.PURPLE);
     }
 }

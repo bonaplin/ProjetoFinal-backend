@@ -47,7 +47,7 @@ public class NotificationBean {
      * @param ne
      * @return
      */
-    private NotificationDto toDto ( NotificationEntity ne){
+    public NotificationDto toDto ( NotificationEntity ne){
         NotificationDto dto = new NotificationDto();
         dto.setId(ne.getId());
         dto.setSenderEmail(ne.getSender().getEmail());
@@ -55,9 +55,9 @@ public class NotificationBean {
         dto.setContent(ne.getContent());
         dto.setInstant(ne.getInstant());
         dto.setRead(ne.isRead());
-        dto.setNotificationType(ne.getNotificationType().getValue());
         dto.setSenderName(ne.getSender().getFirstname());
         dto.setSenderImg(ne.getSender().getProfileImagePath());
+        dto.setNotificationType(ne.getNotificationType().getValue());
 
         if(ne.getProject() != null) {
             dto.setProjectId(ne.getProject().getId());
@@ -131,7 +131,6 @@ public class NotificationBean {
         }
         String receiverEmail = session.getUser().getEmail();
 
-        System.out.println(receiverEmail);
         NotificationEntity notification = notificationDao.findNotificationById(id);
 
         if(notification == null) {

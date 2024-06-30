@@ -72,7 +72,6 @@ public class ImageService {
     public Response getUserPicture(@HeaderParam("Authorization") String auth, @QueryParam("id") long id){
         String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         String path = imageBean.getUserImageString(token,id);
-        System.out.println(Color.RED+"User image path: "+path+"."+Color.RED);
         return Response.ok().entity(path).build();
     }
 

@@ -18,7 +18,6 @@ public class PopulatorService {
     @Produces ("application/json")
     @Consumes("application/json")
     public Response populateUsers(PopulatorUserDto dto) {
-        System.out.println("service called");
         populatorBean.addUser(dto);
         return Response.ok().build();
     }
@@ -28,7 +27,6 @@ public class PopulatorService {
     @Produces ("application/json")
     @Consumes("application/json")
     public Response populateSkills(PopulatorSkillDto dto) {
-        System.out.println("service called");
         populatorBean.addSkills(dto.getName());
         return Response.ok().build();
     }
@@ -38,7 +36,6 @@ public class PopulatorService {
     @Produces ("application/json")
     @Consumes("application/json")
     public Response populateInterests(PopulatorSkillDto dto) {
-        System.out.println("service called");
         populatorBean.addInterest(dto.getName());
         return Response.ok().build();
     }

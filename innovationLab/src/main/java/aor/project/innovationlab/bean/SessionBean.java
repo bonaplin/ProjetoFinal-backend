@@ -162,7 +162,6 @@ public class SessionBean  {
             sessionLoginDto.setToken(createSession(userEntity));
             sessionLoginDto.setEmail(userEntity.getEmail());
             sessionLoginDto.setUnreadNotifications(0);
-            System.out.println(Color.CYAN+"Unread emails: " + emailBean.getUnreadEmails(userEntity.getEmail())+Color.CYAN);
             sessionLoginDto.setUnreadEmails(emailBean.getUnreadEmails(userEntity.getEmail()));
             return sessionLoginDto;
         }
