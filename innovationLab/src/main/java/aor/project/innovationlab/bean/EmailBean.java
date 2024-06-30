@@ -305,7 +305,7 @@ public class EmailBean {
         return emailDto;
     }
 
-    public void sendEmailInviteToUser(String token, String invitedUserEmail, String subject, String body) {
+    public void sendEmailInviteToUser(String token, String invitedUserEmail, String subject, String body, Long id) {
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null){
             throw new IllegalArgumentException("Session not found.");
@@ -330,8 +330,9 @@ public class EmailBean {
         EmailEntity emailEntity = toEntity(emailDto);
         emailDao.persist(emailEntity);
 
+//        notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getId());
 
-        notificationBean.sendNotification(from, to, "You have received an email from " + from, NotificationType.NEW_MAIL, null);
+        notificationBean.sendNotification(from, to, "You have received an email from " + from, NotificationType.NEW_MAIL, id);
     }
 
     public String createEmailBody( String projectName,String projectLink, String acceptLink, String rejectLink) {

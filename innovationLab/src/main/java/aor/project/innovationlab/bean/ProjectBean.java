@@ -793,8 +793,8 @@ public class ProjectBean {
             projectUser.setActive(true);
             projectUser.setTokenAuthorization(tokenAuthorization);
             projectUserDao.persist(projectUser);
-//            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody);
-            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getId());
+            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody, project.getId());
+//            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getId());
         }
 
 
