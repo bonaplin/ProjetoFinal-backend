@@ -3,6 +3,8 @@ package aor.project.innovationlab.dao;
 import aor.project.innovationlab.entity.TaskEntity;
 import jakarta.ejb.Stateless;
 
+import java.util.List;
+
 @Stateless
 public class TaskDao extends AbstractDao<TaskEntity> {
 
@@ -27,6 +29,15 @@ public class TaskDao extends AbstractDao<TaskEntity> {
             return (TaskEntity) em.createNamedQuery("Task.findTaskById").setParameter("id", id)
                     .getSingleResult();
 
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<TaskEntity> findTasksByProjectId(Long projectId) {
+        try {
+            return em.createNamedQuery("Task.findTasksByProjectId").setParameter("projectId", projectId)
+                    .getResultList();
         } catch (Exception e) {
             return null;
         }

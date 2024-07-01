@@ -221,5 +221,14 @@ public class UserDao extends AbstractDao<UserEntity> {
             return null;
         }
     }
+
+    public List<UserEntity> findUsersByProjectId(Long projectId) {
+        try {
+            return em.createNamedQuery("User.findUsersByProjectId").setParameter("projectId", projectId)
+                    .getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
 

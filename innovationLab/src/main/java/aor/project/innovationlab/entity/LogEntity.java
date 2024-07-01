@@ -21,10 +21,10 @@ public class LogEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true, updatable = false)
-    private int id;
+    private long id;
 
     @Column(name = "instant", nullable = false)
-    private Instant instant;
+    private Instant instant = Instant.now();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
@@ -42,11 +42,11 @@ public class LogEntity implements Serializable {
 
     @Enumerated
     @Column(name = "new_user_type")
-    private UserType newUserTestType;
+    private UserType newUserType;
 
     @Enumerated
     @Column(name = "old_user_type")
-    private UserType oldUserTestType;
+    private UserType oldUserType;
 
 
 
@@ -83,8 +83,28 @@ public class LogEntity implements Serializable {
 
 
 
-    public int getId() {
+    public long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public UserType getNewUserType() {
+        return newUserType;
+    }
+
+    public void setNewUserType(UserType newUserType) {
+        this.newUserType = newUserType;
+    }
+
+    public UserType getOldUserType() {
+        return oldUserType;
+    }
+
+    public void setOldUserType(UserType oldUserType) {
+        this.oldUserType = oldUserType;
     }
 
     public void setAffectedUser(UserEntity affectedUser) {
@@ -181,14 +201,18 @@ public class LogEntity implements Serializable {
                 return isProjectChangeValid();
             case PROJECT_STATE_CHANGE:
                 return isProjectStateChangeValid();
+
+
+            case TASK_STATE_CHANGE:
+                return isTaskChangeValid();
             case TASK_CREATE:
-            case TASK_CHANGE:
             case TASK_DELETE:
             case TASK_COMPLETE:
-            case TASK_STATE_CHANGE:
+            case TASK_CHANGE:
                 return isTaskAffected();
             case USER_JOIN:
             case USER_LEAVE:
+            case USER_KICKED:
                 return isUserAffected();
             case USER_CHANGE:
                 return isUserChangeValid();
@@ -199,7 +223,7 @@ public class LogEntity implements Serializable {
 
     private boolean isProjectChangeValid() {
         return project != null &&
-                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
+                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
     }
 
     private boolean isProjectStateChangeValid() {
@@ -214,16 +238,16 @@ public class LogEntity implements Serializable {
 
     private boolean isTaskAffected() {
         return task != null &&
-                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
+                affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
     }
 
     private boolean isUserAffected() {
         return affectedUser != null &&
-                newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserTestType == null && newUserTestType == null;
+                newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
     }
 
     private boolean isUserChangeValid() {
-        return affectedUser != null && oldUserTestType != null && newUserTestType != null &&
+        return affectedUser != null && oldUserType != null && newUserType != null &&
                 newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null;
     }
 

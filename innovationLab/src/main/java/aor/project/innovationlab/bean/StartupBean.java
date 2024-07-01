@@ -41,6 +41,9 @@ public class StartupBean {
     @Inject
     private AppConfigBean appConfigBean;
 
+    @Inject
+    private LogBean logBean;
+
     @PostConstruct
     public void init() {
         labBean.createInitialData();
@@ -51,6 +54,8 @@ public class StartupBean {
         projectBean.createInitialData();
         taskBean.createInitialData();
         emailBean.createInitialData();
+        logBean.createInitialData();
         appConfigBean.createInitialData();
+
     }
 }

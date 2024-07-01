@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.ProjectUserEntity;
+import aor.project.innovationlab.entity.UserEntity;
 import jakarta.ejb.Stateless;
 
 import java.util.ArrayList;
@@ -53,6 +54,16 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
                     .getSingleResult();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    public List<UserEntity> findUsersByProjectId(Long projectId) {
+        try {
+            return em.createQuery("SELECT pu.user FROM ProjectUserEntity pu WHERE pu.project.id = :projectId", UserEntity.class)
+                    .setParameter("projectId", projectId)
+                    .getResultList();
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
     }
 }
