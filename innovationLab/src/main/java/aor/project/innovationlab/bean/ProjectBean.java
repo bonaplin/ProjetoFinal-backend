@@ -337,9 +337,6 @@ public class ProjectBean {
                     projectProductDao.persist(projectProductEntity);
                 }
             }
-        } else {
-            LoggerUtil.logError(log, "At least one project keyword is required", session.getUser().getEmail(), token);
-            throw new IllegalArgumentException("At least one project keyword is required");
         }
 
         if (createProjectDto.getKeywords() != null) {
@@ -353,6 +350,9 @@ public class ProjectBean {
                     projectInterestDao.persist(projectInterestEntity);
                 }
             }
+        } else {
+            LoggerUtil.logError(log, "At least one project keyword is required", session.getUser().getEmail(), token);
+            throw new IllegalArgumentException("At least one project keyword is required");
         }
 
         if (createProjectDto.getSkills() != null) {
