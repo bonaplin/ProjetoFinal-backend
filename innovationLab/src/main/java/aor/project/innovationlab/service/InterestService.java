@@ -38,6 +38,14 @@ public class InterestService {
 
     }
 
+    @GET
+    @Path("/{projectId}")
+    @Produces("application/json")
+    public Response getInterestsByProject(@PathParam("projectId") Long projectId, @HeaderParam("token") String token){
+        List<InterestDto> interests = interestBean.getProjectInterests(token, projectId);
+        return Response.status(200).entity(interests).build();
+    }
+
     @POST
     @Path("/")
     @Consumes(MediaType.APPLICATION_JSON)
