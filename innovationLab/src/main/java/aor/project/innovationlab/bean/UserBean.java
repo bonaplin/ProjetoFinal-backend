@@ -625,6 +625,19 @@ public class UserBean {
         return response;
     }
 
+    public List<UserAddToProjectDto> getUsersForInfo(String token, long id) {
+        String log = "Attempt to get users for info";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+        List<UserEntity> users = userDao.findUsersByProjectId(id);
+        return users.stream()
+                .map(this::toDtoUserProject)
+                .collect(Collectors.toList());
+    }
+
     private void validateOrderParameters(String orderField, String orderDirection) {
         List<String> allowedFields = Arrays.asList("username", "email", "firstname", "privateProfile");
         List<String> allowedDirections = Arrays.asList("asc", "desc");

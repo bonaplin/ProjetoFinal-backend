@@ -132,6 +132,23 @@ public class InterestBean {
         return toDto(interest);
     }
 
+
+    public List<InterestDto> getProjectInterests(String token, long projectId) {
+
+        String log = "Attempt to get interests for project info";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        List<InterestEntity> interests = projectInterestDao.findInterestByProjectId(projectId);
+        if(interests == null) {
+            return new ArrayList<>();
+        }
+        return interests.stream().map(this::toDto).collect(Collectors.toList());
+    }
+
     /**
      * Remove um interesse de um user
      * @param email - email do user

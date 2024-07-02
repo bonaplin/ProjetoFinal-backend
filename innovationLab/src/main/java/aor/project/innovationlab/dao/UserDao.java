@@ -130,6 +130,26 @@ public class UserDao extends AbstractDao<UserEntity> {
         return response;
     }
 
+    public List<UserEntity> findUsersByProjectId(Long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
+        Root<ProjectUserEntity> root = cq.from(ProjectUserEntity.class);
+
+
+        Join<ProjectUserEntity, UserEntity> userJoin = root.join("user");
+
+
+        cq.where(cb.equal(root.get("project").get("id"), projectId));
+
+
+        cq.select(userJoin);
+
+
+        List<UserEntity> users = em.createQuery(cq).getResultList();
+
+        return users;
+    }
+
     private Order getOrder(CriteriaBuilder cb, Root<UserEntity> user, String orderField, String orderDirection) {
         List<Order> orders = new ArrayList<>();
 

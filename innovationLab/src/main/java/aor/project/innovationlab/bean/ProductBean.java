@@ -1,15 +1,19 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.ProductDao;
+import aor.project.innovationlab.dao.ProjectProductDao;
 import aor.project.innovationlab.dao.SessionDao;
 import aor.project.innovationlab.dao.SupplierDao;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
+import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.product.filter.FilterOptionsProductDto;
 import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.SupplierEntity;
+import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
+import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
@@ -33,6 +37,9 @@ public class ProductBean {
     @EJB
     SessionDao sessionDao;
 
+    @EJB
+    ProjectProductDao ProjectProductDao;
+
     @Inject
     SessionBean sessionBean;
 
@@ -49,6 +56,14 @@ public class ProductBean {
         productDto.setIdentifier(productEntity.getIdentifier());
         productDto.setDescription(productEntity.getDescription());
         productDto.setNotes(productEntity.getNotes());
+        return productDto;
+    }
+
+    public ProductToCreateProjectDto toProjectInfoDto(ProjectProductEntity productEntity) {
+        ProductToCreateProjectDto productDto = new ProductToCreateProjectDto();
+        productDto.setId(productEntity.getId());
+        productDto.setName(productEntity.getProduct().getName());
+        productDto.setQuantity(productEntity.getQuantity());
         return productDto;
     }
 
@@ -175,6 +190,22 @@ public class ProductBean {
         }
         return response;
 
+    }
+
+    public List<ProductToCreateProjectDto> getProjectProducts (String token, long projectId) {
+
+        String log = "Attempt to get products for project info";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        List<ProjectProductEntity> products = ProjectProductDao.findProductsByProjectId(projectId);
+        if(products == null) {
+            return new ArrayList<>();
+        }
+        return products.stream().map(this::toProjectInfoDto).collect(Collectors.toList());
     }
 
     private void validateOrderParameters(String orderField, String orderDirection, String auth) {

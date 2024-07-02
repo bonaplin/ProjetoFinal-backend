@@ -159,6 +159,14 @@ public class UserService {
         }
         return Response.status(200).build();
     }
+    @GET
+    @Path("/{projectId}")
+    @Produces("application/json")
+    public Response getUsersByProject(@PathParam("projectId") Long projectId, @HeaderParam("token") String token) {
+        List<UserAddToProjectDto> dto = userBean.getUsersForInfo(token, projectId);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
 
 
 
