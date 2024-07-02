@@ -359,7 +359,7 @@ public class LogBean {
 
         dto.setUserEmail(entity.getUser() != null ? entity.getUser().getEmail() : null);
         dto.setUserFirstName(entity.getUser() != null ? entity.getUser().getFirstname() : null);
-
+        dto.setUserPicture(entity.getUser() != null ? entity.getUser().getProfileImagePath() : null);
         dto.setType(entity.getType() != null ? entity.getType().getValue() : null);
 
         dto.setProjectId(entity.getProject() != null ? entity.getProject().getId() : null);

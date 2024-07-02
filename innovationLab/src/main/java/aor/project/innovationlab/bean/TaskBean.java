@@ -396,9 +396,8 @@ public class TaskBean {
 
         if(tasks == null || tasks.isEmpty()) {
             LoggerUtil.logInfo(log, "No tasks found for project", user.getEmail(), token);
-            throw new IllegalArgumentException("No tasks found for project");
+            return new ArrayList<>();
         }
-        System.out.println(tasks.size());
 
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "IdNameDto";

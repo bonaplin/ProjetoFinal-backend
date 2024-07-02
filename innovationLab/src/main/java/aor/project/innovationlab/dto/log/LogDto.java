@@ -7,6 +7,7 @@ public class LogDto {
     private Instant instant;
     private String userEmail;
     private String userFirstName;
+    private String userPicture;
 
     private Integer type;
 
@@ -28,6 +29,14 @@ public class LogDto {
 
 
     public LogDto(){}
+
+    public String getUserPicture() {
+        return userPicture;
+    }
+
+    public void setUserPicture(String userPicture) {
+        this.userPicture = userPicture;
+    }
 
     public String getAffectedUserEmail() {
         return affectedUserEmail;
