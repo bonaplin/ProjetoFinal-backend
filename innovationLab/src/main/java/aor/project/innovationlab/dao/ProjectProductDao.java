@@ -1,9 +1,6 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.entity.InterestEntity;
-import aor.project.innovationlab.entity.ProductEntity;
-import aor.project.innovationlab.entity.ProjectInterestEntity;
-import aor.project.innovationlab.entity.ProjectProductEntity;
+import aor.project.innovationlab.entity.*;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -31,19 +28,24 @@ public class ProjectProductDao extends AbstractDao<ProjectProductEntity> {
         }
     }
 
-    public List<ProductEntity> findProductsByProjectId(long projectId) {
+    public List<ProjectProductEntity> findProductsByProjectId(long projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
+        CriteriaQuery<ProjectProductEntity> cq = cb.createQuery(ProjectProductEntity.class);
         Root<ProjectProductEntity> root = cq.from(ProjectProductEntity.class);
 
-        Join<ProjectProductEntity, ProductEntity> userJoin = root.join("product");
+        // Perform the join operation
+        Join<ProjectProductEntity, ProductEntity> productJoin = root.join("product");
+        Join<ProjectProductEntity, ProjectEntity> projectJoin = root.join("project");
 
-        cq.where(cb.equal(root.get("project").get("id"), projectId));
+        // Set the where clause to filter by projectId
+        cq.where(cb.equal(projectJoin.get("id"), projectId));
 
-        cq.select(userJoin);
+        // Set the select clause to return ProjectProductEntity objects
+        cq.select(root);
 
-        List<ProductEntity> products = em.createQuery(cq).getResultList();
+        // Execute the query and get the result list
+        List<ProjectProductEntity> projectProducts = em.createQuery(cq).getResultList();
 
-        return products;
+        return projectProducts;
     }
 }

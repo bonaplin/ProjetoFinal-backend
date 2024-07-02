@@ -10,10 +10,7 @@ import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.product.filter.FilterOptionsProductDto;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
-import aor.project.innovationlab.entity.InterestEntity;
-import aor.project.innovationlab.entity.ProductEntity;
-import aor.project.innovationlab.entity.SessionEntity;
-import aor.project.innovationlab.entity.SupplierEntity;
+import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
@@ -64,10 +61,10 @@ public class ProductBean {
         return productDto;
     }
 
-    public ProductToCreateProjectDto toProjectInfoDto(ProductEntity productEntity) {
+    public ProductToCreateProjectDto toProjectInfoDto(ProjectProductEntity productEntity) {
         ProductToCreateProjectDto productDto = new ProductToCreateProjectDto();
         productDto.setId(productEntity.getId());
-        productDto.setName(productEntity.getName());
+        productDto.setName(productEntity.getProduct().getName());
         productDto.setQuantity(productEntity.getQuantity());
         return productDto;
     }
@@ -209,7 +206,7 @@ public class ProductBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<ProductEntity> products = ProjectProductDao.findProductsByProjectId(projectId);
+        List<ProjectProductEntity> products = ProjectProductDao.findProductsByProjectId(projectId);
         if(products == null) {
             return new ArrayList<>();
         }
