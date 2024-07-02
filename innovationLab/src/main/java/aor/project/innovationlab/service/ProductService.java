@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.ProductBean;
 import aor.project.innovationlab.dto.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
+import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.ProjectUserType;
@@ -38,6 +39,14 @@ public class ProductService {
         PaginatedResponse<Object> dto = productBean.getProducts(auth, dtoType, name, type, brand, supplier_name, identifier, pageNumber, pageSize, orderField, orderDirection, id);
 
         return Response.ok().entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
+    @GET
+    @Path("/{projectId}")
+    @Produces("application/json")
+    public Response getProductsByProjectId(@PathParam("projectId") Long projectId, @HeaderParam("token") String token) {
+        List<ProductToCreateProjectDto> products = productBean.getProjectProducts(token, projectId);
+        return Response.status(200).entity(products).build();
     }
 
     @GET

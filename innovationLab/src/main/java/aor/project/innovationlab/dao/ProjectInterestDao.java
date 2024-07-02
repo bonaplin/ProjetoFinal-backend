@@ -1,7 +1,14 @@
 package aor.project.innovationlab.dao;
 
+import aor.project.innovationlab.entity.InterestEntity;
 import aor.project.innovationlab.entity.ProjectInterestEntity;
 import jakarta.ejb.Stateless;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
+
+import java.util.List;
 
 @Stateless
 public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
@@ -21,6 +28,22 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public List<InterestEntity> findInterestByProjectId(long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<InterestEntity> cq = cb.createQuery(InterestEntity.class);
+        Root<ProjectInterestEntity> root = cq.from(ProjectInterestEntity.class);
+
+        Join<ProjectInterestEntity, InterestEntity> userJoin = root.join("interest");
+
+        cq.where(cb.equal(root.get("project").get("id"), projectId));
+
+        cq.select(userJoin);
+
+        List<InterestEntity> interests = em.createQuery(cq).getResultList();
+
+        return interests;
     }
 
 

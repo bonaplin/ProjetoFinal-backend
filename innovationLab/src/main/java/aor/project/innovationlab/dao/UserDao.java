@@ -138,16 +138,16 @@ public class UserDao extends AbstractDao<UserEntity> {
         CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
         Root<ProjectUserEntity> root = cq.from(ProjectUserEntity.class);
 
-        // Join the ProjectUserEntity with UserEntity
+
         Join<ProjectUserEntity, UserEntity> userJoin = root.join("user");
 
-        // Add the where clause
+
         cq.where(cb.equal(root.get("project").get("id"), projectId));
 
-        // Select the user entities
+
         cq.select(userJoin);
 
-        // Execute the query
+
         List<UserEntity> users = em.createQuery(cq).getResultList();
 
         return users;
