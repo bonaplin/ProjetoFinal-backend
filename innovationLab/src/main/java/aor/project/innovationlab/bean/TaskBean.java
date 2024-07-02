@@ -1,21 +1,18 @@
 package aor.project.innovationlab.bean;
 
-import aor.project.innovationlab.dao.ProjectDao;
-import aor.project.innovationlab.dao.TaskDao;
-import aor.project.innovationlab.dao.TaskExecutorDao;
-import aor.project.innovationlab.dao.UserDao;
+import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -35,6 +32,12 @@ public class TaskBean {
 
     @Inject
     LogBean logBean;
+
+    @EJB
+    ProjectUserDao projectUserDao;
+
+    @EJB
+    SessionDao sessionDao;
 
 
     /**
@@ -178,7 +181,7 @@ public class TaskBean {
             taskDao.merge(taskEntity);
 
             //TESTE - adicionar log de criação de tarefa
-            logBean.addNewTask(projectDao.findProjectByName(project).getId(), userDao.findUserByEmail("admin@admin").getId(), id, LogType.TASK_CREATE);
+            logBean.addNewTask(projectDao.findProjectByName(project).getId(), userDao.findUserByEmail("admin@admin").getId(), id);
         }
     }
 
@@ -363,6 +366,58 @@ public class TaskBean {
                 additionalExecutor.setActive(false);
                 taskDao.merge(task);
             }
+        }
+    }
+
+    public IdNameDto idNameDto(TaskEntity te){
+        IdNameDto dto = new IdNameDto();
+        dto.setId(te.getId());
+        dto.setName(te.getTitle());
+        return dto;
+    }
+
+    public List<Object> getProjectTasks(String token, Long id, String dtoType) {
+        String log= "Attempting to get project tasks for notes";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity pe = projectDao.findProjectById(id);
+        if(se == null || pe == null) {
+            LoggerUtil.logInfo(log, "Invalid token or project", null, token);
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+        UserEntity user = se.getUser();
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
+
+        if(pue == null || !pue.isActive()) {
+            LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        List<TaskEntity> tasks = taskDao.findTasksByProjectId(id);
+
+        if(tasks == null || tasks.isEmpty()) {
+            LoggerUtil.logInfo(log, "No tasks found for project", user.getEmail(), token);
+            throw new IllegalArgumentException("No tasks found for project");
+        }
+        System.out.println(tasks.size());
+
+        if(dtoType == null || dtoType.isEmpty()) {
+            dtoType = "IdNameDto";
+        }
+        if(!dtoType.equalsIgnoreCase("IdNameDto")){
+            throw new IllegalArgumentException("Invalid dto type");
+        }
+
+        switch (dtoType) {
+            case "IdNameDto":
+                return tasks.stream()
+                        .map(this::idNameDto)
+                        .collect(Collectors.toList());
+//            case "TaskDto":
+//                return tasks.stream()
+//                        .map(taskBean::toDto)
+//                        .collect(Collectors.toList());
+            default:
+                return new ArrayList<>();
         }
     }
 

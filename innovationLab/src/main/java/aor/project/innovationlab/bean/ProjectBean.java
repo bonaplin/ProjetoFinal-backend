@@ -1,6 +1,8 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.log.LogDto;
+import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
@@ -8,6 +10,7 @@ import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
+import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
@@ -61,6 +64,12 @@ public class ProjectBean {
 
     @EJB
     private SkillDao skillDao;
+
+    @EJB
+    private TaskDao taskDao;
+
+    @EJB
+    private LogDao logDao;
 
     @Inject
     private MessageBean messageBean;
@@ -245,7 +254,7 @@ public class ProjectBean {
 
 
             //TESTE - add log ao add user
-            logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId(), LogType.USER_JOIN);
+            logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId());
         }
     }
 
@@ -910,4 +919,8 @@ public class ProjectBean {
                 .map(messageBean::toDto)
                 .collect(Collectors.toList());
     }
+
+
+
+
 }

@@ -13,7 +13,11 @@ public enum LogType {
     USER_KICKED(23),
 
     PROJECT_CHANGE(30),
-    PROJECT_STATE_CHANGE(31); //.
+    PROJECT_STATE_CHANGE(31), //.
+
+    NOTE(40),
+    NOTE_TASK(41);
+
 
 
     private final int value;

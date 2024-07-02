@@ -1,15 +1,15 @@
 package aor.project.innovationlab.service;
 
-import aor.project.innovationlab.bean.LogBean;
-import aor.project.innovationlab.bean.MessageBean;
-import aor.project.innovationlab.bean.ProjectBean;
-import aor.project.innovationlab.bean.SessionBean;
+import aor.project.innovationlab.bean.*;
+import aor.project.innovationlab.dto.log.LogDto;
+import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -31,6 +31,9 @@ public class ProjectService {
 
     @Inject
     private LogBean logBean;
+
+    @Inject
+    private TaskBean taskBean;
 
     /**
      * Get projects by dto, this method is used to get projects by a specific dto
@@ -138,6 +141,23 @@ public class ProjectService {
 
     }
 
+    @GET
+    @Path("/{id}/tasks")
+    @Produces("application/json")
+    public Response getProjectTasks(@HeaderParam("token") String token, @PathParam("id") Long id, @QueryParam("dtoType") String dtoType) {
+        List<Object> tasks = taskBean.getProjectTasks(token, id, dtoType);
+        System.out.println(Color.CYAN+tasks.size()+Color.CYAN);
+        return Response.ok().entity(JsonUtils.convertObjectToJson(tasks)).build();
+    }
+
+    @POST
+    @Path("/{id}/notes")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response addProjectNotes(@HeaderParam("token") String token, @PathParam("id") Long id, NoteIdNoteDto notes) {
+        LogDto dto = logBean.addProjectNotes(token, id, notes);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
 }
 
 

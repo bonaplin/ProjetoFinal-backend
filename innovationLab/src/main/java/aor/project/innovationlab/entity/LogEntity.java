@@ -9,8 +9,6 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 
-//TODO acredito que faltem tipos de logs, por exemplo, add keyword, remove keyword
-
 @Entity
 @Table(name = "log")
 @NamedQuery(name = "Log.findLogByProjectId", query = "SELECT l FROM LogEntity l WHERE l.project.id = :projectId")
@@ -51,7 +49,7 @@ public class LogEntity implements Serializable {
 
 
     @ManyToOne
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", nullable = false)
     private ProjectEntity project;
 
     @Enumerated(EnumType.STRING)
@@ -77,11 +75,21 @@ public class LogEntity implements Serializable {
     private TaskStatus oldTaskStatus;
 
 
+    @Column(name = "notes")
+    private String notes;
+
+
     public UserEntity getAffectedUser() {
         return affectedUser;
     }
 
+    public String getNotes() {
+        return notes;
+    }
 
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 
     public long getId() {
         return id;
@@ -201,8 +209,6 @@ public class LogEntity implements Serializable {
                 return isProjectChangeValid();
             case PROJECT_STATE_CHANGE:
                 return isProjectStateChangeValid();
-
-
             case TASK_STATE_CHANGE:
                 return isTaskChangeValid();
             case TASK_CREATE:
@@ -216,9 +222,20 @@ public class LogEntity implements Serializable {
                 return isUserAffected();
             case USER_CHANGE:
                 return isUserChangeValid();
+            case NOTE:
+                return isNoteValid();
+            case NOTE_TASK:
+                return isNoteTaskValid();
             default:
                 return false;
         }
+    }
+    private boolean isNoteValid() {
+        return notes != null && project != null && affectedUser == null && newProjectStatus == null && oldProjectStatus == null && task == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
+    }
+
+    private boolean isNoteTaskValid() {
+        return notes != null && task != null && project != null && affectedUser == null && newProjectStatus == null && oldProjectStatus == null && newTaskStatus == null && oldTaskStatus == null && oldUserType == null && newUserType == null;
     }
 
     private boolean isProjectChangeValid() {
