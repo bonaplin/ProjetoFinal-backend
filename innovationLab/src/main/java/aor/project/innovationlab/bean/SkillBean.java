@@ -1,12 +1,8 @@
 package aor.project.innovationlab.bean;
 
-import aor.project.innovationlab.dao.SessionDao;
-import aor.project.innovationlab.dao.SkillDao;
-import aor.project.innovationlab.dao.UserDao;
-import aor.project.innovationlab.dao.UserSkillDao;
-import aor.project.innovationlab.entity.SessionEntity;
-import aor.project.innovationlab.entity.UserEntity;
-import aor.project.innovationlab.entity.UserSkillEntity;
+import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
+import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.SkillType;
 
 import aor.project.innovationlab.utils.logs.LoggerUtil;
@@ -15,7 +11,6 @@ import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import aor.project.innovationlab.dto.skill.SkillDto;
-import aor.project.innovationlab.entity.SkillEntity;
 import jakarta.inject.Inject;
 
 import java.util.ArrayList;
@@ -36,6 +31,9 @@ public class SkillBean {
 
     @EJB
     private SessionDao sessionDao;
+
+    @EJB
+    ProjectSkillDao ProjectSkillDao;
 
     @Inject
     private SessionBean sessionBean;
@@ -166,6 +164,22 @@ public class SkillBean {
 
         userSkillDao.merge(userSkill); // Atualiza a userSkill no banco de dados
         LoggerUtil.logInfo(log, "Skill: "+ skillName +"removed from user", email, null);
+    }
+
+    public List<SkillDto> getProjectSkills (String token, long projectId) {
+
+        String log = "Attempt to get products for project info";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        List<SkillEntity> products = ProjectSkillDao.findSkillsByProjectId(projectId);
+        if(products == null) {
+            return new ArrayList<>();
+        }
+        return products.stream().map(this::toDto).collect(Collectors.toList());
     }
 
     /**
