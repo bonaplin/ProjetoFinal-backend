@@ -14,6 +14,7 @@ import java.util.Set;
 @NamedQuery(name = "Task.findTaskByTitle", query = "SELECT t FROM TaskEntity t WHERE t.title = :title")
 @NamedQuery(name = "Task.findTaskById", query = "SELECT t FROM TaskEntity t WHERE t.id = :id")
 @NamedQuery(name = "Task.findTasksByProjectId", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId")
+@NamedQuery(name = "Task.findTaskBySystemTitle", query = "SELECT t FROM TaskEntity t WHERE t.systemTitle = :systemTitle")
 public class TaskEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -25,6 +26,9 @@ public class TaskEntity implements Serializable {
 
     @Column(name = "title", nullable = false, unique = true, updatable = true)
     private String title;
+
+    @Column(name = "system_title", nullable = false)
+    private String systemTitle;
 
     @Column(name = "description", nullable = false, unique = false, updatable = true)
     private String description;
@@ -183,6 +187,14 @@ public class TaskEntity implements Serializable {
 
     public void setProject(ProjectEntity project) {
         this.project = project;
+    }
+
+    public String getSystemTitle() {
+        return systemTitle;
+    }
+
+    public void setSystemTitle(String systemTitle) {
+        this.systemTitle = systemTitle;
     }
 
     @Override

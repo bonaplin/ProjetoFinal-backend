@@ -2,7 +2,10 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.task.DependentTaskDto;
+import aor.project.innovationlab.dto.task.MemberDto;
 import aor.project.innovationlab.dto.task.TaskDto;
+import aor.project.innovationlab.dto.task.TaskGanttDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;
@@ -119,6 +122,12 @@ public class TaskBean {
                 .collect(Collectors.toSet());
         taskDto.setExecutors(executors);
 
+        Set<Long> prerequisiteIds = taskEntity.getPrerequisites().stream()
+                .filter(TaskPrerequisiteEntity::isActive)
+                .map(prerequisiteEntity -> prerequisiteEntity.getPrerequisite().getId())
+                .collect(Collectors.toSet());
+        taskDto.setPrerequisiteIds(prerequisiteIds);
+
         return taskDto;
     }
 
@@ -163,6 +172,7 @@ public class TaskBean {
             taskEntity.setInitialDate(java.time.LocalDate.parse(initialDate));
             taskEntity.setDuration(java.time.Duration.parse(duration));
             taskEntity.setCreator(userDao.findUserByEmail(responsible));
+            taskEntity.setSystemTitle(taskSystemNameGenerator(name));
             taskEntity.setActive(true);
             taskEntity.setProject(projectDao.findProjectByName(project));
 
@@ -402,7 +412,7 @@ public class TaskBean {
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "IdNameDto";
         }
-        if(!dtoType.equalsIgnoreCase("IdNameDto")){
+        if(!dtoType.equalsIgnoreCase("IdNameDto") && !dtoType.equalsIgnoreCase("TaskDto")){
             throw new IllegalArgumentException("Invalid dto type");
         }
 
@@ -411,15 +421,137 @@ public class TaskBean {
                 return tasks.stream()
                         .map(this::idNameDto)
                         .collect(Collectors.toList());
-//            case "TaskDto":
-//                return tasks.stream()
-//                        .map(taskBean::toDto)
-//                        .collect(Collectors.toList());
+            case "TaskDto":
+                return tasks.stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList());
             default:
                 return new ArrayList<>();
         }
     }
 
 
+    public List<Object> getTasks(String token, Long projectId, String dtoType) {
+        String log = "Attempting to get tasks";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logInfo(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+        UserEntity user = se.getUser();
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if(project == null) {
+            LoggerUtil.logInfo(log, "Project not found", user.getEmail(), token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+
+        if(pue == null || !pue.isActive()) {
+            LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        List<TaskEntity> tasks = taskDao.findTasksByProjectId(projectId);
+        if(tasks == null || tasks.isEmpty()) {
+            LoggerUtil.logInfo(log, "No tasks found for project", user.getEmail(), token);
+            return new ArrayList<>();
+        }
+
+        if(dtoType == null || dtoType.isEmpty()) {
+            dtoType = "TaskGanttDto";
+        }
+
+        if(!dtoType.equalsIgnoreCase("TaskGanttDto") && !dtoType.equalsIgnoreCase("TaskDto")){
+            throw new IllegalArgumentException("Invalid dto type");
+        }
+
+switch (dtoType) {
+            case "TaskGanttDto":
+                return tasks.stream()
+                        .map(this::toGanttDto)
+                        .collect(Collectors.toList());
+            case "TaskDto":
+                 return tasks.stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+            default:
+                return new ArrayList<>();
+        }
+    }
+
+    private String taskSystemNameGenerator(String originalName) {
+        String systemTitle = originalName.replaceAll("\\s+", "").toLowerCase();
+        int i = 0;
+        String uniqueSystemTitle;
+
+        do {
+            uniqueSystemTitle = systemTitle + (i == 0 ? "" : i);
+            i++;
+        } while (taskDao.findTaskBySystemTitle(uniqueSystemTitle) != null);
+
+        return uniqueSystemTitle;
+    }
+
+    private TaskGanttDto toGanttDto(TaskEntity taskEntity) {
+        TaskGanttDto taskGanttDto = new TaskGanttDto();
+        taskGanttDto.setId(taskEntity.getId());
+        taskGanttDto.setTitle(taskEntity.getTitle());
+        taskGanttDto.setSystemTitle(taskEntity.getSystemTitle());
+        taskGanttDto.setDescription(taskEntity.getDescription());
+        taskGanttDto.setStatus(taskEntity.getStatus().toString()); // Ajuste conforme a enumeração TaskStatus
+        taskGanttDto.setInitialDate(taskEntity.getInitialDate());
+        taskGanttDto.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().toDays()));
+
+        // Converter executors e additionalExecutors para MemberDto
+        List<MemberDto> membersOfTask = new ArrayList<>();
+        taskEntity.getExecutors().forEach(executor -> {
+            MemberDto member = new MemberDto();
+            member.setId(executor.getExecutor().getId()); // Ajuste conforme necessário
+            member.setName(executor.getExecutor().getEmail()); // Ajuste conforme necessário
+            member.setSystemUsername(executor.getExecutor().getEmail()); // Ajuste conforme necessário
+            member.setType("MEMBER"); // Defina o tipo conforme necessário
+            membersOfTask.add(member);
+        });
+
+        UserEntity responsible = taskEntity.getResponsible();
+        MemberDto creator = new MemberDto();
+        creator.setId(responsible.getId()); // Ajuste conforme necessário
+        creator.setName(responsible.getEmail()); // Ajuste conforme necessário
+        creator.setSystemUsername(responsible.getEmail()); // Ajuste conforme necessário
+        creator.setType("CREATOR"); // Defina o tipo conforme necessário
+        membersOfTask.add(creator);
+
+        // Repita para additionalExecutors se necessário
+        taskGanttDto.setMembersOfTask(membersOfTask);
+
+        List<MemberDto> additionalMembersOfTask = new ArrayList<>();
+        taskEntity.getAdditionalExecutors().forEach(additionalExecutor -> {
+            MemberDto additionalMember = new MemberDto();
+            additionalMember.setId(additionalExecutor.getId()); // Ajuste conforme necessário
+            additionalMember.setName(additionalExecutor.getName()); // Ajuste conforme necessário
+            additionalMember.setSystemUsername(additionalExecutor.getName()); // Ajuste conforme necessário
+            additionalMember.setType("ADDITIONAL"); // Defina o tipo conforme necessário
+            additionalMembersOfTask.add(additionalMember);
+        });
+
+        // Converter prerequisites para DependentTaskDto
+        List<DependentTaskDto> dependentTasks = new ArrayList<>();
+        taskEntity.getPrerequisites().forEach(prerequisite -> {
+            DependentTaskDto dependentTask = new DependentTaskDto();
+            dependentTask.setId(prerequisite.getPrerequisite().getId()); // Ajuste conforme a estrutura de TaskPrerequisiteEntity
+            dependentTask.setTitle(prerequisite.getPrerequisite().getTitle()); // Ajuste conforme necessário
+            dependentTask.setSystemTitle(prerequisite.getPrerequisite().getSystemTitle()); // Ajuste conforme necessário
+            dependentTask.setDescription(prerequisite.getPrerequisite().getDescription()); // Ajuste conforme necessário
+            dependentTask.setStatus(prerequisite.getPrerequisite().getStatus().toString()); // Ajuste conforme necessário
+            dependentTask.setInitialDate(prerequisite.getPrerequisite().getInitialDate()); // Ajuste conforme necessário
+            dependentTask.setFinalDate(prerequisite.getPrerequisite().getInitialDate().plusDays(prerequisite.getPrerequisite().getDuration().toDays())); // Ajuste conforme necessário
+
+            dependentTasks.add(dependentTask);
+        });
+        taskGanttDto.setDependentTasks(dependentTasks);
+
+        return taskGanttDto;
+    }
 }
 
