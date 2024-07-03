@@ -3,6 +3,8 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.ProjectStatus;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import com.sun.tools.jconsole.JConsoleContext;
@@ -15,7 +17,9 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -32,6 +36,9 @@ public class InterestBean {
 
     @EJB
     private ProjectDao projectDao;
+
+    @EJB
+    private ProjectUserDao projectUserDao;
 
     @EJB
     private ProjectInterestDao projectInterestDao;
@@ -130,6 +137,91 @@ public class InterestBean {
         userInterestDao.merge(userInterest);
         LoggerUtil.logInfo(log,"Interest added to user",null,null);
         return toDto(interest);
+    }
+
+    public void addInterestToProject(String token, long projectId, long interestId) {
+        String log = "Attempting to add interest to project";
+        Set<ProjectStatus> invalidStatuses = EnumSet.of(ProjectStatus.READY, ProjectStatus.CANCELLED, ProjectStatus.FINISHED);
+
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (invalidStatuses.contains(project.getStatus()))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        InterestEntity interest = interestDao.findInterestById(interestId);
+        if(interest == null) {
+            LoggerUtil.logError(log,"Interest not found",null,token);
+            throw new IllegalArgumentException("Interest not found");
+        }
+
+        ProjectInterestEntity projectInterest = projectInterestDao.findProjectInterestIds(projectId, interestId);
+        if(projectInterest != null) {
+            projectInterest.setActive(true);
+            projectInterestDao.merge(projectInterest);
+            LoggerUtil.logInfo(log,"ProjectInterest already exists, just setActive",null,token);
+        }
+
+        projectInterest = new ProjectInterestEntity();
+        projectInterest.setProject(project);
+        projectInterest.setInterest(interest);
+        projectInterestDao.persist(projectInterest);
+
+        project.getInterests().add(projectInterest);
+        interest.getProjectInterests().add(projectInterest);
+
+        projectDao.merge(project);
+        interestDao.merge(interest);
+
+        LoggerUtil.logInfo(log,"Interest " + interest.getName() + " added to project " + projectId,null,token);
+    }
+
+    private void verifications(String token, String log, SessionEntity sessionEntity, ProjectEntity project) {
+        Set<ProjectStatus> invalidStatuses = EnumSet.of(ProjectStatus.READY, ProjectStatus.CANCELLED, ProjectStatus.FINISHED);
+
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        if (invalidStatuses.contains(project.getStatus()))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
     }
 
 

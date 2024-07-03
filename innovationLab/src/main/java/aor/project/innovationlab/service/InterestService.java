@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.InterestBean;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.interests.InterestDto;
+import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.utils.Color;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -54,6 +55,15 @@ public class InterestService {
 //        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
         InterestDto interest = interestBean.addInterest(auth, interestDto);
         return Response.status(200).entity(interest).build();
+    }
+
+    @PUT
+    @Path("/{projectId}/{interestId}")
+    @Consumes("application/json")
+    public Response addInterestToProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId,@PathParam("interestId") Long interestId) {
+        System.out.println(token);
+        interestBean.addInterestToProject(token, projectId, interestId);
+        return Response.status(200).entity("Project updated successfully!").build();
     }
 
     @PUT
