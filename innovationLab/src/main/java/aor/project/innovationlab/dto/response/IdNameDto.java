@@ -1,7 +1,7 @@
 package aor.project.innovationlab.dto.response;
 
 public class IdNameDto {
-    private int id;
+    private long id;
     private String name;
 
     public IdNameDto() {
@@ -12,11 +12,11 @@ public class IdNameDto {
         this.name = name;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 

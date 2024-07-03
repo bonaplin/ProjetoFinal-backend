@@ -73,6 +73,10 @@ public class NotificationBean {
      * @param type - type of notification
      */
     public void sendNotification(String senderEmail, String receiverEmail, String content, NotificationType type, Long projectId) {
+        if(type == NotificationType.LOGOUT){
+            System.out.println("NotificationBean.sendNotification: type is LOGOUT");
+            return;
+        }
         UserEntity sender = userDao.findUserByEmail(senderEmail);
         UserEntity receiver = userDao.findUserByEmail(receiverEmail);
 

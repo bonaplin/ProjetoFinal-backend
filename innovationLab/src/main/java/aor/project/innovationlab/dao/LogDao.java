@@ -42,7 +42,7 @@ public class LogDao extends AbstractDao<LogEntity> {
         List<Predicate> predicates = createPredicates(cb, log, id);
 
         cq.where(predicates.toArray(new Predicate[0]));
-        cq.orderBy(cb.asc(log.get("id"))); // Order logs by ID in ascending order
+        cq.orderBy(cb.desc(log.get("id"))); // Order logs by ID in ascending order
         TypedQuery<LogEntity> createPredicate = em.createQuery(cq);
 
         // Calculate total pages

@@ -7,6 +7,7 @@ public class LogDto {
     private Instant instant;
     private String userEmail;
     private String userFirstName;
+    private String userPicture;
 
     private Integer type;
 
@@ -24,8 +25,18 @@ public class LogDto {
     private Integer newTaskStatus;
     private Integer oldTaskStatus;
 
+    private String note;
+
 
     public LogDto(){}
+
+    public String getUserPicture() {
+        return userPicture;
+    }
+
+    public void setUserPicture(String userPicture) {
+        this.userPicture = userPicture;
+    }
 
     public String getAffectedUserEmail() {
         return affectedUserEmail;
@@ -154,5 +165,13 @@ public class LogDto {
 
     public void setTaskName(String taskName) {
         this.taskName = taskName;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }
