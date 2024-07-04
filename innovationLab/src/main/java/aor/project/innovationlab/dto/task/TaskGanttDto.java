@@ -13,6 +13,8 @@ public class TaskGanttDto {
     private LocalDate finalDate; // Data final da tarefa
     private List<DependentTaskDto> dependentTasks; // Lista de tarefas dependentes
     private List<MemberDto> membersOfTask; // Lista de membros atribuídos à tarefa
+    private List<MemberDto> additionalMembersOfTask; // Lista de membros adicionais atribuídos à tarefa
+    private TaskGanttDto projectTask;
 
     public TaskGanttDto() {
     }
@@ -87,5 +89,21 @@ public class TaskGanttDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public TaskGanttDto getProjectTask() {
+        return projectTask;
+    }
+
+    public void setProjectTask(TaskGanttDto projectTask) {
+        this.projectTask = projectTask;
+    }
+
+    public void setAdditionalMembersOfTask(List<MemberDto> additionalMembersOfTask) {
+        this.additionalMembersOfTask = additionalMembersOfTask;
+    }
+
+    public List<MemberDto> getAdditionalMembersOfTask() {
+        return additionalMembersOfTask;
     }
 }

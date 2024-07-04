@@ -95,6 +95,9 @@ public class ProjectBean {
     @Inject
     private WebSocketBean webSocketBean;
 
+    @Inject
+    private TaskBean taskBean;
+
     public ProjectBean() {
     }
 
@@ -225,6 +228,7 @@ public class ProjectBean {
             project.setEndDate(LocalDate.now().plusDays(20));
             project.setFinishDate(LocalDate.now().plusDays(30));
             project.setLab(labDao.findLabByLocation(location));
+            project.setSystemName(taskBean.taskSystemNameGenerator(name));
             projectDao.persist(project);
             // create the entity project - creator
             addUserToProject(name, creatorEmail, UserType.MANAGER);
@@ -346,6 +350,7 @@ public class ProjectBean {
 
         project.setCreator(session.getUser());
         project.setStatus(ProjectStatus.READY);
+        project.setSystemName(taskBean.taskSystemNameGenerator(createProjectDto.getName()));
 
         projectDao.persist(project);
 
