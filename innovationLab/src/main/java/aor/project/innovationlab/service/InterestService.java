@@ -61,9 +61,16 @@ public class InterestService {
     @Path("/{projectId}/{interestId}")
     @Consumes("application/json")
     public Response addInterestToProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId,@PathParam("interestId") Long interestId) {
-        System.out.println(token);
         interestBean.addInterestToProject(token, projectId, interestId);
-        return Response.status(200).entity("Project updated successfully!").build();
+        return Response.status(200).entity("Interest added to project successfully!").build();
+    }
+
+    @DELETE
+    @Path("/{projectId}/{interestId}")
+    @Produces("application/json")
+    public Response removeInterestFromProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId,@PathParam("interestId") Long interestId) {
+        interestBean.removeInterestFromProject(token, projectId, interestId);
+        return Response.status(200).entity("Interest removed from project successfully!").build();
     }
 
     @PUT
