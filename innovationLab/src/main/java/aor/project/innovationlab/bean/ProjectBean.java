@@ -25,6 +25,7 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -230,6 +231,8 @@ public class ProjectBean {
             project.setLab(labDao.findLabByLocation(location));
             project.setSystemName(taskBean.taskSystemNameGenerator(name));
             projectDao.persist(project);
+            createFinalTaskForProject(project);
+
             // create the entity project - creator
             addUserToProject(name, creatorEmail, UserType.MANAGER);
 
@@ -255,7 +258,6 @@ public class ProjectBean {
             ProjectEntity pe = projectDao.findProjectByName(name);
             notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
             notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
-
 
             //TESTE - add log ao add user
             logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId());
@@ -398,6 +400,7 @@ public class ProjectBean {
                 }
             }
         }
+        createFinalTaskForProject(project);
     }
 
     private void addingUsersToCreatedProject(SessionEntity session, ProjectEntity project, CreateProjectDto createProjectDto) {
@@ -923,6 +926,48 @@ public class ProjectBean {
         return messages.stream()
                 .map(messageBean::toDto)
                 .collect(Collectors.toList());
+    }
+
+    public void createFinalTaskForProject(ProjectEntity project) {
+        try {
+            // Verificar se já existe uma tarefa com o título "Presentation of the project"
+            List<TaskEntity> existingTasks = taskDao.findTasksByProjectIdAndTitle(project.getId(), "Presentation of the project");
+            if (!existingTasks.isEmpty()) {
+                // Se já existir, não criar uma nova tarefa
+                return;
+            }
+
+            // Encontrar a última tarefa do projeto
+            List<TaskEntity> tasks = taskDao.findTasksByProjectId(project.getId());
+            TaskEntity lastTask = tasks.isEmpty() ? null : tasks.get(tasks.size() - 1);
+
+            // Criar a nova tarefa final
+            TaskEntity finalTask = new TaskEntity();
+            finalTask.setTitle("Presentation of the project");
+            finalTask.setSystemTitle(taskBean.taskSystemNameGenerator("Presentation of the project"));
+            finalTask.setDescription("This is the final task of the project.");
+            finalTask.setInitialDate(project.getEndDate());
+            finalTask.setDuration(Duration.ofDays(1));
+            finalTask.setFinalDate(project.getEndDate().plusDays(1));
+            finalTask.setProject(project);
+            finalTask.setStatus(TaskStatus.PRESENTATION);
+            finalTask.setActive(true);
+
+            UserEntity responsible = project.getCreator();
+            finalTask.setResponsible(responsible);
+            finalTask.setCreator(responsible);
+
+            taskDao.persist(finalTask);
+
+            // Adicionar a última tarefa como pré-requisito, se existir
+            if (lastTask != null) {
+                taskBean.addPrerequisite(finalTask.getId(), lastTask.getId());
+            }
+        } catch (Exception e) {
+            // Logar a exceção e marcar a transação para rollback
+            LoggerUtil.logError("Error creating final task for project", e.getMessage(), null, null);
+            throw new RuntimeException("Error creating final task for project", e);
+        }
     }
 
 

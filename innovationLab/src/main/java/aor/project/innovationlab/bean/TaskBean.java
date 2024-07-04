@@ -7,6 +7,7 @@ import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;
 import aor.project.innovationlab.enums.UserType;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -140,12 +141,13 @@ public class TaskBean {
      * Cria tarefas iniciais.
      */
     public void createInitialData() {
-        createTaskIfNotExists(1,"Task 1", "Description 1", "admin@admin", TaskStatus.fromValue(50), "2021-01-01", "PT1H",null, "Project1");
-        createTaskIfNotExists(2,"Task 2", "Description 1", "admin@admin", TaskStatus.IN_PROGRESS, "2021-01-01", "PT1H",null, "Project1");
-        createTaskIfNotExists(3,"Task 3", "Description 3", "admin@admin", TaskStatus.PLANNED, "2021-01-01", "PT1H", null, "Project1");
-        addPrerequisite(3, 1);
-        addPrerequisite(3, 2);
-        addPrerequisite(2,1);
+        System.out.println(Color.CYAN + "Creating initial data for tasks" + Color.CYAN);
+        createTaskIfNotExists(5,"Task 5", "Description 5", "admin@admin", TaskStatus.fromValue(50), "2024-04-10", "PT24H",null, "Project1");
+        createTaskIfNotExists(6,"Task 6", "Description 6", "admin@admin", TaskStatus.IN_PROGRESS, "2024-04-10", "PT24H",null, "Project1");
+        createTaskIfNotExists(7,"Task 7", "Description 7", "admin@admin", TaskStatus.PLANNED, "2024-04-10", "PT24H", null, "Project1");
+        addPrerequisite(7, 5);
+        addPrerequisite(5, 6);
+
     }
 
     /**
@@ -176,6 +178,7 @@ public class TaskBean {
             taskEntity.setSystemTitle(taskSystemNameGenerator(name));
             taskEntity.setActive(true);
             taskEntity.setProject(projectDao.findProjectByName(project));
+            taskEntity.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().toDays()));
 
             if (prerequisiteIds != null) {
                 for (Long prerequisiteId : prerequisiteIds) {
@@ -590,6 +593,11 @@ switch (dtoType) {
             throw new IllegalArgumentException("Task not found");
         }
 
+        if(task.getStatus() == TaskStatus.PRESENTATION) {
+            LoggerUtil.logInfo(log, "Task is a presentation task", user.getEmail(), token);
+            throw new IllegalArgumentException("Task is a presentation task");
+        }
+
         long projectId = task.getProject().getId();
 
         ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
@@ -639,22 +647,13 @@ switch (dtoType) {
             dto.setInitialDate(latestPrerequisiteFinalDate);
         }
 
-
-        // Recalcula a duração com base nas novas datas
-//        Duration duration = Duration.between(dto.getInitialDate().atStartOfDay(), dto.getFinalDate().atStartOfDay());
-
         if(originalDuration > 0) {
             task.setDuration(Duration.ofDays(originalDuration));
         }
 
-//        if (duration.isNegative() || duration.isZero()) {
-//           task.setInitialDate(latestPrerequisiteFinalDate);
-//
-//        }
-
         // Atualiza as propriedades da tarefa
         task.setInitialDate(dto.getInitialDate());
-
+        task.setFinalDate(dto.getInitialDate().plusDays(task.getDuration().toDays()));
 
         // Persiste as mudanças
         taskDao.merge(task);
@@ -664,13 +663,12 @@ switch (dtoType) {
 
         // Atualizar datas das tarefas dependentes usando HashSet para evitar ciclos infinitos
         updateDependentTasksDate(task, new HashSet<>());
+        // Verificar se já existe uma tarefa com status PRESENTATION no projeto
+        // Atualizar a tarefa de apresentação para ser a última
+        updatePresentationTask(projectId);
         return toGanttDto(task);
     }
 
-    /**
-     * Update task date and dependent tasks date
-     * @param task - task to update
-     */
     /**
      * Update task date and dependent tasks date
      * @param task - task to update
@@ -714,6 +712,95 @@ switch (dtoType) {
         return taskEntity.getPrerequisiteForTasks().stream()
                 .map(TaskPrerequisiteEntity::getTask)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Update the presentation task of a project to be the last task
+     * @param projectId - id of the project
+     */
+    public void updatePresentationTask(Long projectId) {
+        // Procura a tarefa de apresentação pelo projeto e status
+        TaskEntity presentationTask = taskDao.findTaskByProjectIdAndStatus(projectId, TaskStatus.PRESENTATION);
+        if (presentationTask != null) {
+            System.out.println("Presentation task found: " + presentationTask.getId());
+            // Obtém a data final mais recente entre todas as tarefas do projeto, exceto a tarefa de apresentação
+            LocalDate latestFinalDate = getLatestFinalDate(projectId, presentationTask.getId());
+
+            // Atualiza a data inicial da tarefa de apresentação para ser a data final mais recente
+            presentationTask.setInitialDate(latestFinalDate);
+            // Atualiza a data final da tarefa de apresentação com base na nova data inicial e na duração
+            presentationTask.setFinalDate(presentationTask.getInitialDate().plusDays(presentationTask.getDuration().toDays()));
+            // Salva as alterações na base de dados
+            taskDao.merge(presentationTask);
+            // Adiciona um log indicando a mudança da tarefa
+            logBean.addNewTaskchange(projectId, presentationTask.getResponsible().getId(), presentationTask.getId());
+        }
+    }
+
+    /**
+     * Get the latest final date among all tasks of a project, excluding a specific task
+     * @param projectId - id of the project
+     * @param excludeTaskId - id of the task to exclude
+     * @return - latest final date
+     */
+    private LocalDate getLatestFinalDate(Long projectId, Long excludeTaskId) {
+        List<TaskEntity> tasks = taskDao.findTasksByProjectId(projectId);
+        LocalDate latestFinalDate = LocalDate.MIN; // Inicializa com a data mínima
+
+        for (TaskEntity task : tasks) {
+            if (!task.getId().equals(excludeTaskId)) { // Exclui a tarefa especificada
+                // Calcula a data final da tarefa atual
+                LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+                if (taskFinalDate.isAfter(latestFinalDate)) {
+                    // Atualiza a data final mais recente, se necessário
+                    latestFinalDate = taskFinalDate;
+                }
+                // Obtém a data final mais recente das tarefas dependentes
+                LocalDate dependentFinalDate = getLatestDependentFinalDate(task, new HashSet<>());
+                if (dependentFinalDate.isAfter(latestFinalDate)) {
+                    // Atualiza a data final mais recente, se necessário
+                    latestFinalDate = dependentFinalDate;
+                }
+            }
+        }
+
+        return latestFinalDate;
+    }
+
+    /**
+     * Get the latest final date among all dependent tasks of a specific task
+     * @param task - task to analyze
+     * @param visitedTaskIds - set of visited task ids to prevent infinite recursion
+     * @return - latest final date
+     */
+    private LocalDate getLatestDependentFinalDate(TaskEntity task, Set<Long> visitedTaskIds) {
+        if (visitedTaskIds.contains(task.getId())) {
+            // Evita ciclos infinitos retornando a data mínima se a tarefa já foi visitada
+            return LocalDate.MIN;
+        }
+        // Marca a tarefa como visitada
+        visitedTaskIds.add(task.getId());
+        // Inicializa com a data final da tarefa atual
+        LocalDate latestFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+        // Obtém as tarefas dependentes
+        Set<TaskEntity> dependentTasks = getDependentTasks(task.getId());
+
+        for (TaskEntity dependentTask : dependentTasks) {
+            // Calcula a data final da tarefa dependente
+            LocalDate dependentTaskFinalDate = dependentTask.getInitialDate().plusDays(dependentTask.getDuration().toDays());
+            if (dependentTaskFinalDate.isAfter(latestFinalDate)) {
+                // Atualiza a data final mais recente, se necessário
+                latestFinalDate = dependentTaskFinalDate;
+            }
+            // Chamada recursiva para obter a data final mais recente das tarefas dependentes aninhadas
+            LocalDate nestedFinalDate = getLatestDependentFinalDate(dependentTask, visitedTaskIds);
+            if (nestedFinalDate.isAfter(latestFinalDate)) {
+                // Atualiza a data final mais recente, se necessário
+                latestFinalDate = nestedFinalDate;
+            }
+        }
+
+        return latestFinalDate;
     }
 }
 
