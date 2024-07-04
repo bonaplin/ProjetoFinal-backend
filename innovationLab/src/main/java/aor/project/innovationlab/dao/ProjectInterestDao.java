@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.InterestEntity;
+import aor.project.innovationlab.entity.ProjectEntity;
 import aor.project.innovationlab.entity.ProjectInterestEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -24,6 +25,17 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
             return (ProjectInterestEntity) em.createNamedQuery("ProjectInterest.findProjectInterestIds")
                     .setParameter("project", projectId)
                     .setParameter("interest", interestId)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public ProjectInterestEntity findInterestInProject(ProjectEntity project, InterestEntity interest) {
+        try {
+            return (ProjectInterestEntity) em.createNamedQuery("ProjectInterest.findProjectInterestIds")
+                    .setParameter("project", project)
+                    .setParameter("interest", interest)
                     .getSingleResult();
         } catch (Exception e) {
             return null;

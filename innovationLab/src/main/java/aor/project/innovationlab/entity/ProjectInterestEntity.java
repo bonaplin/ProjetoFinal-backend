@@ -7,6 +7,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "project_interest")
 @NamedQuery(name = "ProjectInterest.findProjectInterestIds", query = "SELECT pi.project.id, pi.interest.id FROM ProjectInterestEntity pi WHERE pi.project = :project AND pi.interest = :interest")
+@NamedQuery(name = "ProjectInterest.findInterestInProject", query = "SELECT pi FROM ProjectInterestEntity pi WHERE pi.project = :project AND pi.interest = :interest")
 public class ProjectInterestEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

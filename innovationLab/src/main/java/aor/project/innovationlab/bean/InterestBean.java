@@ -179,8 +179,7 @@ public class InterestBean {
 
         ProjectInterestEntity projectInterest = projectInterestDao.findProjectInterestIds(projectId, interestId);
         if(projectInterest != null) {
-            projectInterestDao.merge(projectInterest);
-            LoggerUtil.logInfo(log,"ProjectInterest already exists",null,token);
+            LoggerUtil.logInfo(log,"Project already has that interest",null,token);
         }
 
         projectInterest = new ProjectInterestEntity();
@@ -239,19 +238,14 @@ public class InterestBean {
             throw new IllegalArgumentException("Interest not found");
         }
 
-        ProjectInterestEntity projectInterest = projectInterestDao.findProjectInterestIds(projectId, interestId);
+        ProjectInterestEntity projectInterest = projectInterestDao.findInterestInProject(project, interest);
         if(projectInterest == null) {
             LoggerUtil.logError(log,"ProjectInterest not found",null,token);
             throw new IllegalArgumentException("ProjectInterest not found");
         }
 
+        projectInterest.setActive(false);
         projectInterestDao.merge(projectInterest);
-
-        project.getInterests().remove(projectInterest);
-        interest.getProjectInterests().remove(projectInterest);
-
-        projectDao.merge(project);
-        interestDao.merge(interest);
 
         LoggerUtil.logInfo(log,"Interest " + interest.getName() + " removed from project " + projectId,null,token);
     }
@@ -277,7 +271,7 @@ public class InterestBean {
         if(interests == null) {
             return new ArrayList<>();
         }
-        return interests.stream().map(this::toDto).collect(Collectors.toList());
+        return interests.stream().filter(InterestEntity::isActive).map(this::toDto).collect(Collectors.toList());
     }
 
     /**
