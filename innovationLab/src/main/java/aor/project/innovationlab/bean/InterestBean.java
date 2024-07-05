@@ -239,9 +239,12 @@ public class InterestBean {
         }
 
         ProjectInterestEntity projectInterest = projectInterestDao.findInterestInProject(project, interest);
-        if(projectInterest == null) {
-            LoggerUtil.logError(log,"ProjectInterest not found",null,token);
-            throw new IllegalArgumentException("ProjectInterest not found");
+        if(projectInterest != null) {
+            if (!projectInterest.isActive()) {
+                projectInterest.setActive(true);
+                projectDao.merge(project);
+                LoggerUtil.logInfo(log,"Interest " + interest.getName() + " added to project " + projectId,null,token);
+            }
         }
 
         projectInterest.setActive(false);

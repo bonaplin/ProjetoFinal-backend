@@ -41,22 +41,6 @@ public class ProjectSkillDao extends AbstractDao<ProjectSkillEntity>{
         }
     }
 
-    public List<SkillEntity> findSkillsByProjectId(long projectId) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<SkillEntity> cq = cb.createQuery(SkillEntity.class);
-        Root<ProjectSkillEntity> root = cq.from(ProjectSkillEntity.class);
-
-        Join<ProjectSkillEntity, SkillEntity> userJoin = root.join("skill");
-
-        cq.where(cb.equal(root.get("project").get("id"), projectId));
-
-        cq.select(userJoin);
-
-        List<SkillEntity> skills = em.createQuery(cq).getResultList();
-
-        return skills;
-    }
-
     public List<ProjectSkillEntity> findProjectSkillsByProjectId (long projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProjectSkillEntity> cq = cb.createQuery(ProjectSkillEntity.class);
