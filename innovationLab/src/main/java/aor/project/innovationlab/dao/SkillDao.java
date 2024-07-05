@@ -33,6 +33,16 @@ public class SkillDao extends AbstractDao<SkillEntity>{
         }
     }
 
+    public SkillEntity findSkillById(int id) {
+        try {
+            return (SkillEntity) em.createNamedQuery("Skill.findSkillById").setParameter("id", id)
+                    .getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
     public List<String> getAllSkillType() {
         return em.createNamedQuery("Skill.getAllSkillType", String.class)
                 .getResultList();

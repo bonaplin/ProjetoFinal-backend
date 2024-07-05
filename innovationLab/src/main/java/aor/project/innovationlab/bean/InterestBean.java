@@ -255,7 +255,7 @@ public class InterestBean {
         LoggerUtil.logInfo(log,"Interest " + interest.getName() + " removed from project " + projectId,null,token);
     }
 
-    private boolean checkProjectStatus(ProjectEntity project) {
+    public boolean checkProjectStatus(ProjectEntity project) {
         Set<ProjectStatus> invalidStatuses = EnumSet.of(ProjectStatus.READY, ProjectStatus.CANCELLED, ProjectStatus.FINISHED);
         if (invalidStatuses.contains(project.getStatus()))  {
             return true;
