@@ -1,6 +1,7 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.InterestEntity;
+import aor.project.innovationlab.entity.ProjectEntity;
 import aor.project.innovationlab.entity.ProjectInterestEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -30,20 +31,29 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
         }
     }
 
-    public List<InterestEntity> findInterestByProjectId(long projectId) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<InterestEntity> cq = cb.createQuery(InterestEntity.class);
-        Root<ProjectInterestEntity> root = cq.from(ProjectInterestEntity.class);
+    public ProjectInterestEntity findInterestInProject(ProjectEntity project, InterestEntity interest) {
+        try {
+            return (ProjectInterestEntity) em.createNamedQuery("ProjectInterest.findInterestInProject")
+                    .setParameter("project", project)
+                    .setParameter("interest", interest)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-        Join<ProjectInterestEntity, InterestEntity> userJoin = root.join("interest");
+    public List<ProjectInterestEntity> findProjectInterestByProjectId(long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProjectInterestEntity> cq = cb.createQuery(ProjectInterestEntity.class);
+        Root<ProjectInterestEntity> root = cq.from(ProjectInterestEntity.class);
 
         cq.where(cb.equal(root.get("project").get("id"), projectId));
 
-        cq.select(userJoin);
+        cq.select(root);
 
-        List<InterestEntity> interests = em.createQuery(cq).getResultList();
+        List<ProjectInterestEntity> projectInterests = em.createQuery(cq).getResultList();
 
-        return interests;
+        return projectInterests;
     }
 
 

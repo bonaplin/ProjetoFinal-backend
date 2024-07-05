@@ -3,19 +3,20 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.enums.ProjectStatus;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
-import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TransactionRequiredException;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -32,6 +33,9 @@ public class InterestBean {
 
     @EJB
     private ProjectDao projectDao;
+
+    @EJB
+    private ProjectUserDao projectUserDao;
 
     @EJB
     private ProjectInterestDao projectInterestDao;
@@ -132,6 +136,135 @@ public class InterestBean {
         return toDto(interest);
     }
 
+    public void addInterestToProject(String token, long projectId, long interestId) {
+        String log = "Attempting to add interest to project";
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (checkProjectStatus(project))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        InterestEntity interest = interestDao.findInterestById(interestId);
+        if(interest == null) {
+            LoggerUtil.logError(log,"Interest not found",null,token);
+            throw new IllegalArgumentException("Interest not found");
+        }
+
+        ProjectInterestEntity projectInterest = projectInterestDao.findProjectInterestIds(projectId, interestId);
+        if(projectInterest != null) {
+            LoggerUtil.logInfo(log,"Project already has that interest",null,token);
+        }
+
+        projectInterest = new ProjectInterestEntity();
+        projectInterest.setProject(project);
+        projectInterest.setInterest(interest);
+        projectInterestDao.persist(projectInterest);
+
+        project.getInterests().add(projectInterest);
+        interest.getProjectInterests().add(projectInterest);
+
+        projectDao.merge(project);
+        interestDao.merge(interest);
+
+        LoggerUtil.logInfo(log,"Interest " + interest.getName() + " added to project " + projectId,null,token);
+    }
+
+
+    public void removeInterestFromProject (String token, long projectId, long interestId) {
+        String log = "Attempting to remove interest from project";
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (checkProjectStatus(project))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        InterestEntity interest = interestDao.findInterestById(interestId);
+        if(interest == null) {
+            LoggerUtil.logError(log,"Interest not found",null,token);
+            throw new IllegalArgumentException("Interest not found");
+        }
+
+        ProjectInterestEntity projectInterest = projectInterestDao.findInterestInProject(project, interest);
+        if(projectInterest != null) {
+            if (!projectInterest.isActive()) {
+                projectInterest.setActive(true);
+                projectDao.merge(project);
+                LoggerUtil.logInfo(log,"Interest " + interest.getName() + " added to project " + projectId,null,token);
+            }
+        }
+
+        projectInterest.setActive(false);
+        project.getInterests().remove(projectInterest);
+        interest.getProjectInterests().remove(projectInterest);
+
+        projectDao.merge(project);
+        interestDao.merge(interest);
+        projectInterestDao.merge(projectInterest);
+
+        LoggerUtil.logInfo(log,"Interest " + interest.getName() + " removed from project " + projectId,null,token);
+    }
+
+    public boolean checkProjectStatus(ProjectEntity project) {
+        Set<ProjectStatus> invalidStatuses = EnumSet.of(ProjectStatus.READY, ProjectStatus.CANCELLED, ProjectStatus.FINISHED);
+        if (invalidStatuses.contains(project.getStatus()))  {
+            return true;
+        }
+        return false;
+    }
 
     public List<InterestDto> getProjectInterests(String token, long projectId) {
 
@@ -142,14 +275,22 @@ public class InterestBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<InterestEntity> interests = projectInterestDao.findInterestByProjectId(projectId);
+        List<ProjectInterestEntity> interests = projectInterestDao.findProjectInterestByProjectId(projectId);
         if(interests == null) {
             return new ArrayList<>();
         }
-        return interests.stream().map(this::toDto).collect(Collectors.toList());
+        return interests.stream().filter(ProjectInterestEntity::isActive).map(this::toDtoFromProjectInterest).collect(Collectors.toList());
     }
 
-    /**
+    private InterestDto toDtoFromProjectInterest(ProjectInterestEntity projectInterestEntity) {
+        InterestDto interestDto = new InterestDto();
+        interestDto.setId(projectInterestEntity.getInterest().getId());
+        interestDto.setName(projectInterestEntity.getInterest().getName());
+        return interestDto;
+    }
+
+
+/**
      * Remove um interesse de um user
      * @param email - email do user
      * @param interestName - nome do interesse

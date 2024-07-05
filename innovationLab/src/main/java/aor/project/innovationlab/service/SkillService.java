@@ -62,6 +62,22 @@ public class SkillService {
         return Response.status(200).entity(skills).build();
     }
 
+    @PUT
+    @Path("/{projectId}/{skillId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addSkillToProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, @PathParam("skillId") Long skillId) {
+        skillBean.addSkillToProject(token, projectId, skillId);
+        return Response.status(200).entity("Skill added to project").build();
+    }
+
+    @PUT
+    @Path("/remove/{projectId}/{skillId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response removeSkillFromProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, @PathParam("skillId") Long skillId) {
+        skillBean.removeSkillFromProject(token, projectId, skillId);
+        return Response.status(200).entity("Skill removed from project").build();
+    }
+
     @GET
     @Path("/types")
     @Produces(MediaType.APPLICATION_JSON)

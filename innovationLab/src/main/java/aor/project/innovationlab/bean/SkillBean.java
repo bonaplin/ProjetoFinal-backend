@@ -5,6 +5,7 @@ import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.SkillType;
 
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
@@ -33,10 +34,19 @@ public class SkillBean {
     private SessionDao sessionDao;
 
     @EJB
+    private ProjectDao projectDao;
+
+    @EJB
+    private ProjectUserDao projectUserDao;
+
+    @EJB
     ProjectSkillDao ProjectSkillDao;
 
     @Inject
     private SessionBean sessionBean;
+
+    @Inject
+    private InterestBean interestBean;
 
     @Inject
     private SkillBean skillBean;
@@ -163,6 +173,128 @@ public class SkillBean {
         LoggerUtil.logInfo(log, "Skill: "+ skillName +"removed from user", email, null);
     }
 
+    public void addSkillToProject (String token, long projectId, long skillId) {
+
+
+        String log = "Attempting to add skill to project";
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (interestBean.checkProjectStatus(project))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        SkillEntity skill = skillDao.findSkillById((int)skillId);
+        if(skill == null){
+            LoggerUtil.logError(log,"Skill not found.",null,token);
+            throw new IllegalArgumentException("Skill not found.");
+        }
+        ProjectSkillEntity projectSkill = ProjectSkillDao.findSkillInProject(project, skill);
+        if(projectSkill != null){
+            if (!projectSkill.isActive()) {
+                projectSkill.setActive(true);
+                ProjectSkillDao.merge(projectSkill);
+                LoggerUtil.logInfo(log,"Skill: "+ skill.getName() +"added to project", sessionEntity.getUser().getEmail(), token);
+                return;
+            }
+        }
+
+        projectSkill = new ProjectSkillEntity();
+        projectSkill.setProject(project);
+        projectSkill.setSkill(skill);
+        ProjectSkillDao.persist(projectSkill);
+
+        project.getProjectSkills().add(projectSkill);
+        skill.getProjectSkills().add(projectSkill);
+
+
+        projectDao.merge(project);
+        skillDao.merge(skill);
+        LoggerUtil.logInfo(log, "Skill: "+ skill.getName() +"added to project", sessionEntity.getUser().getEmail(), token);
+    }
+
+    public void removeSkillFromProject (String token, long projectId, long skillId) {
+        String log = "Attempting to remove skill from project";
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (interestBean.checkProjectStatus(project))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User not part of the project: " + projectId);
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        SkillEntity skill = skillDao.findSkillById((int)skillId);
+        if(skill == null){
+            LoggerUtil.logError(log,"Skill not found.",null,token);
+            throw new IllegalArgumentException("Skill not found.");
+        }
+        ProjectSkillEntity projectSkill = ProjectSkillDao.findSkillInProject(project, skill);
+        if(projectSkill == null){
+            LoggerUtil.logError(log,"Project doesnt have that skill",null,token);
+            throw new IllegalArgumentException("Project doesnt have that skill");
+        }
+
+        projectSkill.setActive(false);
+        project.getProjectSkills().remove(projectSkill);
+        skill.getProjectSkills().remove(projectSkill);
+
+        projectDao.merge(project);
+        skillDao.merge(skill);
+        ProjectSkillDao.merge(projectSkill);
+        LoggerUtil.logInfo(log, "Skill: "+ skill.getName() +"removed from project", sessionEntity.getUser().getEmail(), token);
+    }
+
     public List<SkillDto> getProjectSkills (String token, long projectId) {
 
         String log = "Attempt to get products for project info";
@@ -172,11 +304,19 @@ public class SkillBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<SkillEntity> products = ProjectSkillDao.findSkillsByProjectId(projectId);
+        List<ProjectSkillEntity> products = ProjectSkillDao.findProjectSkillsByProjectId(projectId);
         if(products == null) {
             return new ArrayList<>();
         }
-        return products.stream().map(this::toDto).collect(Collectors.toList());
+        return products.stream().filter(ProjectSkillEntity::isActive).map(this::toDtoFromProjectSkill).collect(Collectors.toList());
+    }
+
+    private SkillDto toDtoFromProjectSkill(ProjectSkillEntity entity) {
+        SkillDto dto = new SkillDto();
+        dto.setId(entity.getSkill().getId());
+        dto.setType(entity.getSkill().getSkillType().name());
+        dto.setName(entity.getSkill().getName());
+        return dto;
     }
 
     /**
