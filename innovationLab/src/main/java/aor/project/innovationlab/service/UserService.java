@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.bean.UserBean;
 //import aor.project.innovationlab.utils.jwt.JwtBean;
+import aor.project.innovationlab.dto.response.LabelValueDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
@@ -166,6 +167,17 @@ public class UserService {
         List<UserAddToProjectDto> dto = userBean.getUsersForInfo(token, projectId);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
     }
+
+    @GET
+    @Path("/task/{projectId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response getUsersByTask(@PathParam("projectId") Long projectId, @HeaderParam("token") String token) {
+        System.out.println("ENTROU NO ENDPOINT");
+        List<LabelValueDto> dto = userBean.getUsersToTask(token, projectId);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
 
 
 

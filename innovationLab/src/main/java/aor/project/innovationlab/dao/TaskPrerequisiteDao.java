@@ -21,4 +21,14 @@ public class TaskPrerequisiteDao extends AbstractDao<TaskPrerequisiteEntity> {
             return null;
         }
     }
+
+    public TaskPrerequisiteEntity findPrequisiteTaskByTaskId(long taskId) {
+        try {
+            return (TaskPrerequisiteEntity) em.createNamedQuery("PrerequisiteTask.findPrerequisiteTaskByTaskId").setParameter("taskId", taskId)
+                    .getSingleResult();
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

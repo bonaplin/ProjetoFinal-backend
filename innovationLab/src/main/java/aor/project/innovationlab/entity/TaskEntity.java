@@ -20,6 +20,7 @@ import java.util.Set;
 @NamedQuery(name = "Task.findLastTaskByProjectIdExcludingPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus ORDER BY t.finalDate DESC")
 @NamedQuery(name = "Task.findTaskByProjectIdAndStatus", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status = :status")
 @NamedQuery(name = "Task.findTasksByProjectIdAndTitle", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.title = :title")
+@NamedQuery(name = "Task.findTasksByProjectIdNoPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus")
 public class TaskEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

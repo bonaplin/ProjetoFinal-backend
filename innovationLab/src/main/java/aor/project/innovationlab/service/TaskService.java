@@ -1,6 +1,8 @@
 package aor.project.innovationlab.service;
 
 import aor.project.innovationlab.bean.TaskBean;
+import aor.project.innovationlab.dto.task.TaskContributorsDto;
+import aor.project.innovationlab.dto.task.TaskCreateDto;
 import aor.project.innovationlab.dto.task.TaskDateUpdateDto;
 import aor.project.innovationlab.dto.task.TaskGanttDto;
 import aor.project.innovationlab.utils.JsonUtils;
@@ -39,5 +41,25 @@ public class TaskService {
         System.out.println(dto.getFinalDate());
         TaskGanttDto taskGanttDto = taskBean.updateTaskDate(token, taskId, dto);
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createTask(@HeaderParam("token") String token,
+                               TaskCreateDto dto){
+        System.out.println("bateu aqui");
+        TaskGanttDto taskGanttDto = taskBean.createTask(token, dto);
+        return Response.ok().entity(JsonUtils.convertObjectToJson(taskGanttDto)).build();
+    }
+
+    @GET
+    @Path("/create-info/{projectId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTaskCreateInfo(@HeaderParam("token") String token,
+                                      @PathParam("projectId") Long projectId){
+        TaskContributorsDto taskCreateDto = taskBean.getTaskCreateInfo(token, projectId);
+        return Response.ok().entity(JsonUtils.convertObjectToJson(taskCreateDto)).build();
     }
 }

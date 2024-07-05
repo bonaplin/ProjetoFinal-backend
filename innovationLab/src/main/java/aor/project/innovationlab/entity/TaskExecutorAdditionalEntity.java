@@ -6,6 +6,10 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "task_additional_executor")
+@NamedQueries({
+        @NamedQuery(name = "TaskExecutorAdditional.findTaskExecutorAdditionalByTaskIdAndExecutorName",
+                query = "SELECT t FROM TaskExecutorAdditionalEntity t WHERE t.task.id = :taskId AND t.executor.name = :executorName")
+})
 public class TaskExecutorAdditionalEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -15,8 +19,9 @@ public class TaskExecutorAdditionalEntity implements Serializable {
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
-    @Column(name="name", nullable = false, unique = false, updatable = true)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "executor_id", nullable = false)
+    private ExecutorEntity executor;
 
     @ManyToOne
     @JoinColumn(name = "task_id", nullable = false)
@@ -52,11 +57,11 @@ public class TaskExecutorAdditionalEntity implements Serializable {
         this.active = active;
     }
 
-    public String getName() {
-        return name;
+    public ExecutorEntity getExecutor() {
+        return executor;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setExecutor(ExecutorEntity executor) {
+        this.executor = executor;
     }
 }

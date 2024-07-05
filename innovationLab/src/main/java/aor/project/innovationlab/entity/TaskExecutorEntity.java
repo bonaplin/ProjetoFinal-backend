@@ -6,6 +6,8 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "task_executor")
+@NamedQuery(name = "TaskExecutor.findTaskExecutorByTaskIdAndExecutorId",
+        query = "SELECT t FROM TaskExecutorEntity t WHERE t.task.id = :taskId AND t.executor.id = :executorId")
 public class TaskExecutorEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

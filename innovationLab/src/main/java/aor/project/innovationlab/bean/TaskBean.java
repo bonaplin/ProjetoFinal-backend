@@ -2,16 +2,15 @@ package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.LabelValueDto;
 import aor.project.innovationlab.dto.task.*;
 import aor.project.innovationlab.entity.*;
-import aor.project.innovationlab.enums.LogType;
 import aor.project.innovationlab.enums.TaskStatus;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Duration;
@@ -35,6 +34,15 @@ public class TaskBean {
     @EJB
     TaskExecutorDao taskExecutorDao;
 
+    @EJB
+    TaskExecutorAdditionalDao taskExecutorAdditionalDao;
+
+    @EJB
+    ExecutorDao executorDao;
+
+    @EJB
+    TaskPrerequisiteDao taskPrerequisiteDao;
+
     @Inject
     LogBean logBean;
 
@@ -43,6 +51,9 @@ public class TaskBean {
 
     @EJB
     SessionDao sessionDao;
+
+    @Inject
+    UserBean userBean;
 
 
     /**
@@ -66,7 +77,7 @@ public class TaskBean {
         Set<TaskExecutorAdditionalEntity> additionalExecutors = new HashSet<>();
         for (String additionalExecutorName : taskDto.getAdditionalExecutors()) {
             TaskExecutorAdditionalEntity additionalExecutor = new TaskExecutorAdditionalEntity();
-            additionalExecutor.setName(additionalExecutorName);
+            additionalExecutor.setExecutor(executorDao.findExecutorByName(additionalExecutorName));
             additionalExecutor.setTask(taskEntity);
             additionalExecutor.setActive(true);
             additionalExecutors.add(additionalExecutor);
@@ -112,7 +123,7 @@ public class TaskBean {
 
         Set<String> additionalExecutors = taskEntity.getAdditionalExecutors().stream()
                 .filter(TaskExecutorAdditionalEntity::isActive)
-                .map(TaskExecutorAdditionalEntity::getName)
+                .map(executorEntity -> executorEntity.getExecutor().getName())
                 .collect(Collectors.toSet());
         taskDto.setAdditionalExecutors(additionalExecutors);
 
@@ -354,12 +365,18 @@ public class TaskBean {
      */
     public void addAdditionalExecutorToTask(Long taskId, String additionalExecutorName) {
         TaskEntity task = taskDao.findTaskById(taskId);
-        if (task != null) {
-            TaskExecutorAdditionalEntity additionalExecutor = new TaskExecutorAdditionalEntity();
+        ExecutorEntity additionalExecutor = executorDao.findExecutorByName(additionalExecutorName);
+        if(additionalExecutor == null) {
+            additionalExecutor = new ExecutorEntity();
             additionalExecutor.setName(additionalExecutorName);
-            additionalExecutor.setTask(task);
-            additionalExecutor.setActive(true);
-            task.getAdditionalExecutors().add(additionalExecutor);
+            executorDao.persist(additionalExecutor);
+        }
+        if (task != null) {
+            TaskExecutorAdditionalEntity additionalExecutorEntity = new TaskExecutorAdditionalEntity();
+            additionalExecutorEntity.setExecutor(additionalExecutor);
+            additionalExecutorEntity.setTask(task);
+            additionalExecutorEntity.setActive(true);
+            task.getAdditionalExecutors().add(additionalExecutorEntity);
             taskDao.merge(task);
         }
     }
@@ -373,7 +390,7 @@ public class TaskBean {
         TaskEntity task = taskDao.findTaskById(taskId);
         if (task != null) {
             TaskExecutorAdditionalEntity additionalExecutor = task.getAdditionalExecutors().stream()
-                    .filter(executor -> executor.getName().equals(additionalExecutorName) && executor.isActive())
+                    .filter(executor -> executor.getExecutor().getName().equals(additionalExecutorName) && executor.isActive())
                     .findFirst()
                     .orElse(null);
             if (additionalExecutor != null) {
@@ -543,10 +560,10 @@ switch (dtoType) {
         List<MemberDto> additionalMembersOfTask = new ArrayList<>();
         taskEntity.getAdditionalExecutors().forEach(additionalExecutor -> {
             MemberDto additionalMember = new MemberDto();
-            additionalMember.setId(additionalExecutor.getId()); // Ajuste conforme necessário
-            additionalMember.setName(additionalExecutor.getName()); // Ajuste conforme necessário
-            additionalMember.setSystemUsername(additionalExecutor.getName()); // Ajuste conforme necessário
-            additionalMember.setType("ADDITIONAL"); // Defina o tipo conforme necessário
+            additionalMember.setId(additionalExecutor.getExecutor().getId()); // Ajuste conforme necessário
+            additionalMember.setName(additionalExecutor.getExecutor().getName()); // Ajuste conforme necessário
+            additionalMember.setSystemUsername(additionalExecutor.getExecutor().getName()); // Ajuste conforme necessário
+            additionalMember.setType("ADDITIONAL_MEMBER"); // Defina o tipo conforme necessário
             additionalMembersOfTask.add(additionalMember);
         });
 
@@ -726,10 +743,9 @@ switch (dtoType) {
             // Obtém a data final mais recente entre todas as tarefas do projeto, exceto a tarefa de apresentação
             LocalDate latestFinalDate = getLatestFinalDate(projectId, presentationTask.getId());
 
-            // Atualiza a data inicial da tarefa de apresentação para ser a data final mais recente
+            // Atualiza a data inicial e final da tarefa de apresentação
             presentationTask.setInitialDate(latestFinalDate);
-            // Atualiza a data final da tarefa de apresentação com base na nova data inicial e na duração
-            presentationTask.setFinalDate(presentationTask.getInitialDate().plusDays(presentationTask.getDuration().toDays()));
+            presentationTask.setFinalDate(latestFinalDate.plusDays(presentationTask.getDuration().toDays()));
             // Salva as alterações na base de dados
             taskDao.merge(presentationTask);
             // Adiciona um log indicando a mudança da tarefa
@@ -749,18 +765,8 @@ switch (dtoType) {
 
         for (TaskEntity task : tasks) {
             if (!task.getId().equals(excludeTaskId)) { // Exclui a tarefa especificada
-                // Calcula a data final da tarefa atual
-                LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
-                if (taskFinalDate.isAfter(latestFinalDate)) {
-                    // Atualiza a data final mais recente, se necessário
-                    latestFinalDate = taskFinalDate;
-                }
-                // Obtém a data final mais recente das tarefas dependentes
-                LocalDate dependentFinalDate = getLatestDependentFinalDate(task, new HashSet<>());
-                if (dependentFinalDate.isAfter(latestFinalDate)) {
-                    // Atualiza a data final mais recente, se necessário
-                    latestFinalDate = dependentFinalDate;
-                }
+                // Atualiza a data final mais recente, se necessário
+                latestFinalDate = updateLatestFinalDate(task, latestFinalDate, new HashSet<>());
             }
         }
 
@@ -768,39 +774,252 @@ switch (dtoType) {
     }
 
     /**
-     * Get the latest final date among all dependent tasks of a specific task
+     * Update the latest final date among all dependent tasks of a specific task
      * @param task - task to analyze
+     * @param latestFinalDate - current latest final date
      * @param visitedTaskIds - set of visited task ids to prevent infinite recursion
-     * @return - latest final date
+     * @return - updated latest final date
      */
-    private LocalDate getLatestDependentFinalDate(TaskEntity task, Set<Long> visitedTaskIds) {
+    private LocalDate updateLatestFinalDate(TaskEntity task, LocalDate latestFinalDate, Set<Long> visitedTaskIds) {
         if (visitedTaskIds.contains(task.getId())) {
-            // Evita ciclos infinitos retornando a data mínima se a tarefa já foi visitada
-            return LocalDate.MIN;
+            // Evita ciclos infinitos retornando a data atual
+            return latestFinalDate;
         }
         // Marca a tarefa como visitada
         visitedTaskIds.add(task.getId());
-        // Inicializa com a data final da tarefa atual
-        LocalDate latestFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+        // Calcula a data final da tarefa atual
+        LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+        if (taskFinalDate.isAfter(latestFinalDate)) {
+            // Atualiza a data final mais recente, se necessário
+            latestFinalDate = taskFinalDate;
+        }
         // Obtém as tarefas dependentes
         Set<TaskEntity> dependentTasks = getDependentTasks(task.getId());
 
         for (TaskEntity dependentTask : dependentTasks) {
-            // Calcula a data final da tarefa dependente
-            LocalDate dependentTaskFinalDate = dependentTask.getInitialDate().plusDays(dependentTask.getDuration().toDays());
-            if (dependentTaskFinalDate.isAfter(latestFinalDate)) {
-                // Atualiza a data final mais recente, se necessário
-                latestFinalDate = dependentTaskFinalDate;
-            }
-            // Chamada recursiva para obter a data final mais recente das tarefas dependentes aninhadas
-            LocalDate nestedFinalDate = getLatestDependentFinalDate(dependentTask, visitedTaskIds);
-            if (nestedFinalDate.isAfter(latestFinalDate)) {
-                // Atualiza a data final mais recente, se necessário
-                latestFinalDate = nestedFinalDate;
-            }
+            // Chamada recursiva para obter a data final mais recente das tarefas dependentes
+            latestFinalDate = updateLatestFinalDate(dependentTask, latestFinalDate, visitedTaskIds);
         }
 
         return latestFinalDate;
+    }
+
+    /**
+     * Create a task with the specified data and add it to the database
+     * @param token - user token
+     * @param dto - task creation data
+     */
+    public TaskGanttDto createTask(String token, TaskCreateDto dto) {
+        String log = "Attempting to create task";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if (dto == null || se == null) {
+            LoggerUtil.logInfo(log, "Invalid token or dto", null, token);
+            throw new IllegalArgumentException("Invalid token or data");
+        }
+
+        UserEntity user = se.getUser();
+        if (dto.getProjectId() == null || dto.getTitle() == null || dto.getInitialDate() == null || dto.getFinalDate() == null || dto.getResponsibleId() == null) {
+            LoggerUtil.logInfo(log, "Invalid dto", user.getEmail(), token);
+            throw new IllegalArgumentException("Invalid creation data");
+        }
+
+        UserEntity responsible = userDao.findUserById(dto.getResponsibleId());
+        if (responsible == null) {
+            LoggerUtil.logInfo(log, "Responsible user not found", user.getEmail(), token);
+            throw new IllegalArgumentException("Responsible user not found");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(dto.getProjectId());
+        if (project == null) {
+            LoggerUtil.logInfo(log, "Project not found", user.getEmail(), token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), user.getId());
+        ProjectUserEntity pueR = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), responsible.getId());
+        if (pue == null || !pue.isActive() || pueR == null || !pueR.isActive()) {
+            LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        //se não tiver data no dto, a data inicial é a data atual
+        if(dto.getInitialDate() == null) {
+            throw new IllegalArgumentException("Invalid Initial date");
+        }
+        //se não tiver data final no dto, a data final é a data inicial + 1 dia
+        if(dto.getFinalDate() == null) {
+            throw new IllegalArgumentException("Invalid Final date");
+        }
+
+        if (dto.getInitialDate().isAfter(dto.getFinalDate())) {
+            LoggerUtil.logInfo(log, "Invalid date", user.getEmail(), token);
+            throw new IllegalArgumentException("Invalid dates, initial date is after final date");
+        }
+
+        TaskEntity task = new TaskEntity();
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setInitialDate(dto.getInitialDate());
+        task.setDuration(Duration.between(dto.getInitialDate().atStartOfDay(), dto.getFinalDate().atStartOfDay()));
+        task.setFinalDate(dto.getFinalDate());
+        task.setResponsible(responsible);
+        task.setCreator(user);
+        task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
+        task.setActive(true);
+        task.setProject(project);
+        task.setStatus(TaskStatus.PLANNED);
+        taskDao.persist(task);
+
+        addAdditionalExecutorsToTask(task, dto.getAdditionalExecutorsNames());
+        addUsersToTask(task, dto.getUsersIds(), dto.getProjectId());
+        addTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
+        return toGanttDto(task);
+    }
+
+    /**
+     * Adiciona executores adicionais a uma tarefa. Cria-os caso eles não existam na base de dados.
+     * @param task - tarefa
+     * @param additionalExecutorsNames - lista de nomes dos executores adicionais
+     */
+    private void addAdditionalExecutorsToTask(TaskEntity task, List<String> additionalExecutorsNames) {
+        if (additionalExecutorsNames != null) {
+            for (String additionalExecutorName : additionalExecutorsNames) {
+                ExecutorEntity additionalExecutor = executorDao.findExecutorByName(additionalExecutorName);
+                if (additionalExecutor == null) {
+                    additionalExecutor = new ExecutorEntity();
+                    additionalExecutor.setName(additionalExecutorName);
+                    executorDao.persist(additionalExecutor);
+                } else if (!additionalExecutor.isActive()) {
+                    additionalExecutor.setActive(true);
+                    executorDao.merge(additionalExecutor);
+                }
+
+                //verifica se a task já tem associado o executor adicional
+                TaskExecutorAdditionalEntity teae = taskExecutorAdditionalDao.findTaskExecutorAdditionalByTaskIdAndExecutorNAme(task.getId(), additionalExecutor.getName());
+                if(teae == null) {
+                    TaskExecutorAdditionalEntity additionalExecutorEntity = new TaskExecutorAdditionalEntity();
+                    additionalExecutorEntity.setExecutor(additionalExecutor);
+                    additionalExecutorEntity.setTask(task);
+                    additionalExecutorEntity.setActive(true);
+                    task.getAdditionalExecutors().add(additionalExecutorEntity);
+                    taskDao.merge(task);
+                }else if(!teae.isActive()){
+                    teae.setActive(true);
+                    taskDao.merge(task);
+                }
+            }
+        }
+    }
+
+    /**
+     * Adiciona users a uma tarefa. Cria-os caso eles não existam na base de dados.
+     * @param task
+     * @param userIds
+     * @param projectId
+     */
+    private void addUsersToTask(TaskEntity task, List<Long> userIds, Long projectId) {
+        String log = "Attempting to add users to task";
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+        if(pe == null) {
+            LoggerUtil.logInfo(log, "Project not found", null, null);
+            throw new IllegalArgumentException("Project not found");
+        }
+        if (userIds != null) {
+            for (Long userId : userIds) {
+                UserEntity user = userDao.findUserById(userId);
+                if (user != null) {
+                    TaskExecutorEntity taskExecutor = taskExecutorDao.findTaskExecutorByTaskIdAndExecutorId(task.getId(), user.getId());
+                    if (taskExecutor == null) {
+                        taskExecutor = new TaskExecutorEntity();
+                        taskExecutor.setTask(task);
+                        taskExecutor.setExecutor(user);
+                        taskExecutor.setActive(true);
+                        taskExecutorDao.merge(taskExecutor);
+                    } else if (!taskExecutor.isActive()) {
+                        taskExecutor.setActive(true);
+                        taskExecutorDao.merge(taskExecutor);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Adiciona dependências a uma tarefa. Cria-as caso elas não existam na base de dados.
+     * @param task
+     * @param prerequisiteIds
+     * @param projectId
+     */
+    private void addTaskDependencies(TaskEntity task, List<Long> prerequisiteIds, Long projectId) {
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+        if(pe == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+        if (prerequisiteIds != null) {
+            for (Long prerequisiteId : prerequisiteIds) {
+                TaskEntity prerequisite = taskDao.findTaskById(prerequisiteId);
+                if (prerequisite != null && prerequisite.getProject().getId() == projectId) {
+                    boolean foundAndActivated = false;
+                    for (TaskPrerequisiteEntity existingPrerequisite : task.getPrerequisites()) {
+                        if (existingPrerequisite.getPrerequisite().getId().equals(prerequisiteId)) {
+                            if (!existingPrerequisite.isActive()) {
+                                existingPrerequisite.setActive(true);
+                                taskDao.merge(task);
+                            }
+                            foundAndActivated = true;
+                            break;
+                        }
+                    }
+                    if (!foundAndActivated) {
+                        TaskPrerequisiteEntity taskPrerequisite = new TaskPrerequisiteEntity();
+                        taskPrerequisite.setTask(task);
+                        taskPrerequisite.setPrerequisite(prerequisite);
+                        taskPrerequisite.setActive(true);
+                        task.getPrerequisites().add(taskPrerequisite);
+                        prerequisite.getPrerequisiteForTasks().add(taskPrerequisite);
+                        taskDao.merge(task);
+                    }
+                } else {
+                    System.out.println("Prerequisite task does not belong to the project");
+                }
+            }
+        }
+    }
+
+    public TaskContributorsDto getTaskCreateInfo(String token, Long projectId) {
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+
+        if(se == null || pe == null) {
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+
+        UserEntity user = se.getUser();
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+
+        if(pue == null || !pue.isActive()) {
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        TaskContributorsDto dto = new TaskContributorsDto();
+
+        List<UserEntity> users = userDao.findUsersByProjectId(projectId);
+        List<LabelValueDto> userList = users.stream()
+                .map(u -> new LabelValueDto(u.getFirstname()+" <"+u.getEmail()+"> ",u.getId()))
+                .collect(Collectors.toList());
+        List<TaskEntity> tasks = taskDao.findTasksByProjectIdNoPresentation(projectId);
+        List<LabelValueDto> taskList = tasks.stream()
+                .map(t -> new LabelValueDto(t.getTitle()+" ("+t.getResponsible().getFirstname()+")", t.getId()))
+                .collect(Collectors.toList());
+        List<ExecutorEntity> executors = executorDao.findAllExecutors();
+        List<LabelValueDto> executorList = executors.stream()
+                .map(e -> new LabelValueDto(e.getName(), e.getId()))
+                .collect(Collectors.toList());
+        dto.setUsers(userList);
+        dto.setDependentTasks(taskList);
+        dto.setExecutors(executorList);
+
+        return dto;
     }
 }
 
