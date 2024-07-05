@@ -1,6 +1,7 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.response.LabelValueDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.session.SessionLoginDto;
 import aor.project.innovationlab.dto.user.*;
@@ -148,6 +149,13 @@ public class UserBean {
         userAddToProjectDto.setLastName(userEntity.getLastname());
         userAddToProjectDto.setImagePath(userEntity.getProfileImagePath());
         return userAddToProjectDto;
+    }
+
+    public LabelValueDto toLabelValueDto(UserEntity userEntity) {
+        LabelValueDto labelValueDto = new LabelValueDto();
+        labelValueDto.setLabel(userEntity.getFirstname() + " <" + userEntity.getEmail()+ ">");
+        labelValueDto.setValue(userEntity.getId());
+        return labelValueDto;
     }
 
     /**
@@ -674,5 +682,18 @@ public class UserBean {
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
         userEntity.setPrivateProfile(dto.getPrivateProfile());
         userDao.merge(userEntity);
+    }
+
+    public List<LabelValueDto> getUsersToTask(String token, Long projectId) {
+        String log = "Attempt to get users to task";
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+        List<UserEntity> users = userDao.findUsersByProjectId(projectId);
+        return users.stream()
+                .map(this::toLabelValueDto)
+                .collect(Collectors.toList());
     }
 }

@@ -3,7 +3,8 @@ package aor.project.innovationlab.enums;
 public enum TaskStatus {
     PLANNED(10),
     IN_PROGRESS(30),
-    FINISHED(50);
+    FINISHED(50),
+    PRESENTATION(70);
 
     private final int value;
 

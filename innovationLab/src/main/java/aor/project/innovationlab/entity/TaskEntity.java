@@ -1,7 +1,9 @@
 package aor.project.innovationlab.entity;
 
 import aor.project.innovationlab.enums.TaskStatus;
+import jakarta.inject.Named;
 import jakarta.persistence.*;
+import jdk.jfr.Name;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -14,6 +16,11 @@ import java.util.Set;
 @NamedQuery(name = "Task.findTaskByTitle", query = "SELECT t FROM TaskEntity t WHERE t.title = :title")
 @NamedQuery(name = "Task.findTaskById", query = "SELECT t FROM TaskEntity t WHERE t.id = :id")
 @NamedQuery(name = "Task.findTasksByProjectId", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId")
+@NamedQuery(name = "Task.findTaskBySystemTitle", query = "SELECT t FROM TaskEntity t WHERE t.systemTitle = :systemTitle")
+@NamedQuery(name = "Task.findLastTaskByProjectIdExcludingPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus ORDER BY t.finalDate DESC")
+@NamedQuery(name = "Task.findTaskByProjectIdAndStatus", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status = :status")
+@NamedQuery(name = "Task.findTasksByProjectIdAndTitle", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.title = :title")
+@NamedQuery(name = "Task.findTasksByProjectIdNoPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus")
 public class TaskEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -23,14 +30,20 @@ public class TaskEntity implements Serializable {
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     private Long id;
 
-    @Column(name = "title", nullable = false, unique = true, updatable = true)
+    @Column(name = "title", nullable = false, unique = false, updatable = true)
     private String title;
+
+    @Column(name = "system_title", nullable = false, unique = true, updatable = true)
+    private String systemTitle;
 
     @Column(name = "description", nullable = false, unique = false, updatable = true)
     private String description;
 
     @Column(name = "initial_date", nullable = false, unique = false, updatable = true)
     private LocalDate initialDate;
+
+    @Column(name = "final_date", nullable = false, unique = false, updatable = true)
+    private LocalDate finalDate;
 
     @Column(name = "duration", nullable = false, unique = false, updatable = true)
     private Duration duration;
@@ -183,6 +196,22 @@ public class TaskEntity implements Serializable {
 
     public void setProject(ProjectEntity project) {
         this.project = project;
+    }
+
+    public String getSystemTitle() {
+        return systemTitle;
+    }
+
+    public void setSystemTitle(String systemTitle) {
+        this.systemTitle = systemTitle;
+    }
+
+    public LocalDate getFinalDate() {
+        return finalDate;
+    }
+
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
     }
 
     @Override

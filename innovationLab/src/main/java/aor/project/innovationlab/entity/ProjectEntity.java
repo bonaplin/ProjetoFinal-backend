@@ -25,6 +25,9 @@ public class ProjectEntity implements Serializable {
     @Column(name = "name", nullable = false, unique = false)
     private String name;
 
+    @Column(name = "system_name", nullable = false, unique = false)
+    private String systemName;
+
     @Column(name = "description", nullable = false, unique = false)
     private String description;
 
@@ -241,5 +244,17 @@ public class ProjectEntity implements Serializable {
 
     public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public void setSystemName(String systemName) {
+        this.systemName = systemName;
     }
 }
