@@ -245,6 +245,11 @@ public class InterestBean {
         }
 
         projectInterest.setActive(false);
+        project.getInterests().remove(projectInterest);
+        interest.getProjectInterests().remove(projectInterest);
+
+        projectDao.merge(project);
+        interestDao.merge(interest);
         projectInterestDao.merge(projectInterest);
 
         LoggerUtil.logInfo(log,"Interest " + interest.getName() + " removed from project " + projectId,null,token);
@@ -267,14 +272,22 @@ public class InterestBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<InterestEntity> interests = projectInterestDao.findInterestByProjectId(projectId);
+        List<ProjectInterestEntity> interests = projectInterestDao.findProjectInterestByProjectId(projectId);
         if(interests == null) {
             return new ArrayList<>();
         }
-        return interests.stream().filter(InterestEntity::isActive).map(this::toDto).collect(Collectors.toList());
+        return interests.stream().filter(ProjectInterestEntity::isActive).map(this::toDtoFromProjectInterest).collect(Collectors.toList());
     }
 
-    /**
+    private InterestDto toDtoFromProjectInterest(ProjectInterestEntity projectInterestEntity) {
+        InterestDto interestDto = new InterestDto();
+        interestDto.setId(projectInterestEntity.getInterest().getId());
+        interestDto.setName(projectInterestEntity.getInterest().getName());
+        return interestDto;
+    }
+
+
+/**
      * Remove um interesse de um user
      * @param email - email do user
      * @param interestName - nome do interesse

@@ -33,7 +33,7 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
 
     public ProjectInterestEntity findInterestInProject(ProjectEntity project, InterestEntity interest) {
         try {
-            return (ProjectInterestEntity) em.createNamedQuery("ProjectInterest.findProjectInterestIds")
+            return (ProjectInterestEntity) em.createNamedQuery("ProjectInterest.findInterestInProject")
                     .setParameter("project", project)
                     .setParameter("interest", interest)
                     .getSingleResult();
@@ -56,6 +56,20 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
         List<InterestEntity> interests = em.createQuery(cq).getResultList();
 
         return interests;
+    }
+
+    public List<ProjectInterestEntity> findProjectInterestByProjectId(long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProjectInterestEntity> cq = cb.createQuery(ProjectInterestEntity.class);
+        Root<ProjectInterestEntity> root = cq.from(ProjectInterestEntity.class);
+
+        cq.where(cb.equal(root.get("project").get("id"), projectId));
+
+        cq.select(root);
+
+        List<ProjectInterestEntity> projectInterests = em.createQuery(cq).getResultList();
+
+        return projectInterests;
     }
 
 
