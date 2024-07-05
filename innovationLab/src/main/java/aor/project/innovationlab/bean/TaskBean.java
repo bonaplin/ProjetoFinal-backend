@@ -540,19 +540,27 @@ switch (dtoType) {
         taskEntity.getExecutors().forEach(executor -> {
             MemberDto member = new MemberDto();
             member.setId(executor.getExecutor().getId()); // Ajuste conforme necessário
-            member.setName(executor.getExecutor().getEmail()); // Ajuste conforme necessário
+            member.setName(executor.getExecutor().getFirstname() + " <"+executor.getExecutor().getEmail()+">"); // Ajuste conforme necessário
             member.setSystemUsername(executor.getExecutor().getEmail()); // Ajuste conforme necessário
             member.setType("MEMBER"); // Defina o tipo conforme necessário
             membersOfTask.add(member);
         });
 
         UserEntity responsible = taskEntity.getResponsible();
-        MemberDto creator = new MemberDto();
-        creator.setId(responsible.getId()); // Ajuste conforme necessário
-        creator.setName(responsible.getEmail()); // Ajuste conforme necessário
-        creator.setSystemUsername(responsible.getEmail()); // Ajuste conforme necessário
-        creator.setType("CREATOR"); // Defina o tipo conforme necessário
-        membersOfTask.add(creator);
+        MemberDto responsibleDto = new MemberDto();
+        responsibleDto.setId(responsible.getId()); // Ajuste conforme necessário
+        responsibleDto.setName(responsible.getFirstname() + " <"+responsible.getEmail()+">");
+        responsibleDto.setSystemUsername(responsible.getEmail()); // Ajuste conforme necessário
+        responsibleDto.setType("RESPONSIBLE"); // Defina o tipo conforme necessário
+        membersOfTask.add(responsibleDto);
+
+        UserEntity creator = taskEntity.getResponsible();
+        MemberDto creatorDto = new MemberDto();
+        creatorDto.setId(creator.getId()); // Ajuste conforme necessário
+        creatorDto.setName(creator.getFirstname() + " <"+creator.getEmail()+">");
+        creatorDto.setSystemUsername(creator.getEmail()); // Ajuste conforme necessário
+        creatorDto.setType("CREATOR"); // Defina o tipo conforme necessário
+        membersOfTask.add(creatorDto);
 
         // Repita para additionalExecutors se necessário
         taskGanttDto.setMembersOfTask(membersOfTask);
