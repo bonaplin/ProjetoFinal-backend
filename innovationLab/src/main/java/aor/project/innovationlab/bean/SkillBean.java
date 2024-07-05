@@ -172,11 +172,19 @@ public class SkillBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<SkillEntity> products = ProjectSkillDao.findSkillsByProjectId(projectId);
+        List<ProjectSkillEntity> products = ProjectSkillDao.findProjectSkillsByProjectId(projectId);
         if(products == null) {
             return new ArrayList<>();
         }
-        return products.stream().map(this::toDto).collect(Collectors.toList());
+        return products.stream().filter(ProjectSkillEntity::isActive).map(this::toDtoFromProjectSkill).collect(Collectors.toList());
+    }
+
+    private SkillDto toDtoFromProjectSkill(ProjectSkillEntity entity) {
+        SkillDto dto = new SkillDto();
+        dto.setId((int)entity.getId());
+        dto.setType(entity.getSkill().getSkillType().name());
+        dto.setName(entity.getSkill().getName());
+        return dto;
     }
 
     /**

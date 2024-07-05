@@ -1,9 +1,6 @@
 package aor.project.innovationlab.dao;
 
-import aor.project.innovationlab.entity.InterestEntity;
-import aor.project.innovationlab.entity.ProjectInterestEntity;
-import aor.project.innovationlab.entity.ProjectSkillEntity;
-import aor.project.innovationlab.entity.SkillEntity;
+import aor.project.innovationlab.entity.*;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -33,6 +30,17 @@ public class ProjectSkillDao extends AbstractDao<ProjectSkillEntity>{
         }
     }
 
+    public ProjectSkillEntity findSkillInProject(ProjectEntity project, SkillEntity skill) {
+        try {
+            return (ProjectSkillEntity) em.createNamedQuery("ProjectSkill.findSkillInProject")
+                    .setParameter("project", project)
+                    .setParameter("skill", skill)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public List<SkillEntity> findSkillsByProjectId(long projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<SkillEntity> cq = cb.createQuery(SkillEntity.class);
@@ -45,6 +53,20 @@ public class ProjectSkillDao extends AbstractDao<ProjectSkillEntity>{
         cq.select(userJoin);
 
         List<SkillEntity> skills = em.createQuery(cq).getResultList();
+
+        return skills;
+    }
+
+    public List<ProjectSkillEntity> findProjectSkillsByProjectId (long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProjectSkillEntity> cq = cb.createQuery(ProjectSkillEntity.class);
+        Root<ProjectSkillEntity> root = cq.from(ProjectSkillEntity.class);
+
+        cq.where(cb.equal(root.get("project").get("id"), projectId));
+
+        cq.select(root);
+
+        List<ProjectSkillEntity> skills = em.createQuery(cq).getResultList();
 
         return skills;
     }

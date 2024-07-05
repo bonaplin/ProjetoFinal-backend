@@ -42,22 +42,6 @@ public class ProjectInterestDao extends AbstractDao<ProjectInterestEntity> {
         }
     }
 
-    public List<InterestEntity> findInterestByProjectId(long projectId) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<InterestEntity> cq = cb.createQuery(InterestEntity.class);
-        Root<ProjectInterestEntity> root = cq.from(ProjectInterestEntity.class);
-
-        Join<ProjectInterestEntity, InterestEntity> userJoin = root.join("interest");
-
-        cq.where(cb.equal(root.get("project").get("id"), projectId));
-
-        cq.select(userJoin);
-
-        List<InterestEntity> interests = em.createQuery(cq).getResultList();
-
-        return interests;
-    }
-
     public List<ProjectInterestEntity> findProjectInterestByProjectId(long projectId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ProjectInterestEntity> cq = cb.createQuery(ProjectInterestEntity.class);
