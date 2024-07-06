@@ -15,6 +15,7 @@ public class TaskCreateDto {
     private List<Long> dependentTasksIds;
     private Long projectId;
     private Long responsibleId;
+    private Integer status;
 
     public TaskCreateDto() {
     }
@@ -90,5 +91,29 @@ public class TaskCreateDto {
 
     public void setResponsibleId(Long responsibleId) {
         this.responsibleId = responsibleId;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskCreateDto{" +
+                "title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", initialDate=" + initialDate +
+                ", finalDate=" + finalDate +
+                ", usersIds=" + usersIds +
+                ", additionalExecutorsNames=" + additionalExecutorsNames +
+                ", dependentTasksIds=" + dependentTasksIds +
+                ", projectId=" + projectId +
+                ", responsibleId=" + responsibleId +
+                ", status=" + status +
+                '}';
     }
 }

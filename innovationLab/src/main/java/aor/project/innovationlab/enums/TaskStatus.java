@@ -12,6 +12,15 @@ public enum TaskStatus {
         this.value = value;
     }
 
+    public static boolean contains(Integer status) {
+        for (TaskStatus taskStatus : TaskStatus.values()) {
+            if (taskStatus.getValue() == status) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getValue() {
         return value;
     }
@@ -24,4 +33,5 @@ public enum TaskStatus {
         }
         return null;
     }
+
 }

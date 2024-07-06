@@ -3,6 +3,8 @@ package aor.project.innovationlab.dao;
 import aor.project.innovationlab.entity.TaskPrerequisiteEntity;
 import jakarta.ejb.Stateless;
 
+import java.util.List;
+
 @Stateless
 public class TaskPrerequisiteDao extends AbstractDao<TaskPrerequisiteEntity> {
 
@@ -27,6 +29,32 @@ public class TaskPrerequisiteDao extends AbstractDao<TaskPrerequisiteEntity> {
             return (TaskPrerequisiteEntity) em.createNamedQuery("PrerequisiteTask.findPrerequisiteTaskByTaskId").setParameter("taskId", taskId)
                     .getSingleResult();
 
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<TaskPrerequisiteEntity> findActiveTaskPrerequisiteByTaskId(Long id) {
+        return em.createNamedQuery("PrerequisiteTask.findActiveTaskPrerequisiteByTaskId")
+                .setParameter("taskId", id)
+                .getResultList();
+    }
+
+    public List<TaskPrerequisiteEntity> findByTaskId(Long id) {
+        try{
+            return em.createNamedQuery("PrerequisiteTask.findByTaskId")
+                    .setParameter("taskId", id)
+                    .getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<TaskPrerequisiteEntity> findByPrerequisiteTaskId(Long id) {
+        try{
+            return em.createNamedQuery("PrerequisiteTask.findByPrerequisiteTaskId")
+                    .setParameter("prerequisiteId", id)
+                    .getResultList();
         } catch (Exception e) {
             return null;
         }

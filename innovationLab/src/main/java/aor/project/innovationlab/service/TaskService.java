@@ -62,4 +62,25 @@ public class TaskService {
         TaskContributorsDto taskCreateDto = taskBean.getTaskCreateInfo(token, projectId);
         return Response.ok().entity(JsonUtils.convertObjectToJson(taskCreateDto)).build();
     }
+
+    @PUT
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateTask(@HeaderParam("token") String token,
+                               @PathParam("id") Long taskId,
+                               TaskCreateDto dto){
+        System.out.println(dto);
+        TaskGanttDto taskGanttDto = taskBean.updateTask(token, taskId, dto);
+        return Response.ok().entity(JsonUtils.convertObjectToJson(taskGanttDto)).build();
+    }
+
+    @PUT
+    @Path("inactivate/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response inactivateTask(@HeaderParam("token") String token,
+                                   @PathParam("id") Long taskId){
+        taskBean.deleteTask(token, taskId);
+        return Response.ok().build();
+    }
 }

@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -947,7 +948,7 @@ public class ProjectBean {
             finalTask.setSystemTitle(taskBean.taskSystemNameGenerator("Presentation of the project"));
             finalTask.setDescription("This is the final task of the project.");
             finalTask.setInitialDate(project.getEndDate());
-            finalTask.setDuration(Duration.ofDays(1));
+            finalTask.setDuration(Period.ofDays(1));
             finalTask.setFinalDate(project.getEndDate().plusDays(1));
             finalTask.setProject(project);
             finalTask.setStatus(TaskStatus.PRESENTATION);

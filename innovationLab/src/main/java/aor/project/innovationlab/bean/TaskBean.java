@@ -15,6 +15,7 @@ import jakarta.inject.Inject;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -154,8 +155,8 @@ public class TaskBean {
     public void createInitialData() {
         System.out.println(Color.CYAN + "Creating initial data for tasks" + Color.CYAN);
         createTaskIfNotExists(5,"Task 5", "Description 5", "admin@admin", TaskStatus.fromValue(50), "2024-04-10", "PT24H",null, "Project1");
-        createTaskIfNotExists(6,"Task 6", "Description 6", "admin@admin", TaskStatus.IN_PROGRESS, "2024-04-10", "PT24H",null, "Project1");
-        createTaskIfNotExists(7,"Task 7", "Description 7", "admin@admin", TaskStatus.PLANNED, "2024-04-10", "PT24H", null, "Project1");
+        createTaskIfNotExists(6,"Task 6", "Description 6", "ricardo@ricardo", TaskStatus.IN_PROGRESS, "2024-04-10", "PT24H",null, "Project1");
+        createTaskIfNotExists(7,"Task 7", "Description 7", "joao@joao", TaskStatus.PLANNED, "2024-04-10", "PT24H", null, "Project1");
         addPrerequisite(7, 5);
         addPrerequisite(5, 6);
 
@@ -184,12 +185,12 @@ public class TaskBean {
             taskEntity.setResponsible(userDao.findUserByEmail(responsible));
             taskEntity.setStatus(TaskStatus.valueOf(status.toString()));
             taskEntity.setInitialDate(java.time.LocalDate.parse(initialDate));
-            taskEntity.setDuration(Duration.ofDays(1));
+            taskEntity.setDuration(Period.ofDays(1));
             taskEntity.setCreator(userDao.findUserByEmail(responsible));
             taskEntity.setSystemTitle(taskSystemNameGenerator(name));
             taskEntity.setActive(true);
             taskEntity.setProject(projectDao.findProjectByName(project));
-            taskEntity.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().toDays()));
+            taskEntity.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().getDays()));
 
             if (prerequisiteIds != null) {
                 for (Long prerequisiteId : prerequisiteIds) {
@@ -199,8 +200,24 @@ public class TaskBean {
             }
 
             taskDao.persist(taskEntity);
-            addExecutorToTask(id, "admin@admin");
-            addExecutorToTask(id, "ricardo@ricardo");
+            if(responsible.equals("admin@admin")){
+                addExecutorToTask(id,"ricardo@ricardo");
+                addExecutorToTask(id,"joana@joana");
+                addExecutorToTask(id,"joao@joao");
+            }else if(responsible.equals("ricardo@ricardo")) {
+                addExecutorToTask(id, "admin@admin");
+                addExecutorToTask(id, "joana@joana");
+                addExecutorToTask(id, "joao@joao");
+            }else if(responsible.equals("joana@joana")) {
+                addExecutorToTask(id, "admin@admin");
+                addExecutorToTask(id, "ricardo@ricardo");
+                addExecutorToTask(id, "joao@joao");
+            }else if(responsible.equals("joao@joao")) {
+                addExecutorToTask(id, "admin@admin");
+                addExecutorToTask(id, "ricardo@ricardo");
+                addExecutorToTask(id, "joana@joana");
+            }
+
             addAdditionalExecutorToTask(id, "Executor 3");
             addAdditionalExecutorToTask(id, "Executor 4");
             taskDao.merge(taskEntity);
@@ -523,7 +540,7 @@ switch (dtoType) {
         taskGanttDto.setDescription(taskEntity.getDescription());
         taskGanttDto.setStatus(taskEntity.getStatus().toString());
         taskGanttDto.setInitialDate(taskEntity.getInitialDate());
-        taskGanttDto.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().toDays()));
+        taskGanttDto.setFinalDate(taskEntity.getInitialDate().plusDays(taskEntity.getDuration().getDays()));
 
         TaskGanttDto projectTask = new TaskGanttDto();
         projectTask.setId(0L);
@@ -536,8 +553,9 @@ switch (dtoType) {
 
         taskGanttDto.setProjectTask(projectTask);
         // Converter executors e additionalExecutors para MemberDto
+        List<TaskExecutorEntity> executors = taskExecutorDao.findActiveTaskExecutorByTaskId(taskEntity.getId());
         List<MemberDto> membersOfTask = new ArrayList<>();
-        taskEntity.getExecutors().forEach(executor -> {
+        executors.forEach(executor -> {
             MemberDto member = new MemberDto();
             member.setId(executor.getExecutor().getId()); // Ajuste conforme necessário
             member.setName(executor.getExecutor().getFirstname() + " <"+executor.getExecutor().getEmail()+">"); // Ajuste conforme necessário
@@ -554,19 +572,19 @@ switch (dtoType) {
         responsibleDto.setType("RESPONSIBLE"); // Defina o tipo conforme necessário
         membersOfTask.add(responsibleDto);
 
-        UserEntity creator = taskEntity.getResponsible();
-        MemberDto creatorDto = new MemberDto();
-        creatorDto.setId(creator.getId()); // Ajuste conforme necessário
-        creatorDto.setName(creator.getFirstname() + " <"+creator.getEmail()+">");
-        creatorDto.setSystemUsername(creator.getEmail()); // Ajuste conforme necessário
-        creatorDto.setType("CREATOR"); // Defina o tipo conforme necessário
-        membersOfTask.add(creatorDto);
+//        UserEntity creator = taskEntity.getResponsible();
+//        MemberDto creatorDto = new MemberDto();
+//        creatorDto.setId(creator.getId()); // Ajuste conforme necessário
+//        creatorDto.setName(creator.getFirstname() + " <"+creator.getEmail()+">");
+//        creatorDto.setSystemUsername(creator.getEmail()); // Ajuste conforme necessário
+//        creatorDto.setType("CREATOR"); // Defina o tipo conforme necessário
+//        membersOfTask.add(creatorDto);
 
         // Repita para additionalExecutors se necessário
         taskGanttDto.setMembersOfTask(membersOfTask);
-
+        List<TaskExecutorAdditionalEntity> additionalExecutors = taskExecutorAdditionalDao.findActiveTaskExecutorAdditionalByTaskId(taskEntity.getId());
         List<MemberDto> additionalMembersOfTask = new ArrayList<>();
-        taskEntity.getAdditionalExecutors().forEach(additionalExecutor -> {
+        additionalExecutors.forEach(additionalExecutor -> {
             MemberDto additionalMember = new MemberDto();
             additionalMember.setId(additionalExecutor.getExecutor().getId()); // Ajuste conforme necessário
             additionalMember.setName(additionalExecutor.getExecutor().getName()); // Ajuste conforme necessário
@@ -579,7 +597,8 @@ switch (dtoType) {
 
         // Converter prerequisites para DependentTaskDto
         List<DependentTaskDto> dependentTasks = new ArrayList<>();
-        taskEntity.getPrerequisites().forEach(prerequisite -> {
+        List<TaskPrerequisiteEntity> prerequisites = taskPrerequisiteDao.findActiveTaskPrerequisiteByTaskId(taskEntity.getId());
+        prerequisites.forEach(prerequisite -> {
             DependentTaskDto dependentTask = new DependentTaskDto();
             dependentTask.setId(prerequisite.getPrerequisite().getId());
             dependentTask.setTitle(prerequisite.getPrerequisite().getTitle());
@@ -587,7 +606,7 @@ switch (dtoType) {
             dependentTask.setDescription(prerequisite.getPrerequisite().getDescription());
             dependentTask.setStatus(prerequisite.getPrerequisite().getStatus().toString());
             dependentTask.setInitialDate(prerequisite.getPrerequisite().getInitialDate());
-            dependentTask.setFinalDate(prerequisite.getPrerequisite().getInitialDate().plusDays(prerequisite.getPrerequisite().getDuration().toDays()));
+            dependentTask.setFinalDate(prerequisite.getPrerequisite().getInitialDate().plusDays(prerequisite.getPrerequisite().getDuration().getDays()));
 
             dependentTasks.add(dependentTask);
         });
@@ -644,53 +663,49 @@ switch (dtoType) {
             throw new IllegalArgumentException("Invalid date");
         }
 
-        long originalDuration = dto.getInitialDate().until(dto.getFinalDate(), ChronoUnit.DAYS);
-        System.out.println("Original duration: " + originalDuration);
-
         // Ensure the task has at least 1 day duration
         if (dto.getInitialDate().isEqual(dto.getFinalDate())) {
             dto.setFinalDate(dto.getInitialDate().plusDays(1));
         }
 
-        // Validação de datas
+        // Validate dates
         if (dto.getFinalDate().isBefore(dto.getInitialDate())) {
             throw new IllegalArgumentException("Final date must be after initial date.");
         }
 
-        System.out.println("Initial date: " + dto.getInitialDate());
-        System.out.println("Final date: " + dto.getFinalDate());
+        // Calculate original duration
+        int originalDuration = (int) ChronoUnit.DAYS.between(dto.getInitialDate(), dto.getFinalDate());
+        System.out.println("Original duration: " + originalDuration);
 
-        // Ajuste da data inicial baseado nas tarefas das quais é dependente
+        // Adjust initial date based on prerequisite tasks
         LocalDate latestPrerequisiteFinalDate = task.getPrerequisites().stream()
+                .filter(TaskPrerequisiteEntity::isActive)
                 .map(TaskPrerequisiteEntity::getPrerequisite)
-                .map(prerequisite -> prerequisite.getInitialDate().plusDays(prerequisite.getDuration().toDays()))
+                .map(TaskEntity::getFinalDate)
                 .max(LocalDate::compareTo)
                 .orElse(dto.getInitialDate());
 
-
-        if (dto.getInitialDate().isBefore(latestPrerequisiteFinalDate) || dto.getInitialDate().isEqual(latestPrerequisiteFinalDate)) {
+        if (!dto.getInitialDate().isAfter(latestPrerequisiteFinalDate)) {
             dto.setInitialDate(latestPrerequisiteFinalDate);
         }
 
-        if(originalDuration > 0) {
-            task.setDuration(Duration.ofDays(originalDuration));
-        }
-
-        // Atualiza as propriedades da tarefa
+        // Update the task's dates
         task.setInitialDate(dto.getInitialDate());
-        task.setFinalDate(dto.getInitialDate().plusDays(task.getDuration().toDays()));
+        task.setFinalDate(dto.getInitialDate().plusDays(originalDuration));
+        task.setDuration(Period.ofDays(originalDuration));
 
-        // Persiste as mudanças
+        // Persist the changes
         taskDao.merge(task);
 
-        //TESTE - adicionar log de alteração de data de tarefa
+        // Log the task date change
         logBean.addNewTaskchange(projectId, user.getId(), taskId);
 
-        // Atualizar datas das tarefas dependentes usando HashSet para evitar ciclos infinitos
+        // Update dependent tasks dates
         updateDependentTasksDate(task, new HashSet<>());
-        // Verificar se já existe uma tarefa com status PRESENTATION no projeto
-        // Atualizar a tarefa de apresentação para ser a última
+
+        // Update the presentation task
         updatePresentationTask(projectId);
+
         return toGanttDto(task);
     }
 
@@ -699,28 +714,35 @@ switch (dtoType) {
      * @param task - task to update
      */
     private void updateDependentTasksDate(TaskEntity task, Set<Long> visitedTaskIds) {
+        System.out.println(Color.CYAN + "Updating dependent tasks date for task: " + task.getId() + Color.CYAN);
         if (visitedTaskIds.contains(task.getId())) {
             // Cycle detected, abort further processing to prevent infinite recursion
             return;
         }
         visitedTaskIds.add(task.getId());
 
-        LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+        LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().getDays());
         Set<TaskEntity> dependentTasks = getDependentTasks(task.getId());
+        System.out.println("Dependent tasks: " + dependentTasks.size());
 
         for (TaskEntity dependentTask : dependentTasks) {
-            Duration originalDuration = dependentTask.getDuration();
+            boolean hasActiveDependency = dependentTask.getPrerequisites().stream()
+                    .anyMatch(prerequisite -> prerequisite.isActive() && prerequisite.getPrerequisite().equals(task));
 
-            // Adjust only the initial date if necessary
-            if (dependentTask.getInitialDate().isBefore(taskFinalDate)) {
-                dependentTask.setInitialDate(taskFinalDate);
-                dependentTask.setDuration(originalDuration);
-                taskDao.merge(dependentTask);
-                logBean.addNewTaskchange(dependentTask.getProject().getId(), dependentTask.getResponsible().getId(), dependentTask.getId());
+            if (hasActiveDependency) {
+                Period originalDuration = dependentTask.getDuration();
+
+                // Adjust only the initial date if necessary
+                if (dependentTask.getInitialDate().isBefore(taskFinalDate.plusDays(1))) {
+                    dependentTask.setInitialDate(taskFinalDate);
+                    dependentTask.setFinalDate(dependentTask.getInitialDate().plusDays(originalDuration.getDays()));
+                    taskDao.merge(dependentTask);
+                    logBean.addNewTaskchange(dependentTask.getProject().getId(), dependentTask.getResponsible().getId(), dependentTask.getId());
+                }
+
+                // Recursive call with visit tracking for dependent tasks
+                updateDependentTasksDate(dependentTask, visitedTaskIds);
             }
-
-            // Recursive call with visit tracking for dependent tasks
-            updateDependentTasksDate(dependentTask, visitedTaskIds);
         }
     }
 
@@ -753,7 +775,7 @@ switch (dtoType) {
 
             // Atualiza a data inicial e final da tarefa de apresentação
             presentationTask.setInitialDate(latestFinalDate);
-            presentationTask.setFinalDate(latestFinalDate.plusDays(presentationTask.getDuration().toDays()));
+            presentationTask.setFinalDate(latestFinalDate.plusDays(presentationTask.getDuration().getDays()));
             // Salva as alterações na base de dados
             taskDao.merge(presentationTask);
             // Adiciona um log indicando a mudança da tarefa
@@ -796,7 +818,7 @@ switch (dtoType) {
         // Marca a tarefa como visitada
         visitedTaskIds.add(task.getId());
         // Calcula a data final da tarefa atual
-        LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().toDays());
+        LocalDate taskFinalDate = task.getInitialDate().plusDays(task.getDuration().getDays());
         if (taskFinalDate.isAfter(latestFinalDate)) {
             // Atualiza a data final mais recente, se necessário
             latestFinalDate = taskFinalDate;
@@ -813,79 +835,7 @@ switch (dtoType) {
     }
 
     /**
-     * Create a task with the specified data and add it to the database
-     * @param token - user token
-     * @param dto - task creation data
-     */
-    public TaskGanttDto createTask(String token, TaskCreateDto dto) {
-        String log = "Attempting to create task";
-        SessionEntity se = sessionDao.findSessionByToken(token);
-        if (dto == null || se == null) {
-            LoggerUtil.logInfo(log, "Invalid token or dto", null, token);
-            throw new IllegalArgumentException("Invalid token or data");
-        }
-
-        UserEntity user = se.getUser();
-        if (dto.getProjectId() == null || dto.getTitle() == null || dto.getInitialDate() == null || dto.getFinalDate() == null || dto.getResponsibleId() == null) {
-            LoggerUtil.logInfo(log, "Invalid dto", user.getEmail(), token);
-            throw new IllegalArgumentException("Invalid creation data");
-        }
-
-        UserEntity responsible = userDao.findUserById(dto.getResponsibleId());
-        if (responsible == null) {
-            LoggerUtil.logInfo(log, "Responsible user not found", user.getEmail(), token);
-            throw new IllegalArgumentException("Responsible user not found");
-        }
-
-        ProjectEntity project = projectDao.findProjectById(dto.getProjectId());
-        if (project == null) {
-            LoggerUtil.logInfo(log, "Project not found", user.getEmail(), token);
-            throw new IllegalArgumentException("Project not found");
-        }
-
-        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), user.getId());
-        ProjectUserEntity pueR = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), responsible.getId());
-        if (pue == null || !pue.isActive() || pueR == null || !pueR.isActive()) {
-            LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
-            throw new IllegalArgumentException("User is not a participant in the project");
-        }
-
-        //se não tiver data no dto, a data inicial é a data atual
-        if(dto.getInitialDate() == null) {
-            throw new IllegalArgumentException("Invalid Initial date");
-        }
-        //se não tiver data final no dto, a data final é a data inicial + 1 dia
-        if(dto.getFinalDate() == null) {
-            throw new IllegalArgumentException("Invalid Final date");
-        }
-
-        if (dto.getInitialDate().isAfter(dto.getFinalDate())) {
-            LoggerUtil.logInfo(log, "Invalid date", user.getEmail(), token);
-            throw new IllegalArgumentException("Invalid dates, initial date is after final date");
-        }
-
-        TaskEntity task = new TaskEntity();
-        task.setTitle(dto.getTitle());
-        task.setDescription(dto.getDescription());
-        task.setInitialDate(dto.getInitialDate());
-        task.setDuration(Duration.between(dto.getInitialDate().atStartOfDay(), dto.getFinalDate().atStartOfDay()));
-        task.setFinalDate(dto.getFinalDate());
-        task.setResponsible(responsible);
-        task.setCreator(user);
-        task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
-        task.setActive(true);
-        task.setProject(project);
-        task.setStatus(TaskStatus.PLANNED);
-        taskDao.persist(task);
-
-        addAdditionalExecutorsToTask(task, dto.getAdditionalExecutorsNames());
-        addUsersToTask(task, dto.getUsersIds(), dto.getProjectId());
-        addTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
-        return toGanttDto(task);
-    }
-
-    /**
-     * Adiciona executores adicionais a uma tarefa. Cria-os caso eles não existam na base de dados.
+     * Add users to a task as executors
      * @param task - tarefa
      * @param additionalExecutorsNames - lista de nomes dos executores adicionais
      */
@@ -920,7 +870,65 @@ switch (dtoType) {
     }
 
     /**
-     * Adiciona users a uma tarefa. Cria-os caso eles não existam na base de dados.
+     * Update additional executors for a task. Create them if they do not exist in the database.
+     * @param task - tarefa
+     * @param additionalExecutorsNames - lista de nomes dos executores adicionais
+     */
+    private void updateAdditionalExecutorsForTask(TaskEntity task, List<String> additionalExecutorsNames) {
+        // Map to keep track of current associations
+        Map<String, TaskExecutorAdditionalEntity> currentAssociations = new HashMap<>();
+
+        // Load current associations from the database
+        List<TaskExecutorAdditionalEntity> existingAssociations = taskExecutorAdditionalDao.findTaskExecutorAdditionalByTaskId(task.getId());
+        for (TaskExecutorAdditionalEntity association : existingAssociations) {
+            currentAssociations.put(association.getExecutor().getName(), association);
+        }
+
+        // Process the incoming list of additional executors
+        if (additionalExecutorsNames != null) {
+            for (String additionalExecutorName : additionalExecutorsNames) {
+                ExecutorEntity additionalExecutor = executorDao.findExecutorByName(additionalExecutorName);
+                if (additionalExecutor == null) {
+                    additionalExecutor = new ExecutorEntity();
+                    additionalExecutor.setName(additionalExecutorName);
+                    executorDao.persist(additionalExecutor);
+                } else if (!additionalExecutor.isActive()) {
+                    additionalExecutor.setActive(true);
+                    executorDao.merge(additionalExecutor);
+                }
+
+                if (currentAssociations.containsKey(additionalExecutorName)) {
+                    // Reactivate existing association if necessary
+                    TaskExecutorAdditionalEntity teae = currentAssociations.get(additionalExecutorName);
+                    if (!teae.isActive()) {
+                        teae.setActive(true);
+                        taskDao.merge(task);
+                    }
+                    // Remove processed executor from the map
+                    currentAssociations.remove(additionalExecutorName);
+                } else {
+                    // Create new association
+                    TaskExecutorAdditionalEntity additionalExecutorEntity = new TaskExecutorAdditionalEntity();
+                    additionalExecutorEntity.setExecutor(additionalExecutor);
+                    additionalExecutorEntity.setTask(task);
+                    additionalExecutorEntity.setActive(true);
+                    task.getAdditionalExecutors().add(additionalExecutorEntity);
+                    taskDao.merge(task);
+                }
+            }
+        }
+
+        // Deactivate associations that are no longer in the incoming list
+        for (TaskExecutorAdditionalEntity teae : currentAssociations.values()) {
+            if (teae.isActive()) {
+                teae.setActive(false);
+                taskDao.merge(task);
+            }
+        }
+    }
+
+    /**
+     * Update users for a task. Create them if they do not exist in the database.
      * @param task
      * @param userIds
      * @param projectId
@@ -953,7 +961,63 @@ switch (dtoType) {
     }
 
     /**
-     * Adiciona dependências a uma tarefa. Cria-as caso elas não existam na base de dados.
+     * Update users for a task. Create them if they do not exist in the database.
+     * @param task
+     * @param userIds
+     * @param projectId
+     */
+    private void updateUsersForTask(TaskEntity task, List<Long> userIds, Long projectId) {
+        String log = "Attempting to update users for task";
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+        if (pe == null) {
+            LoggerUtil.logInfo(log, "Project not found", null, null);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        // Map to keep track of current associations
+        Map<Long, TaskExecutorEntity> currentAssociations = new HashMap<>();
+        List<TaskExecutorEntity> existingAssociations = taskExecutorDao.findTaskExecutorsByTaskId(task.getId());
+        for (TaskExecutorEntity association : existingAssociations) {
+            currentAssociations.put(association.getExecutor().getId(), association);
+        }
+
+        if (userIds != null) {
+            for (Long userId : userIds) {
+                UserEntity user = userDao.findUserById(userId);
+                if (user != null) {
+                    if (currentAssociations.containsKey(userId)) {
+                        // Reactivate existing association if necessary
+                        TaskExecutorEntity taskExecutor = currentAssociations.get(userId);
+                        if (!taskExecutor.isActive()) {
+                            taskExecutor.setActive(true);
+                            taskExecutorDao.merge(taskExecutor);
+                        }
+                        // Remove processed user from the map
+                        currentAssociations.remove(userId);
+                    } else {
+                        // Create new association
+                        TaskExecutorEntity taskExecutor = new TaskExecutorEntity();
+                        taskExecutor.setTask(task);
+                        taskExecutor.setExecutor(user);
+                        taskExecutor.setActive(true);
+                        taskExecutorDao.merge(taskExecutor);
+                    }
+                }
+            }
+        }
+
+        // Deactivate associations that are no longer in the incoming list
+        for (TaskExecutorEntity taskExecutor : currentAssociations.values()) {
+            if (taskExecutor.isActive()) {
+                taskExecutor.setActive(false);
+                taskExecutorDao.merge(taskExecutor);
+            }
+        }
+    }
+
+
+    /**
+     * Update task dependencies with the specified data
      * @param task
      * @param prerequisiteIds
      * @param projectId
@@ -994,6 +1058,118 @@ switch (dtoType) {
         }
     }
 
+    /**
+     * Update task dependencies. Create them if they do not exist in the database.
+     * @param task
+     * @param prerequisiteIds
+     * @param projectId
+     */
+    private void updateTaskDependencies(TaskEntity task, List<Long> prerequisiteIds, long projectId) {
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+        if (pe == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        Map<Long, TaskPrerequisiteEntity> currentAssociations = new HashMap<>();
+        Set<TaskPrerequisiteEntity> existingAssociations = task.getPrerequisites();
+        for (TaskPrerequisiteEntity association : existingAssociations) {
+            currentAssociations.put(association.getPrerequisite().getId(), association);
+        }
+
+        Set<Long> newPrerequisiteIds = prerequisiteIds != null ? new HashSet<>(prerequisiteIds) : Collections.emptySet();
+
+        // Remove old dependencies that are no longer in the new list
+        for (TaskPrerequisiteEntity association : new HashSet<>(existingAssociations)) {
+            if (!newPrerequisiteIds.contains(association.getPrerequisite().getId())) {
+                association.setActive(false);
+                taskPrerequisiteDao.merge(association);
+                task.getPrerequisites().remove(association);
+                association.getPrerequisite().getPrerequisiteForTasks().remove(association);
+            }
+        }
+
+        // Add or reactivate new dependencies
+        for (Long prerequisiteId : newPrerequisiteIds) {
+            TaskEntity prerequisite = taskDao.findTaskById(prerequisiteId);
+            if (prerequisite != null && prerequisite.getProject().getId() == projectId) {
+                if (createsDependencyCycle(task, prerequisite)) {
+                    System.out.println("Cannot add dependency: it creates a cycle");
+                    continue; // Skip this dependency
+                }
+
+                if (currentAssociations.containsKey(prerequisiteId)) {
+                    // Reactivate existing association if necessary
+                    TaskPrerequisiteEntity existingPrerequisite = currentAssociations.get(prerequisiteId);
+                    if (!existingPrerequisite.isActive()) {
+                        existingPrerequisite.setActive(true);
+                        taskPrerequisiteDao.merge(existingPrerequisite);
+                    }
+                    currentAssociations.remove(prerequisiteId);
+                } else {
+                    // Create new association
+                    TaskPrerequisiteEntity taskPrerequisite = new TaskPrerequisiteEntity();
+                    taskPrerequisite.setTask(task);
+                    taskPrerequisite.setPrerequisite(prerequisite);
+                    taskPrerequisite.setActive(true);
+                    task.getPrerequisites().add(taskPrerequisite);
+                    prerequisite.getPrerequisiteForTasks().add(taskPrerequisite);
+                    taskPrerequisiteDao.persist(taskPrerequisite);
+                }
+            } else {
+                System.out.println("Prerequisite task does not belong to the project");
+            }
+        }
+
+        // Deactivate associations that are no longer in the incoming list
+        for (TaskPrerequisiteEntity taskPrerequisite : currentAssociations.values()) {
+            if (taskPrerequisite.isActive()) {
+                taskPrerequisite.setActive(false);
+                taskPrerequisiteDao.merge(taskPrerequisite);
+            }
+        }
+
+        taskDao.merge(task);
+    }
+
+
+
+    /**
+     * Método createsDependencyCycle:
+     * Este método verifica se adicionar uma dependência criaria um ciclo.
+     * Usa uma busca em profundidade (DFS) para verificar se a tarefa já está presente nas dependências do potentialPrerequisite.
+     * Verificação de Ciclos:
+     * Antes de adicionar uma nova dependência, a função updateTaskDependencies verifica se isso criaria um ciclo usando o método createsDependencyCycle.
+     * Se um ciclo é detectado, a dependência é ignorada e um aviso é impresso.
+     * Processamento das Dependências:
+     * As dependências são processadas, reativando associações existentes, criando novas associações, e desativando aquelas que não são necessarias .
+     * @param task
+     * @param potentialPrerequisite
+     * @return
+     */
+    private boolean createsDependencyCycle(TaskEntity task, TaskEntity potentialPrerequisite) {
+        Set<TaskEntity> visitedTasks = new HashSet<>();
+        Deque<TaskEntity> stack = new ArrayDeque<>();
+        stack.push(potentialPrerequisite);
+
+        while (!stack.isEmpty()) {
+            TaskEntity currentTask = stack.pop();
+            if (currentTask.equals(task)) {
+                return true; // Cycle detected
+            }
+            if (!visitedTasks.add(currentTask)) {
+                continue; // Already visited, skip
+            }
+            // Iterate over active prerequisites to check for cycles
+            for (TaskPrerequisiteEntity prerequisite : currentTask.getPrerequisites()) {
+                if (prerequisite.isActive()) {
+                    stack.push(prerequisite.getPrerequisite());
+                }
+            }
+        }
+        return false; // No cycle found
+    }
+
+
     public TaskContributorsDto getTaskCreateInfo(String token, Long projectId) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         ProjectEntity pe = projectDao.findProjectById(projectId);
@@ -1029,5 +1205,202 @@ switch (dtoType) {
 
         return dto;
     }
+
+    /**
+     * Create a task with the specified data and add it to the database
+     * @param token - user token
+     * @param dto - task creation data
+     */
+    public TaskGanttDto createTask(String token, TaskCreateDto dto) {
+        String log = "Attempting to create task";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logInfo(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        UserEntity user = se.getUser();
+        validateTaskCreateDto(dto, user, token);
+
+        LocalDate initialDate= dto.getInitialDate();
+        LocalDate finalDate = dto.getFinalDate();
+        Period duration = Period.between(initialDate, finalDate);
+
+        LocalDate maxDependentFinalDate = findMaxDependentFinalDate(dto.getDependentTasksIds());
+
+        if(maxDependentFinalDate != null && initialDate.isBefore(maxDependentFinalDate.plusDays(1))) {
+            initialDate = maxDependentFinalDate;
+            finalDate = initialDate.plus(duration);
+        }
+
+
+        TaskEntity task = new TaskEntity();
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setInitialDate(initialDate);
+        task.setDuration(duration);
+        task.setFinalDate(finalDate);
+        task.setResponsible(userDao.findUserById(dto.getResponsibleId()));
+        task.setCreator(user);
+        task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
+        task.setActive(true);
+        task.setProject(projectDao.findProjectById(dto.getProjectId()));
+        task.setStatus(TaskStatus.PLANNED);
+        taskDao.persist(task);
+
+        addAdditionalExecutorsToTask(task, dto.getAdditionalExecutorsNames());
+        addUsersToTask(task, dto.getUsersIds().stream().filter(id -> !id.equals(dto.getResponsibleId())).collect(Collectors.toList()), dto.getProjectId());
+        addTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
+
+        updateDependentTasksDate(task, new HashSet<>());
+        return toGanttDto(task);
+    }
+
+
+    public TaskGanttDto updateTask(String token, Long taskId, TaskCreateDto dto) {
+        String log = "Attempting to update task";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        TaskEntity task = taskDao.findTaskById(taskId);
+        if (se == null || task == null) {
+            LoggerUtil.logInfo(log, "Invalid token or task", null, token);
+            throw new IllegalArgumentException("Invalid token or task");
+        }
+        validateTaskCreateDto(dto, se.getUser(), token);
+
+        // Verify if dto.status is one of the TaskStatus
+        if(dto.getStatus() != null && !TaskStatus.contains(dto.getStatus())) {
+            System.out.println(Color.RED + "Invalid status" + Color.RESET);
+            throw new IllegalArgumentException("Invalid status");
+        }
+
+        // Find the maximum final date of dependent tasks
+        LocalDate maxDependentFinalDate = findMaxDependentFinalDate(dto.getDependentTasksIds());
+        System.out.println(Color.PURPLE + "Max dependent final date: " + maxDependentFinalDate + Color.RESET);
+        System.out.println(Color.WHITE + "Initial date: " + dto.getInitialDate() +" Final date: " + dto.getFinalDate()+ Color.RESET);
+        // Adjust the initial date if necessary
+        LocalDate initialDate = dto.getInitialDate();
+        LocalDate finalDate = dto.getFinalDate();
+        Period dtoDuration = Period.between(initialDate, finalDate);
+
+        if (maxDependentFinalDate != null && initialDate.isBefore(maxDependentFinalDate.plusDays(1))) {
+            initialDate = maxDependentFinalDate;
+            finalDate = initialDate.plus(dtoDuration);
+        }
+
+
+        System.out.println(Color.GREEN + "Initial date: " + initialDate +" Final date: " + finalDate+ Color.RESET);
+
+        UserEntity responsible = userDao.findUserById(dto.getResponsibleId());
+
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setInitialDate(initialDate);
+        task.setDuration(Period.between(initialDate, finalDate));
+        task.setFinalDate(finalDate);
+        task.setResponsible(responsible);
+        task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
+        task.setStatus(TaskStatus.fromValue(dto.getStatus()));
+        task.setActive(true);
+        taskDao.merge(task);
+
+        updateAdditionalExecutorsForTask(task, dto.getAdditionalExecutorsNames());
+        updateUsersForTask(task, dto.getUsersIds().stream().filter(id -> !id.equals(dto.getResponsibleId())).collect(Collectors.toList()), dto.getProjectId());
+        updateTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
+
+        updateDependentTasksDate(task, new HashSet<>());
+        return toGanttDto(task);
+    }
+
+    /**
+     * Find the maximum final date of dependent tasks
+     * @param dependentTaskIds - list of dependent task IDs
+     * @return the maximum final date, or null if there are no dependencies
+     */
+    private LocalDate findMaxDependentFinalDate(List<Long> dependentTaskIds) {
+        if (dependentTaskIds == null || dependentTaskIds.isEmpty()) {
+            return null;
+        }
+        LocalDate maxFinalDate = null;
+        for (Long taskId : dependentTaskIds) {
+            TaskEntity dependentTask = taskDao.findTaskById(taskId);
+
+            if (dependentTask != null && dependentTask.isActive()) {
+                LocalDate finalDate = dependentTask.getFinalDate();
+                if (maxFinalDate == null || finalDate.isAfter(maxFinalDate)) {
+                    maxFinalDate = finalDate;
+                }
+            }
+        }
+        return maxFinalDate;
+    }
+
+
+    private void validateTaskCreateDto(TaskCreateDto dto, UserEntity user, String token){
+        String log= "Attempting to create/update task";
+        if(dto == null || dto.getProjectId() == null || dto.getTitle() == null || dto.getInitialDate() == null || dto.getFinalDate() == null || dto.getResponsibleId() == null) {
+            LoggerUtil.logInfo(log, "Invalid dto", user.getEmail(), token);
+            throw new IllegalArgumentException("Invalid creation data");
+        }
+
+        if(dto.getInitialDate().isAfter(dto.getFinalDate())) {
+            throw new IllegalArgumentException("Invalid dates, initial date is after final date");
+        }
+        if(dto.getTitle().isEmpty() || dto.getTitle().isBlank() || dto.getDescription() == null || dto.getDescription().isEmpty() || dto.getDescription().isBlank()){
+            throw new IllegalArgumentException("Invalid title or description");
+        }
+        UserEntity responsible = userDao.findUserById(dto.getResponsibleId());
+        if (responsible == null) {
+            LoggerUtil.logInfo(log, "Responsible user not found", user.getEmail(), token);
+            throw new IllegalArgumentException("Responsible user not found");
+        }
+        ProjectEntity project = projectDao.findProjectById(dto.getProjectId());
+        if (project == null) {
+            LoggerUtil.logInfo(log, "Project not found", user.getEmail(), token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), user.getId());
+        ProjectUserEntity pueR = projectUserDao.findProjectUserByProjectIdAndUserId(dto.getProjectId(), responsible.getId());
+        if (pue == null || !pue.isActive() || pueR == null || !pueR.isActive()) {
+            LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+    }
+
+    public void deleteTask(String token, Long taskId) {
+        String log = "Attempting to delete task";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        TaskEntity task = taskDao.findTaskById(taskId);
+
+        if (se == null || task == null) {
+            LoggerUtil.logInfo(log, "Invalid token or task", null, token);
+            throw new IllegalArgumentException("Invalid token or task");
+        }
+
+        // Mark the task as inactive
+        task.setActive(false);
+        taskDao.merge(task);
+
+        // Mark task dependencies as inactive
+        markTaskDependenciesAsInactive(task);
+
+        LoggerUtil.logInfo(log, "Task marked as inactive successfully", se.getUser().getEmail(), token);
+    }
+
+    private void markTaskDependenciesAsInactive(TaskEntity task) {
+        // Mark all TaskPrerequisiteEntity associations where this task is either a prerequisite or a dependent as inactive
+        List<TaskPrerequisiteEntity> prerequisites = taskPrerequisiteDao.findByTaskId(task.getId());
+        for (TaskPrerequisiteEntity prerequisite : prerequisites) {
+            prerequisite.setActive(false);
+            taskPrerequisiteDao.merge(prerequisite);
+        }
+
+        List<TaskPrerequisiteEntity> dependents = taskPrerequisiteDao.findByPrerequisiteTaskId(task.getId());
+        for (TaskPrerequisiteEntity dependent : dependents) {
+            dependent.setActive(false);
+            taskPrerequisiteDao.merge(dependent);
+        }
+    }
+
 }
 
