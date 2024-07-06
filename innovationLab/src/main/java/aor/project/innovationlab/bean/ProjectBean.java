@@ -14,6 +14,8 @@ import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
+import aor.project.innovationlab.dto.user.project.UserChangeRoleDto;
+import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
 import aor.project.innovationlab.utils.Color;
@@ -972,6 +974,80 @@ public class ProjectBean {
     }
 
 
+    public List<UserToChangeRoleKickDto> getUsersByProject(String token, Long projectId) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (session == null || project == null) {
+            throw new IllegalArgumentException("Token ou projeto inválido");
+        }
+        Long currentUserId = session.getUser().getId();
+
+        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectUserByProjectId(projectId);
+
+        // Filtrar os usuários para excluir o próprio usuário
+        return projectUsers.stream()
+                .filter(projectUser -> projectUser.getUser().getId() != (currentUserId))
+                .map(this::toUserToChangeRoleKickDto)
+                .collect(Collectors.toList());
+    }
 
 
+    private UserToChangeRoleKickDto toUserToChangeRoleKickDto(ProjectUserEntity projectUser) {
+        UserToChangeRoleKickDto dto = new UserToChangeRoleKickDto();
+        dto.setId(projectUser.getUser().getId());
+        dto.setEmail(projectUser.getUser().getEmail());
+        dto.setRole(projectUser.getRole().getValue());
+        dto.setFirstname(projectUser.getUser().getFirstname());
+        dto.setLastname(projectUser.getUser().getLastname());
+        dto.setLab(projectUser.getUser().getLab().getLocation());
+        dto.setImg(projectUser.getUser().getProfileImagePath());
+        return dto;
+    }
+
+    public UserToChangeRoleKickDto changeUserRole(String token, Long userId, UserChangeRoleDto userChangeRoleDto) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(userChangeRoleDto.getProjectId());
+        if (session == null || project == null) {
+            throw new IllegalArgumentException("Token or project invalid");
+        }
+        // Verificar se o user é gerente do projeto
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(userChangeRoleDto.getProjectId(), session.getUser().getId());
+        if (projectUser == null || projectUser.getRole() != UserType.MANAGER) {
+            throw new IllegalArgumentException("User isnt a manager of the project");
+        }
+        // Verificar se o usuário a ser alterado é participante do projeto
+        ProjectUserEntity userToChange = projectUserDao.findProjectUserByProjectIdAndUserId(userChangeRoleDto.getProjectId(), userId);
+        if (userToChange == null) {
+            throw new IllegalArgumentException("User isnt a participant of the project");
+        }
+        // Alterar o papel do usuário
+        userToChange.setRole(UserType.fromValue(userChangeRoleDto.getRole()));
+        projectUserDao.merge(userToChange);
+
+        return toUserToChangeRoleKickDto(userToChange);
+    }
+
+    public void kickUser(String token, Long userId, Long projectId) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (session == null || project == null) {
+            throw new IllegalArgumentException("Token or project invalid");
+        }
+        // Verificar se o user é gerente do projeto
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
+        if (projectUser == null || projectUser.getRole() != UserType.MANAGER) {
+            throw new IllegalArgumentException("User isnt a manager of the project");
+        }
+        // Verificar se o user a ser alterado é participante do projeto
+        ProjectUserEntity userToChange = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, userId);
+        if (userToChange == null) {
+            throw new IllegalArgumentException("User isnt a participant of the project");
+        }
+        // Remover o user do projeto
+        userToChange.setActive(false);
+        projectUserDao.merge(userToChange);
+    }
 }
