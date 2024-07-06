@@ -8,8 +8,13 @@ import java.io.Serializable;
 @Table(name = "task_additional_executor")
 @NamedQueries({
         @NamedQuery(name = "TaskExecutorAdditional.findTaskExecutorAdditionalByTaskIdAndExecutorName",
-                query = "SELECT t FROM TaskExecutorAdditionalEntity t WHERE t.task.id = :taskId AND t.executor.name = :executorName")
+                query = "SELECT t FROM TaskExecutorAdditionalEntity t WHERE t.task.id = :taskId AND t.executor.name = :executorName"),
+        @NamedQuery(name = "TaskExecutorAdditional.findTaskExecutorAdditionalByTaskId",
+                query = "SELECT t FROM TaskExecutorAdditionalEntity t WHERE t.task.id = :taskId"),
+        @NamedQuery(name = "TaskExecutorAdditional.findActiveTaskExecutorAdditionalByTaskId",
+                query = "SELECT t FROM TaskExecutorAdditionalEntity t WHERE t.task.id = :taskId AND t.active = true")
 })
+
 public class TaskExecutorAdditionalEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

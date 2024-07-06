@@ -7,6 +7,8 @@ import java.io.Serializable;
 @Entity
 @Table(name = "task_prerequisite")
 @NamedQuery(name = "PrerequisiteTask.findPrerequisiteTaskById", query = "SELECT pt FROM TaskPrerequisiteEntity pt WHERE pt.id = :id")
+@NamedQuery(name = "PrerequisiteTask.findPrerequisiteTaskByTaskId", query = "SELECT pt FROM TaskPrerequisiteEntity pt WHERE pt.task.id = :taskId")
+@NamedQuery(name = "PrerequisiteTask.findActiveTaskPrerequisiteByTaskId", query = "SELECT pt FROM TaskPrerequisiteEntity pt WHERE pt.task.id = :taskId AND pt.active = true")
 public class TaskPrerequisiteEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

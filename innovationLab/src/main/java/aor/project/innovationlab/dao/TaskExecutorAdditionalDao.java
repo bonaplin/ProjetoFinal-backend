@@ -3,6 +3,8 @@ package aor.project.innovationlab.dao;
 import aor.project.innovationlab.entity.TaskExecutorAdditionalEntity;
 import jakarta.ejb.Stateless;
 
+import java.util.List;
+
 @Stateless
 public class TaskExecutorAdditionalDao extends AbstractDao<TaskExecutorAdditionalEntity>{
 
@@ -24,4 +26,15 @@ public class TaskExecutorAdditionalDao extends AbstractDao<TaskExecutorAdditiona
     }
 
 
+    public List<TaskExecutorAdditionalEntity> findTaskExecutorAdditionalByTaskId(Long id){
+        return em.createNamedQuery("TaskExecutorAdditional.findTaskExecutorAdditionalByTaskId")
+                .setParameter("taskId", id)
+                .getResultList();
+    }
+
+    public List<TaskExecutorAdditionalEntity> findActiveTaskExecutorAdditionalByTaskId(Long id) {
+        return em.createNamedQuery("TaskExecutorAdditional.findActiveTaskExecutorAdditionalByTaskId")
+                .setParameter("taskId", id)
+                .getResultList();
+    }
 }

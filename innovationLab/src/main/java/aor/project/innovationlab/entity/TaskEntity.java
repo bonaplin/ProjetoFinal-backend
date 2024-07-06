@@ -8,6 +8,7 @@ import jdk.jfr.Name;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,7 +47,7 @@ public class TaskEntity implements Serializable {
     private LocalDate finalDate;
 
     @Column(name = "duration", nullable = false, unique = false, updatable = true)
-    private Duration duration;
+    private Period duration;
 
     @ManyToOne
     @JoinColumn(name = "creator", nullable = false, unique = false, updatable = true)
@@ -118,11 +119,11 @@ public class TaskEntity implements Serializable {
         this.initialDate = initialDate;
     }
 
-    public Duration getDuration() {
+    public Period getDuration() {
         return duration;
     }
 
-    public void setDuration(Duration duration) {
+    public void setDuration(Period duration) {
         this.duration = duration;
     }
 

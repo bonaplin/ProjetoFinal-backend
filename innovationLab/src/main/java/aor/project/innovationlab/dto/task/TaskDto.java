@@ -4,6 +4,7 @@ import aor.project.innovationlab.enums.TaskStatus;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public class TaskDto {
     private String title;
     private String description;
     private LocalDate initialDate;
-    private Duration duration;
+    private Period duration;
     private String responsible;
     private String creator;
     private Set<String> executors;
@@ -79,11 +80,11 @@ public class TaskDto {
         this.description = description;
     }
 
-    public Duration getDuration() {
+    public Period getDuration() {
         return duration;
     }
 
-    public void setDuration(Duration duration) {
+    public void setDuration(Period duration) {
         this.duration = duration;
     }
 
