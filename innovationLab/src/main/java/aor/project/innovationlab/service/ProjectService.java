@@ -7,6 +7,8 @@ import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
+import aor.project.innovationlab.dto.user.project.UserChangeRoleDto;
+import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
@@ -157,6 +159,30 @@ public class ProjectService {
     public Response addProjectNotes(@HeaderParam("token") String token, @PathParam("id") Long id, NoteIdNoteDto notes) {
         LogDto dto = logBean.addProjectNotes(token, id, notes);
         return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
+    @GET
+    @Path("{id}/users")
+    @Produces("application/json")
+    public Response getUsersByProject(@PathParam("id") Long projectId, @HeaderParam("token") String token) {
+        List<UserToChangeRoleKickDto> dto = projectBean.getUsersByProject(token, projectId);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
+    @PUT
+    @Path("users/{userId}/role")
+    @Produces("application/json")
+    public Response changeUserRole(@PathParam("userId") Long userId, @HeaderParam("token") String token, UserChangeRoleDto userChangeRoleDto) {
+        UserToChangeRoleKickDto dto = projectBean.changeUserRole(token, userId, userChangeRoleDto);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
+    @PUT
+    @Path("users/{userId}/{projectId}/kick")
+    @Produces("application/json")
+    public Response kickUser(@PathParam("userId") Long userId, @HeaderParam("token") String token, @PathParam("projectId") Long projectId) {
+        projectBean.kickUser(token, userId, projectId);
+        return Response.status(200).entity("User kicked successfully!").build();
     }
 }
 

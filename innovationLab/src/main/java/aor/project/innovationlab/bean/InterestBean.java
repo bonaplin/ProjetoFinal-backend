@@ -139,62 +139,80 @@ public class InterestBean {
     public void addInterestToProject(String token, long projectId, long interestId) {
         String log = "Attempting to add interest to project";
 
+        // Validate session
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-
-        if(sessionEntity == null){
-            LoggerUtil.logError(log,"Session not found.",null,token);
+        if (sessionEntity == null) {
+            LoggerUtil.logError(log, "Session not found.", null, token);
             throw new IllegalArgumentException("Session not found.");
         }
 
+        // Validate project
         ProjectEntity project = projectDao.findProjectById(projectId);
-
-        if(project == null) {
-            LoggerUtil.logError(log,"Project not found",null,token);
+        if (project == null) {
+            LoggerUtil.logError(log, "Project not found", null, token);
             throw new IllegalArgumentException("Project not found");
         }
 
         UserEntity user = sessionEntity.getUser();
 
-        if (checkProjectStatus(project))  {
-            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
-            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        // Check project status
+        if (checkProjectStatus(project)) {
+            LoggerUtil.logError(log, "Current project status doesn't allow editions", null, token);
+            throw new IllegalArgumentException("This project is in a status that doesn't allow editions");
         }
 
+        // Validate user permissions
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
-        if(projectUser == null) {
-            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
-            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        if (projectUser == null) {
+            LoggerUtil.logError(log, "User not part of the project with id number: " + projectId, user.getEmail(), token);
+            throw new IllegalArgumentException("User doesn't have permissions to interact with this project");
         }
 
         if (projectUser.getRole() != UserType.MANAGER) {
-            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
-            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+            LoggerUtil.logError(log, "User doesn't have permissions to interact with project " + projectId, user.getEmail(), token);
+            throw new IllegalArgumentException("User doesn't have permissions to interact with this project");
         }
 
+        // Validate interest
         InterestEntity interest = interestDao.findInterestById(interestId);
-        if(interest == null) {
-            LoggerUtil.logError(log,"Interest not found",null,token);
+        if (interest == null) {
+            LoggerUtil.logError(log, "Interest not found", null, token);
             throw new IllegalArgumentException("Interest not found");
         }
 
-        ProjectInterestEntity projectInterest = projectInterestDao.findProjectInterestIds(projectId, interestId);
-        if(projectInterest != null) {
-            LoggerUtil.logInfo(log,"Project already has that interest",null,token);
+        // Check if interest is already associated with the project
+        ProjectInterestEntity projectInterest = projectInterestDao.findInterestInProject(project, interest);
+        if (projectInterest != null) {
+            if (!projectInterest.isActive()) {
+                projectInterest.setActive(true);
+                projectInterestDao.merge(projectInterest);
+                LoggerUtil.logInfo(log, "Interest " + interest.getName() + " reactivated in project " + projectId, user.getEmail(), token);
+                return;
+            } else {
+                LoggerUtil.logInfo(log, "Interest " + interest.getName() + " already active in project " + projectId, user.getEmail(), token);
+                return;
+            }
         }
 
+        // Create new association
         projectInterest = new ProjectInterestEntity();
         projectInterest.setProject(project);
         projectInterest.setInterest(interest);
         projectInterestDao.persist(projectInterest);
 
+        // Update relationships
         project.getInterests().add(projectInterest);
         interest.getProjectInterests().add(projectInterest);
 
+        // Merge changes
         projectDao.merge(project);
         interestDao.merge(interest);
 
-        LoggerUtil.logInfo(log,"Interest " + interest.getName() + " added to project " + projectId,null,token);
+        LoggerUtil.logInfo(log, "Interest " + interest.getName() + " added to project " + projectId, user.getEmail(), token);
     }
+
+
+
 
 
     public void removeInterestFromProject (String token, long projectId, long interestId) {

@@ -66,4 +66,14 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
             return new ArrayList<>();
         }
     }
+
+    public List<ProjectUserEntity> findProjectUserByProjectId(Long projectId) {
+        try {
+            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.active = true", ProjectUserEntity.class)
+                    .setParameter("projectId", projectId)
+                    .getResultList();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
 }
