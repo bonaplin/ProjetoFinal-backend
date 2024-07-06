@@ -686,7 +686,7 @@ switch (dtoType) {
                 .orElse(dto.getInitialDate());
 
         if (!dto.getInitialDate().isAfter(latestPrerequisiteFinalDate)) {
-            dto.setInitialDate(latestPrerequisiteFinalDate.plusDays(1));
+            dto.setInitialDate(latestPrerequisiteFinalDate);
         }
 
         // Update the task's dates
@@ -734,7 +734,7 @@ switch (dtoType) {
 
                 // Adjust only the initial date if necessary
                 if (dependentTask.getInitialDate().isBefore(taskFinalDate.plusDays(1))) {
-                    dependentTask.setInitialDate(taskFinalDate.plusDays(1));
+                    dependentTask.setInitialDate(taskFinalDate);
                     dependentTask.setFinalDate(dependentTask.getInitialDate().plusDays(originalDuration.getDays()));
                     taskDao.merge(dependentTask);
                     logBean.addNewTaskchange(dependentTask.getProject().getId(), dependentTask.getResponsible().getId(), dependentTask.getId());
@@ -1256,41 +1256,6 @@ switch (dtoType) {
         return toGanttDto(task);
     }
 
-    /**
-     * Update a task with the specified data
-     * @param token - user token
-     * @param taskId - task id
-     * @param dto - task update data
-     * @return - updated task
-     */
-//    public TaskGanttDto updateTask(String token, Long taskId, TaskCreateDto dto) {
-//        String log = "Attempting to update task";
-//        SessionEntity se = sessionDao.findSessionByToken(token);
-//        TaskEntity task = taskDao.findTaskById(taskId);
-//        if(se == null || task == null) {
-//            LoggerUtil.logInfo(log, "Invalid token or task", null, token);
-//            throw new IllegalArgumentException("Invalid token or task");
-//        }
-//        validateTaskCreateDto(dto, se.getUser(), token);
-//
-//        UserEntity responsible = userDao.findUserById(dto.getResponsibleId());
-//
-//        task.setTitle(dto.getTitle());
-//        task.setDescription(dto.getDescription());
-//        task.setInitialDate(dto.getInitialDate());
-//        task.setDuration(Duration.between(dto.getInitialDate().atStartOfDay(), dto.getFinalDate().atStartOfDay()));
-//        task.setFinalDate(dto.getFinalDate());
-//        task.setResponsible(responsible);
-//        task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
-//        task.setActive(true);
-//        taskDao.merge(task);
-//
-//        updateAdditionalExecutorsForTask(task, dto.getAdditionalExecutorsNames());
-//        updateUsersForTask(task, dto.getUsersIds().stream().filter(id -> !id.equals(dto.getResponsibleId())).collect(Collectors.toList()), dto.getProjectId());
-//        updateTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
-//
-//        return new TaskGanttDto() ;
-//    }
 
     public TaskGanttDto updateTask(String token, Long taskId, TaskCreateDto dto) {
         String log = "Attempting to update task";
@@ -1301,6 +1266,12 @@ switch (dtoType) {
             throw new IllegalArgumentException("Invalid token or task");
         }
         validateTaskCreateDto(dto, se.getUser(), token);
+
+        // Verify if dto.status is one of the TaskStatus
+        if(dto.getStatus() != null && !TaskStatus.contains(dto.getStatus())) {
+            System.out.println(Color.RED + "Invalid status" + Color.RESET);
+            throw new IllegalArgumentException("Invalid status");
+        }
 
         // Find the maximum final date of dependent tasks
         LocalDate maxDependentFinalDate = findMaxDependentFinalDate(dto.getDependentTasksIds());
@@ -1328,6 +1299,7 @@ switch (dtoType) {
         task.setFinalDate(finalDate);
         task.setResponsible(responsible);
         task.setSystemTitle(taskSystemNameGenerator(dto.getTitle()));
+        task.setStatus(TaskStatus.fromValue(dto.getStatus()));
         task.setActive(true);
         taskDao.merge(task);
 
@@ -1394,5 +1366,41 @@ switch (dtoType) {
             throw new IllegalArgumentException("User is not a participant in the project");
         }
     }
+
+    public void deleteTask(String token, Long taskId) {
+        String log = "Attempting to delete task";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        TaskEntity task = taskDao.findTaskById(taskId);
+
+        if (se == null || task == null) {
+            LoggerUtil.logInfo(log, "Invalid token or task", null, token);
+            throw new IllegalArgumentException("Invalid token or task");
+        }
+
+        // Mark the task as inactive
+        task.setActive(false);
+        taskDao.merge(task);
+
+        // Mark task dependencies as inactive
+        markTaskDependenciesAsInactive(task);
+
+        LoggerUtil.logInfo(log, "Task marked as inactive successfully", se.getUser().getEmail(), token);
+    }
+
+    private void markTaskDependenciesAsInactive(TaskEntity task) {
+        // Mark all TaskPrerequisiteEntity associations where this task is either a prerequisite or a dependent as inactive
+        List<TaskPrerequisiteEntity> prerequisites = taskPrerequisiteDao.findByTaskId(task.getId());
+        for (TaskPrerequisiteEntity prerequisite : prerequisites) {
+            prerequisite.setActive(false);
+            taskPrerequisiteDao.merge(prerequisite);
+        }
+
+        List<TaskPrerequisiteEntity> dependents = taskPrerequisiteDao.findByPrerequisiteTaskId(task.getId());
+        for (TaskPrerequisiteEntity dependent : dependents) {
+            dependent.setActive(false);
+            taskPrerequisiteDao.merge(dependent);
+        }
+    }
+
 }
 

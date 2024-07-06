@@ -70,7 +70,17 @@ public class TaskService {
     public Response updateTask(@HeaderParam("token") String token,
                                @PathParam("id") Long taskId,
                                TaskCreateDto dto){
+        System.out.println(dto);
         TaskGanttDto taskGanttDto = taskBean.updateTask(token, taskId, dto);
         return Response.ok().entity(JsonUtils.convertObjectToJson(taskGanttDto)).build();
+    }
+
+    @PUT
+    @Path("inactivate/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response inactivateTask(@HeaderParam("token") String token,
+                                   @PathParam("id") Long taskId){
+        taskBean.deleteTask(token, taskId);
+        return Response.ok().build();
     }
 }

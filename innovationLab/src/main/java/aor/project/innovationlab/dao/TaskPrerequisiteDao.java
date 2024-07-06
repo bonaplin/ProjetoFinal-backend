@@ -39,4 +39,24 @@ public class TaskPrerequisiteDao extends AbstractDao<TaskPrerequisiteEntity> {
                 .setParameter("taskId", id)
                 .getResultList();
     }
+
+    public List<TaskPrerequisiteEntity> findByTaskId(Long id) {
+        try{
+            return em.createNamedQuery("PrerequisiteTask.findByTaskId")
+                    .setParameter("taskId", id)
+                    .getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<TaskPrerequisiteEntity> findByPrerequisiteTaskId(Long id) {
+        try{
+            return em.createNamedQuery("PrerequisiteTask.findByPrerequisiteTaskId")
+                    .setParameter("prerequisiteId", id)
+                    .getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

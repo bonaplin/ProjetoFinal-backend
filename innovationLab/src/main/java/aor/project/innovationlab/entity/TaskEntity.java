@@ -16,12 +16,12 @@ import java.util.Set;
 @Table(name = "task")
 @NamedQuery(name = "Task.findTaskByTitle", query = "SELECT t FROM TaskEntity t WHERE t.title = :title")
 @NamedQuery(name = "Task.findTaskById", query = "SELECT t FROM TaskEntity t WHERE t.id = :id")
-@NamedQuery(name = "Task.findTasksByProjectId", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId")
+@NamedQuery(name = "Task.findTasksByProjectId", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.active = true")
 @NamedQuery(name = "Task.findTaskBySystemTitle", query = "SELECT t FROM TaskEntity t WHERE t.systemTitle = :systemTitle")
-@NamedQuery(name = "Task.findLastTaskByProjectIdExcludingPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus ORDER BY t.finalDate DESC")
+@NamedQuery(name = "Task.findLastTaskByProjectIdExcludingPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus AND t.active = true ORDER BY t.finalDate DESC")
 @NamedQuery(name = "Task.findTaskByProjectIdAndStatus", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status = :status")
 @NamedQuery(name = "Task.findTasksByProjectIdAndTitle", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.title = :title")
-@NamedQuery(name = "Task.findTasksByProjectIdNoPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status != :presentationStatus")
+@NamedQuery(name = "Task.findTasksByProjectIdNoPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.active = true AND t.status != :presentationStatus")
 public class TaskEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
