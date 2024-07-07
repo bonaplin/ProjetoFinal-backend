@@ -2,6 +2,7 @@ package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.entity.ProjectUserEntity;
 import aor.project.innovationlab.entity.UserEntity;
+import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.Stateless;
 
 import java.util.ArrayList;
@@ -69,8 +70,23 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
 
     public List<ProjectUserEntity> findProjectUserByProjectId(Long projectId) {
         try {
-            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.active = true", ProjectUserEntity.class)
+            return em.createQuery(
+                            "SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.active = true AND (pu.role = :managerRole OR pu.role = :normalRole)",
+                            ProjectUserEntity.class)
                     .setParameter("projectId", projectId)
+                    .setParameter("managerRole", UserType.MANAGER)
+                    .setParameter("normalRole", UserType.NORMAL)
+                    .getResultList();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<ProjectUserEntity> findProjectUserByProjectIdAndRole(Long projectId, UserType userType) {
+        try {
+            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.role = :role AND pu.active = true", ProjectUserEntity.class)
+                    .setParameter("projectId", projectId)
+                    .setParameter("role", userType)
                     .getResultList();
         } catch (Exception e) {
             return new ArrayList<>();

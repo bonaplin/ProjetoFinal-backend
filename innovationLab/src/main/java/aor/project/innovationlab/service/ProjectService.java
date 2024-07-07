@@ -7,7 +7,9 @@ import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
+import aor.project.innovationlab.dto.response.ResponseYesNoInviteDto;
 import aor.project.innovationlab.dto.user.project.UserChangeRoleDto;
+import aor.project.innovationlab.dto.user.project.UserInviteDto;
 import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
@@ -183,6 +185,31 @@ public class ProjectService {
     public Response kickUser(@PathParam("userId") Long userId, @HeaderParam("token") String token, @PathParam("projectId") Long projectId) {
         projectBean.kickUser(token, userId, projectId);
         return Response.status(200).entity("User kicked successfully!").build();
+    }
+
+    @GET
+    @Path("/{id}/invites")
+    @Produces("application/json")
+    @Consumes("application/json")
+    public Response getInvites(@HeaderParam("token") String token, @PathParam("id") Long projectId) {
+        List<UserInviteDto> dto = projectBean.getInvites(token, projectId);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
+    @POST
+    @Path("/{id}/proposed")
+    @Produces("application/json")
+    public Response proposeProject(@HeaderParam("token") String token, @PathParam("id") Long projectId) {
+        projectBean.proposeProject(token, projectId);
+        return Response.status(200).entity("Project proposed successfully!").build();
+    }
+
+    @PUT
+    @Path("/{projectId}/invite-response")
+    @Produces("application/json")
+    public Response inviteResponse(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, ResponseYesNoInviteDto dto) {
+        projectBean.inviteResponse(token, projectId, dto);
+        return Response.status(200).entity("Invite response sent successfully!").build();
     }
 }
 
