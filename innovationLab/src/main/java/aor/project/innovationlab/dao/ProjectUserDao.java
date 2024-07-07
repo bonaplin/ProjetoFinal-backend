@@ -92,4 +92,15 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
             return new ArrayList<>();
         }
     }
+
+    public boolean isUserInProject(String userEmail, long id) {
+        try {
+            return em.createQuery("SELECT pu FROM ProjectUserEntity pu WHERE pu.project.id = :projectId AND pu.user.email = :userEmail AND pu.active = true", ProjectUserEntity.class)
+                    .setParameter("projectId", id)
+                    .setParameter("userEmail", userEmail)
+                    .getSingleResult() != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

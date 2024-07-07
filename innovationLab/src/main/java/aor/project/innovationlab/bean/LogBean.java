@@ -103,7 +103,6 @@ public class LogBean {
 
         log.setTask(task);
         logDao.persist(log);
-        System.out.println("Task changed");
         return log;
     }
     public LogEntity addNewTaskDelete(Long projectId, Long userId, Long taskId){

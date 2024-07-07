@@ -211,6 +211,14 @@ public class ProjectService {
         projectBean.inviteResponse(token, projectId, dto);
         return Response.status(200).entity("Invite response sent successfully!").build();
     }
+
+    @PUT
+    @Path("/{projectId}/leave")
+    @Produces("application/json")
+    public Response leaveProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId) {
+        projectBean.leaveProject(token, projectId);
+        return Response.status(200).entity("You have left the project successfully!").build();
+    }
 }
 
 

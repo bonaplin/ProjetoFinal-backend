@@ -6,7 +6,8 @@ public enum UserType {
     MANAGER(20),
     GUEST(30),
     PROPOSED(40),
-    INVITED(50);
+    INVITED(50),
+    KICKED(60);
 
 
     private final int value;

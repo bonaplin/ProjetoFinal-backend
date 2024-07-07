@@ -49,4 +49,16 @@ public class TaskExecutorDao extends AbstractDao<TaskExecutorEntity> {
                 return null;
             }
     }
+
+    public List<TaskExecutorEntity> findTaskExecutorByProjectIdAndUserId(Long projectId, Long id) {
+            try{
+                return em.createNamedQuery("TaskExecutor.findTaskExecutorByProjectIdAndUserId")
+                        .setParameter("projectId", projectId)
+                        .setParameter("userId", id)
+                        .getResultList();
+            }
+            catch (Exception e){
+                return null;
+            }
+    }
 }

@@ -7,6 +7,7 @@ import aor.project.innovationlab.dto.message.MessageDto;
 import aor.project.innovationlab.dto.notification.NotificationDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.NotificationType;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
 import com.google.gson.JsonObject;
@@ -46,6 +47,8 @@ public class HandleWebSockets {
     NotificationBean notificationBean;
     @EJB
     NotificationDao notificationDao;
+    @EJB
+    ProjectUserDao projectUserDao;
     @EJB
     WebSocketBean webSocketBean;
 
@@ -116,27 +119,29 @@ public class HandleWebSockets {
 
             String jsonWithAddedTypePM = WebSocketBean.addTypeToDtoJson(response, NotificationType.MESSAGE);
 
-
-            //verifica se os users tem o projeto aberto:
+            // Verifica se os usuários ainda pertencem ao projeto e estão ativos antes de enviar notificações
             for (ProjectUserEntity projectUser : project.getProjectUsers()) {
-                String email = projectUser.getUser().getEmail();
-                List<String> openProjectWindowTokens = webSocketBean.isProjectWindowOpen(email, id);
-                if (!openProjectWindowTokens.isEmpty()) {
-                    System.out.println("Project Window is open");
-                    for (String t : openProjectWindowTokens) {
-                        webSocketBean.sendToUserToken(t, jsonWithAddedTypePM);
+                if (projectUser.isActive() && projectUser.getRole() != UserType.KICKED) {
+                    System.out.println("Project User: " + projectUser.getUser().getEmail());
+                    String email = projectUser.getUser().getEmail();
+                    List<String> openProjectWindowTokens = webSocketBean.isProjectWindowOpen(email, id);
+                    if (!openProjectWindowTokens.isEmpty()) {
+                        System.out.println("Project Window is open");
+                        for (String t : openProjectWindowTokens) {
+                            webSocketBean.sendToUserToken(t, jsonWithAddedTypePM);
+                        }
+                    } else {
+                        NotificationEntity notification = new NotificationEntity();
+                        notification.setProject(project);
+                        notification.setReceiver(projectUser.getUser());
+                        notification.setSender(userDao.findUserByEmail(sender));
+                        notification.setContent("New Message from " + sender + " at " + messageEntity.getInstant().toString());
+                        notification.setNotificationType(NotificationType.PROJECT_MESSAGE);
+                        notificationDao.persist(notification);
+                        NotificationDto ndto = notificationBean.toDto(notification);
+                        String jsonWithAddedTypeN = WebSocketBean.addTypeToDtoJson(ndto, NotificationType.NOTIFICATION);
+                        webSocketBean.sendToUser(projectUser.getUser().getEmail(), jsonWithAddedTypeN);
                     }
-                }else {
-                    NotificationEntity notification = new NotificationEntity();
-                    notification.setProject(project);
-                    notification.setReceiver(projectUser.getUser());
-                    notification.setSender(userDao.findUserByEmail(sender));
-                    notification.setContent("New Message from " + sender + " at " + messageEntity.getInstant().toString());
-                    notification.setNotificationType(NotificationType.PROJECT_MESSAGE);
-                    notificationDao.persist(notification);
-                    NotificationDto ndto = notificationBean.toDto(notification);
-                    String jsonWithAddedTypeN = WebSocketBean.addTypeToDtoJson(ndto, NotificationType.NOTIFICATION);
-                    webSocketBean.sendToUser(projectUser.getUser().getEmail(), jsonWithAddedTypeN);
                 }
             }
         } catch (Exception e) {

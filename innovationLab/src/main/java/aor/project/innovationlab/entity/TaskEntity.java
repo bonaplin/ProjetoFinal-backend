@@ -22,6 +22,8 @@ import java.util.Set;
 @NamedQuery(name = "Task.findTaskByProjectIdAndStatus", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.status = :status")
 @NamedQuery(name = "Task.findTasksByProjectIdAndTitle", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.title = :title")
 @NamedQuery(name = "Task.findTasksByProjectIdNoPresentation", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.active = true AND t.status != :presentationStatus")
+@NamedQuery(name = "Task.findTasksByProjectIdAndUserId", query = "SELECT t FROM TaskEntity t " + "WHERE t.project.id = :projectId " + "AND t.active = true " + "AND (t.creator.id = :userId OR t.responsible.id = :userId)"
+)
 public class TaskEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

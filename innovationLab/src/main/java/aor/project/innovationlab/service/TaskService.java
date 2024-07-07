@@ -1,5 +1,6 @@
 package aor.project.innovationlab.service;
 
+import aor.project.innovationlab.bean.LogBean;
 import aor.project.innovationlab.bean.TaskBean;
 import aor.project.innovationlab.dto.task.TaskContributorsDto;
 import aor.project.innovationlab.dto.task.TaskCreateDto;
@@ -18,6 +19,9 @@ public class TaskService {
 
     @Inject
     private TaskBean taskBean;
+
+    @Inject
+    private LogBean logBean;
 
     @GET
     @Path("/{id}")
@@ -70,7 +74,6 @@ public class TaskService {
     public Response updateTask(@HeaderParam("token") String token,
                                @PathParam("id") Long taskId,
                                TaskCreateDto dto){
-        System.out.println(dto);
         TaskGanttDto taskGanttDto = taskBean.updateTask(token, taskId, dto);
         return Response.ok().entity(JsonUtils.convertObjectToJson(taskGanttDto)).build();
     }
