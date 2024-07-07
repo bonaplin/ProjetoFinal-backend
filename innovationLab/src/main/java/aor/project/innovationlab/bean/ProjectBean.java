@@ -9,12 +9,14 @@ import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
+import aor.project.innovationlab.dto.response.ResponseYesNoInviteDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
 import aor.project.innovationlab.dto.project.ProjectSideBarDto;
 import aor.project.innovationlab.dto.user.project.UserChangeRoleDto;
+import aor.project.innovationlab.dto.user.project.UserInviteDto;
 import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
@@ -1005,6 +1007,18 @@ public class ProjectBean {
         return dto;
     }
 
+    private UserInviteDto toUserInviteDto (ProjectUserEntity projectUser){
+        UserInviteDto dto = new UserInviteDto();
+        dto.setId(projectUser.getUser().getId());
+        dto.setEmail(projectUser.getUser().getEmail());
+        dto.setFirstname(projectUser.getUser().getFirstname());
+        dto.setLastname(projectUser.getUser().getLastname());
+        dto.setLab(projectUser.getUser().getLab().getLocation());
+        dto.setImg(projectUser.getUser().getProfileImagePath());
+        dto.setRole(projectUser.getRole().getValue());
+        return dto;
+    }
+
     public UserToChangeRoleKickDto changeUserRole(String token, Long userId, UserChangeRoleDto userChangeRoleDto) {
         // Validar sessão e projeto
         SessionEntity session = sessionDao.findSessionByToken(token);
@@ -1050,4 +1064,97 @@ public class ProjectBean {
         userToChange.setActive(false);
         projectUserDao.merge(userToChange);
     }
+
+    public List<UserInviteDto> getInvites(String token, Long projectId) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (session == null || project == null) {
+            throw new IllegalArgumentException("Token or project invalid");
+        }
+        // Verificar se o user é gerente do projeto
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
+        if (projectUser == null || projectUser.getRole() != UserType.MANAGER) {
+            throw new IllegalArgumentException("User isnt a manager of the project");
+        }
+        // Verificar se o user a ser alterado é participante do projeto
+        List<ProjectUserEntity> invites = projectUserDao.findProjectUserByProjectIdAndRole(projectId, UserType.PROPOSED);
+        System.out.println(invites.size());
+        return invites.stream()
+                .map(this::toUserInviteDto)
+                .collect(Collectors.toList());
+    }
+
+    public void proposeProject(String token, Long projectId) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        if (session == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (project == null) {
+            throw new IllegalArgumentException("Invalid project ID");
+        }
+
+        // Verificar se o usuário já está associado ao projeto
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
+        if (projectUser == null) {
+            // Criar novo ProjectUserEntity
+            ProjectUserEntity newProjectUser = new ProjectUserEntity();
+            newProjectUser.setProject(project);
+            newProjectUser.setUser(session.getUser());
+            newProjectUser.setRole(UserType.PROPOSED);
+            newProjectUser.setActive(true);
+            projectUserDao.persist(newProjectUser);
+        } else if (projectUser.isActive() && (projectUser.getRole() == UserType.NORMAL || projectUser.getRole() == UserType.MANAGER)) {
+            // Lançar exceção se o usuário já for um participante ativo
+            throw new IllegalArgumentException("User is already a participant in the project");
+        } else {
+            // Atualizar o papel do usuário existente no projeto para PROPOSED
+            projectUser.setActive(true);
+            projectUser.setRole(UserType.PROPOSED);
+            projectUserDao.merge(projectUser);
+        }
+    }
+
+    public void inviteResponse(String token, Long projectId, ResponseYesNoInviteDto dto) {
+        // Validar sessão e projeto
+        SessionEntity session = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if (session == null || project == null) {
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+        if (dto == null) {
+            throw new IllegalArgumentException("User invite data is required");
+        }
+
+        // Validar se o usuário é gerente do projeto
+        ProjectUserEntity projectManager = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
+        if (projectManager == null || projectManager.getRole() != UserType.MANAGER) {
+            throw new IllegalArgumentException("User is not a manager of the project");
+        }
+
+        // Validar se o usuário convidado existe e está na lista de convidados
+        ProjectUserEntity invitedUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, dto.getUserId());
+        if (invitedUser == null || invitedUser.getRole() != UserType.PROPOSED) {
+            throw new IllegalArgumentException("User is not invited to the project");
+        }
+
+        // Responder ao convite
+        boolean accept = dto.isAccept();
+        if (accept) {
+            invitedUser.setRole(UserType.NORMAL);
+            invitedUser.setActive(true);
+        } else {
+            invitedUser.setActive(false);
+        }
+
+        // Persistir as mudanças no usuário convidado
+        projectUserDao.merge(invitedUser);
+
+        // Logs para depuração (opcional)
+        System.out.println("User invite response processed: " + dto.getUserId() + " accept: " + accept);
+    }
+
 }
