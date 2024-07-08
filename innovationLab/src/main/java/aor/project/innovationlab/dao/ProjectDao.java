@@ -272,10 +272,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         CriteriaQuery<ProjectEntity> cq = cb.createQuery(ProjectEntity.class);
         Root<ProjectEntity> project = cq.from(ProjectEntity.class);
 
+        // Filtra projetos pelo email do criador e ativos
         Predicate creatorPredicate = cb.equal(project.get("creator").get("email"), creatorEmail);
         Predicate activePredicate = cb.isTrue(project.get("active"));
 
-        // Subquery to check if the user is already associated with the project
+        // Subquery para verificar se o usuário já está associado ao projeto
         Subquery<Long> userSubquery = cq.subquery(Long.class);
         Root<ProjectUserEntity> userRoot = userSubquery.from(ProjectUserEntity.class);
         userSubquery.select(userRoot.get("project").get("id"));
@@ -285,11 +286,29 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         );
         userSubquery.where(userPredicate);
 
-        // Exclude projects where the user is already associated
+        // Excluir projetos onde o usuário já está associado
         Predicate notAssociatedPredicate = cb.not(project.get("id").in(userSubquery));
 
-        cq.where(cb.and(creatorPredicate, activePredicate, notAssociatedPredicate));
+        // Subquery para contar o número de usuários ativos em cada projeto que são USER ou MANAGER
+        Subquery<Long> userCountSubquery = cq.subquery(Long.class);
+        Root<ProjectUserEntity> userCountRoot = userCountSubquery.from(ProjectUserEntity.class);
+        userCountSubquery.select(cb.count(userCountRoot.get("id")));
+        Predicate projectPredicate = cb.equal(userCountRoot.get("project"), project);
+        Predicate activeUserPredicate = cb.isTrue(userCountRoot.get("active"));
+        Predicate roleUserPredicate = cb.or(
+                cb.equal(userCountRoot.get("role"), UserType.NORMAL),
+                cb.equal(userCountRoot.get("role"), UserType.MANAGER)
+        );
+        userCountSubquery.where(cb.and(projectPredicate, activeUserPredicate, roleUserPredicate));
+
+        // Predicate para garantir que o projeto tem vagas
+        Predicate hasVacancyPredicate = cb.lessThan(userCountSubquery.getSelection(), project.get("maxParticipants"));
+
+        // Combina todos os predicados
+        cq.where(cb.and(creatorPredicate, activePredicate, notAssociatedPredicate, hasVacancyPredicate));
 
         return em.createQuery(cq).getResultList();
     }
+
+
 }

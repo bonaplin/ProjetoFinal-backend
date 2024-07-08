@@ -14,19 +14,52 @@ public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception e) {
         System.out.println(Color.CYAN + "GlobalExceptionHandler" + Color.RESET);
-        LoggerUtil.logError("erro",e.getMessage(), null, null);
-        if (e instanceof IllegalArgumentException) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } else if (e instanceof SecurityException) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
-        } else if (e instanceof NullPointerException) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
-        } else if (e instanceof IOException) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("IO exception occurred.").build();
-        } else if (e instanceof RuntimeException) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+
+        // Extrai a causa raiz da exceção, se houver
+        Throwable rootCause = getRootCause(e);
+        String errorMessage = rootCause.getMessage();
+
+        // Log a mensagem de erro
+        LoggerUtil.logError("erro", errorMessage, null, null);
+
+        if (rootCause instanceof IllegalArgumentException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(errorMessage)
+                    .build();
+        } else if (rootCause instanceof SecurityException) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(errorMessage)
+                    .build();
+        } else if (rootCause instanceof NullPointerException) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(errorMessage)
+                    .build();
+        } else if (rootCause instanceof IOException) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("IO exception occurred.")
+                    .build();
+        } else if (rootCause instanceof RuntimeException) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(errorMessage)
+                    .build();
         } else {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Internal server error.").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Internal server error.")
+                    .build();
         }
     }
+
+    private Throwable getRootCause(Throwable e) {
+        Throwable cause = null;
+        Throwable result = e;
+
+        while ((cause = result.getCause()) != null && result != cause) {
+            result = cause;
+        }
+
+        return result;
+    }
 }
+
+
+

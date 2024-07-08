@@ -15,6 +15,7 @@ import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
+import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -206,10 +207,11 @@ public class ProjectService {
 
     @PUT
     @Path("/{projectId}/invite-response")
+    @Consumes("application/json")
     @Produces("application/json")
     public Response inviteResponse(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, ResponseYesNoInviteDto dto) {
-        projectBean.inviteResponse(token, projectId, dto);
-        return Response.status(200).entity("Invite response sent successfully!").build();
+            projectBean.inviteResponse(token, projectId, dto);
+            return Response.status(200).build();
     }
 
     @PUT

@@ -103,4 +103,54 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
             return false;
         }
     }
-}
+
+    public long countActiveUsersByProjectId(long id) {
+        try {
+            return (long) em.createQuery(
+                            "SELECT COUNT(pu) FROM ProjectUserEntity pu " +
+                                    "WHERE pu.project.id = :projectId " +
+                                    "AND pu.active = true " +
+                                    "AND (pu.role = :userRole OR pu.role = :managerRole)"
+                    )
+                    .setParameter("projectId", id)
+                    .setParameter("userRole", UserType.NORMAL)
+                    .setParameter("managerRole", UserType.MANAGER)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public List<UserEntity> countActiveUsersByProjectIds(long id) {
+        try {
+            return em.createQuery(
+                            "SELECT pu.user FROM ProjectUserEntity pu " +
+                                    "WHERE pu.project.id = :projectId " +
+                                    "AND pu.active = true " +
+                                    "AND (pu.role = :userRole OR pu.role = :managerRole)",
+                            UserEntity.class
+                    )
+                    .setParameter("projectId", id)
+                    .setParameter("userRole", UserType.NORMAL)
+                    .setParameter("managerRole", UserType.MANAGER)
+                    .getResultList();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+//        try {
+//            return (long) em.createQuery(
+//                            "SELECT COUNT(pu) FROM ProjectUserEntity pu " +
+//                                    "WHERE pu.project.id = :projectId " +
+//                                    "AND pu.active = true " +
+//                                    "AND (pu.role = :userRole OR pu.role = :managerRole)"
+//                    )
+//                    .setParameter("projectId", id)
+//                    .setParameter("userRole", UserType.NORMAL)
+//                    .setParameter("managerRole", UserType.MANAGER)
+//                    .getSingleResult();
+//        } catch (Exception e) {
+//            return 0;
+//        }
+    }

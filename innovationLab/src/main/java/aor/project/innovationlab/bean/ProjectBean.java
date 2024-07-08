@@ -1,7 +1,6 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.log.LogDto;
 import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
@@ -20,6 +19,7 @@ import aor.project.innovationlab.dto.user.project.UserInviteDto;
 import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
+import aor.project.innovationlab.exception.CustomExceptions;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.TokenUtil;
@@ -159,11 +159,12 @@ public class ProjectBean {
                 .map(SkillEntity::getName) // Obtém o nome
                 .collect(Collectors.toList()));
 
-        List<UserImgCardDto> users = entity.getProjectUsers().stream()
-                .map(projectUserEntity -> {
+        List<UserEntity> participants = projectUserDao.countActiveUsersByProjectIds(entity.getId());
+        List<UserImgCardDto> users = participants.stream()
+                .map(userEntity -> {
                     UserImgCardDto userImgCardDto = new UserImgCardDto();
-                    userImgCardDto.setId(projectUserEntity.getUser().getId());
-                    userImgCardDto.setImagePath(projectUserEntity.getUser().getProfileImagePath());
+                    userImgCardDto.setId(userEntity.getId());
+                    userImgCardDto.setImagePath(userEntity.getProfileImagePath());
                     return userImgCardDto;
                 })
                 .collect(Collectors.toList());
@@ -172,6 +173,7 @@ public class ProjectBean {
 
         return dto;
     }
+
 
     /**
      * Convert ProjectEntity to ProjectSideBarDto, is used to show the project in a sidebar
@@ -550,6 +552,7 @@ public class ProjectBean {
         if(user == null) {
             return;
         }
+
         ProjectUserEntity projectUser = new ProjectUserEntity();
         projectUser.setProject(project);
         projectUser.setUser(user);
@@ -874,6 +877,13 @@ public class ProjectBean {
 
         // Verificar se o usuário já está no projeto
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(project.getId(), invitedUser.getId());
+
+        // Verificar se o projeto já atingiu o número máximo de participantes
+        long activeUsersCount = projectUserDao.countActiveUsersByProjectId(project.getId());
+        if (activeUsersCount >= project.getMaxParticipants()) {
+            throw new IllegalArgumentException("Project has reached the maximum number of participants");
+        }
+
         String tokenAuthorization = TokenUtil.generateToken();
 
         // Criar links de aceitação e rejeição
@@ -914,6 +924,7 @@ public class ProjectBean {
     }
 
 
+
     /**
      * Respond to project invite, accept or reject
      * @param tokenAuthorization - token to respond to the invite
@@ -932,6 +943,11 @@ public class ProjectBean {
             if(projectUser == null) {
                 LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
                 throw new IllegalArgumentException("Invalid authorization token");
+            }
+
+            long participants = projectUserDao.countActiveUsersByProjectId(projectUser.getProject().getId());
+            if (participants >= projectUser.getProject().getMaxParticipants()) {
+                throw new IllegalArgumentException("Project has reached the maximum number of participants");
             }
 
             SessionEntity session = sessionDao.findSessionByToken(token);
@@ -1369,6 +1385,12 @@ public class ProjectBean {
         // Responder ao convite
         boolean accept = dto.isAccept();
         if (accept) {
+
+            long participants = projectUserDao.countActiveUsersByProjectId(projectId);
+            if(participants >= project.getMaxParticipants()){
+                throw new IllegalArgumentException("Project has reached the maximum number of participants");
+            }
+
             invitedUser.setRole(UserType.NORMAL);
             invitedUser.setActive(true);
             logBean.addNewUser(projectId, session.getUser().getId(), invitedUser.getUser().getId());
