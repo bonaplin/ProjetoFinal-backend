@@ -29,6 +29,8 @@ public class ApplicationConfig extends Application{
         resources.add(UserService.class);
         resources.add(JsonUtils.class);
         resources.add(JacksonConfig.class);
+        resources.add(ApplicationConfig.class);
+        resources.add(AdminService.class);
 
         return resources;
     }
