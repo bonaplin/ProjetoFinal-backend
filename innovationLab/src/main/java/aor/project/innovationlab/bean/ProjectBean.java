@@ -1,7 +1,6 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
-import aor.project.innovationlab.dto.log.LogDto;
 import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
@@ -20,6 +19,7 @@ import aor.project.innovationlab.dto.user.project.UserInviteDto;
 import aor.project.innovationlab.dto.user.project.UserToChangeRoleKickDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.*;
+import aor.project.innovationlab.exception.CustomExceptions;
 import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.InputSanitizerUtil;
 import aor.project.innovationlab.utils.TokenUtil;
@@ -35,6 +35,9 @@ import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Bean for managing projects
+ */
 @Stateless
 public class ProjectBean {
 
@@ -58,6 +61,9 @@ public class ProjectBean {
 
     @EJB
     private ProductDao productDao;
+
+    @EJB
+    private TaskExecutorDao taskExecutorDao;
 
     @EJB
     private ProjectUserDao projectUserDao;
@@ -110,6 +116,11 @@ public class ProjectBean {
     public void toEntity(ProjectDto dto) {
     }
 
+    /**
+     * Convert ProjectEntity to ProjectDto
+     * @param entity - entidade do projeto
+     * @return - dto do projeto
+     */
     private ProjectDto toDto(ProjectEntity entity) {
         ProjectDto dto = new ProjectDto();
         dto.setName(entity.getName());
@@ -124,6 +135,11 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Convert ProjectEntity to ProjectCardDto, is used to show the project in a card
+     * @param entity
+     * @return
+     */
     private ProjectCardDto toCardDto(ProjectEntity entity) {
 
         ProjectCardDto dto = new ProjectCardDto();
@@ -143,11 +159,12 @@ public class ProjectBean {
                 .map(SkillEntity::getName) // Obtém o nome
                 .collect(Collectors.toList()));
 
-        List<UserImgCardDto> users = entity.getProjectUsers().stream()
-                .map(projectUserEntity -> {
+        List<UserEntity> participants = projectUserDao.countActiveUsersByProjectIds(entity.getId());
+        List<UserImgCardDto> users = participants.stream()
+                .map(userEntity -> {
                     UserImgCardDto userImgCardDto = new UserImgCardDto();
-                    userImgCardDto.setId(projectUserEntity.getUser().getId());
-                    userImgCardDto.setImagePath(projectUserEntity.getUser().getProfileImagePath());
+                    userImgCardDto.setId(userEntity.getId());
+                    userImgCardDto.setImagePath(userEntity.getProfileImagePath());
                     return userImgCardDto;
                 })
                 .collect(Collectors.toList());
@@ -157,6 +174,12 @@ public class ProjectBean {
         return dto;
     }
 
+
+    /**
+     * Convert ProjectEntity to ProjectSideBarDto, is used to show the project in a sidebar
+     * @param entity - entidade do projeto
+     * @return - dto do projeto
+     */
     private ProjectSideBarDto toSideBarDto(ProjectEntity entity) {
         ProjectSideBarDto dto = new ProjectSideBarDto();
         dto.setId(entity.getId());
@@ -433,7 +456,7 @@ public class ProjectBean {
                     ProjectUserEntity invitedUserEntity = new ProjectUserEntity();
                     invitedUserEntity.setProject(project);
                     invitedUserEntity.setUser(userEntity);
-                    invitedUserEntity.setRole(UserType.INVITED);
+                    invitedUserEntity.setRole(UserType.NORMAL);// when a user is invited to a project in the creation, he is a normal user
                     invitedUserEntity.setActive(true);
                     projectUserDao.persist(invitedUserEntity);
                 }
@@ -514,6 +537,12 @@ public class ProjectBean {
         projectDao.merge(project);
     }
 
+    /**
+     * Add user to project with role
+     * @param projectName - name of the project
+     * @param userEmail - email of the user
+     * @param role - role of the user
+     */
     public void addUserToProject(String projectName, String userEmail, UserType role) {
         ProjectEntity project = projectDao.findProjectByName(projectName);
         if(project == null) {
@@ -523,6 +552,7 @@ public class ProjectBean {
         if(user == null) {
             return;
         }
+
         ProjectUserEntity projectUser = new ProjectUserEntity();
         projectUser.setProject(project);
         projectUser.setUser(user);
@@ -535,6 +565,11 @@ public class ProjectBean {
         projectDao.merge(project);
     }
 
+    /**
+     * Add skill to project
+     * @param projectName - name of the project
+     * @param skillName - name of the skill
+     */
     public void addSkillToProject(String projectName, String skillName) {
         ProjectEntity project = projectDao.findProjectByName(projectName);
         if(project == null) {
@@ -583,6 +618,11 @@ public class ProjectBean {
         }
     }
 
+    /**
+     * Method to get the skills, interests statuses and labs to filter the projects
+     * @param token - user token
+     * @return - dto with the filter options
+     */
     public FilterOptionsDto filterOptions(String token){
         sessionBean.validateUserToken(token);
         FilterOptionsDto dto = new FilterOptionsDto();
@@ -633,6 +673,25 @@ public class ProjectBean {
 //        webSocketBean.isProjectWindowOpen(userEmail, projectId);
 //    }
 
+    /**
+     * Method to get the projects by a specific dto
+     * @param dtoType - type of dto
+     * @param name - name of the project
+     * @param status - status of the project
+     * @param lab - lab of the project
+     * @param creatorEmail - email of the creator
+     * @param skill - skills of the project
+     * @param interest - interests of the project
+     * @param participantEmail - email of the participant
+     * @param role - role of the user
+     * @param orderField - field to order
+     * @param orderDirection - direction to order
+     * @param auth - user token
+     * @param pageNumber - page number
+     * @param pageSize - page size
+     * @param id - id of the project
+     * @return - paginated response with the projects
+     */
     public PaginatedResponse<Object> getProjectsByDto(String dtoType, String name,
                                                       List<ProjectStatus> status,
                                                       List<String> lab, String creatorEmail,
@@ -690,7 +749,7 @@ public class ProjectBean {
         if(dtoType == null || dtoType.isEmpty()) {
             dtoType = "ProjectCardDto";
         }
-        
+
         //Validate inputs
         name = InputSanitizerUtil.sanitizeInput(name);
         creatorEmail = InputSanitizerUtil.sanitizeInput(creatorEmail);
@@ -711,18 +770,30 @@ public class ProjectBean {
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(projectsResponse.getTotalPages());
 
-        if(userEmail != null && id != null){
-            ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, userDao.findUserByEmail(userEmail).getId());
-            if(pue != null && pue.isActive()){
-                webSocketBean.openProjectWindow(auth, id);
-            }
-            if(pue != null){
-                response.setUserType(pue.getRole().getValue());
-            }else{
+        if (userEmail != null && id != null) {
+            UserEntity user = userDao.findUserByEmail(userEmail);
+            if (user != null) {
+                ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
+                if (pue != null) {
+                    if (pue.isActive()) {
+                        webSocketBean.openProjectWindow(auth, id);
+                        response.setUserType(pue.getRole().getValue());
+                    } else {
+                        response.setUserType(UserType.GUEST.getValue());
+                    }
+
+                    if (pue.isActive() && (pue.getRole() == UserType.MANAGER || pue.getRole() == UserType.NORMAL)) {
+                        response.setUserType(pue.getRole().getValue());
+                    } else {
+                        response.setUserType(UserType.GUEST.getValue());
+                    }
+                } else {
+                    response.setUserType(UserType.GUEST.getValue());
+                }
+            } else {
                 response.setUserType(UserType.GUEST.getValue());
             }
-        }
-        else {
+        } else {
             response.setUserType(UserType.GUEST.getValue());
         }
 
@@ -749,6 +820,13 @@ public class ProjectBean {
         return response;
     }
 
+    /**
+     * Validate order parameters for projects query "getProjectsDto"
+     * @param orderField - field to order
+     * @param orderDirection - direction to order
+     * @param userEmail - email of the user
+     * @param token - user token
+     */
     private void validateOrderParameters(String orderField, String orderDirection,String userEmail, String token) {
         String log = "Attempting to validate order parameters. Order field: " + orderField + ", Order direction: " + orderDirection;
         List<String> allowedFields = List.of("createdDate", "name", "status", "vacancies"); // Adicione mais campos conforme necessário
@@ -766,48 +844,67 @@ public class ProjectBean {
         }
     }
 
-
+    /**
+     * Invite users to project, by email
+     * @param token - user token
+     * @param projectInviteDto - dto with the project invite
+     */
     public void inviteToProject(String token, ProjectInviteDto projectInviteDto) {
+        // Validar o token do usuário
         sessionBean.validateUserToken(token);
 
-        if(projectInviteDto == null) {
+        // Verificar se os dados do convite são válidos
+        if (projectInviteDto == null) {
             throw new IllegalArgumentException("Project invite data is required");
         }
 
-        if(projectInviteDto.getInvitedUserEmail() == null || projectInviteDto.getInvitedUserEmail().isEmpty()) {
+        String invitedUserEmail = projectInviteDto.getInvitedUserEmail();
+        if (invitedUserEmail == null || invitedUserEmail.isEmpty()) {
             throw new IllegalArgumentException("Invited user email is required");
         }
 
+        // Buscar o projeto pelo ID
         ProjectEntity project = projectDao.findProjectById(projectInviteDto.getId());
-        if(project == null) {
+        if (project == null) {
             throw new IllegalArgumentException("Project not found");
         }
 
-        UserEntity invitedUser = userDao.findUserByEmail(projectInviteDto.getInvitedUserEmail());
-        if(invitedUser == null) {
+        // Buscar o usuário convidado pelo email
+        UserEntity invitedUser = userDao.findUserByEmail(invitedUserEmail);
+        if (invitedUser == null) {
             throw new IllegalArgumentException("Invited user not found");
         }
 
+        // Verificar se o usuário já está no projeto
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(project.getId(), invitedUser.getId());
+
+        // Verificar se o projeto já atingiu o número máximo de participantes
+        long activeUsersCount = projectUserDao.countActiveUsersByProjectId(project.getId());
+        if (activeUsersCount >= project.getMaxParticipants()) {
+            throw new IllegalArgumentException("Project has reached the maximum number of participants");
+        }
+
         String tokenAuthorization = TokenUtil.generateToken();
 
-        String acceptLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization +"&accept=true";
-        String rejectLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization+ "&accept=false";
+        // Criar links de aceitação e rejeição
+        String acceptLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization + "&accept=true";
+        String rejectLink = "https://localhost:3000/fica-lab/email-list?tokenAuth=" + tokenAuthorization + "&accept=false";
         String projectLink = "https://localhost:3000/fica-lab/project/" + project.getId();
 
-        String emailBody = emailBean.createEmailBody(project.getName(),projectLink, acceptLink, rejectLink);
+        // Criar o corpo do email
+        String emailBody = emailBean.createEmailBody(project.getName(), projectLink, acceptLink, rejectLink);
 
-        if(projectUser != null) {
-            if(projectUser.isActive()) {
+        // Verificar se o usuário já está no projeto
+        if (projectUser != null) {
+            if (projectUser.isActive()) {
                 throw new IllegalArgumentException("User is already a participant in the project");
-            }
-            else {
+            } else {
                 projectUser.setActive(true);
                 projectUser.setRole(UserType.INVITED);
                 projectUser.setTokenAuthorization(tokenAuthorization);
                 projectUserDao.merge(projectUser);
             }
-        }else{
+        } else {
             projectUser = new ProjectUserEntity();
             projectUser.setProject(project);
             projectUser.setUser(invitedUser);
@@ -815,13 +912,25 @@ public class ProjectBean {
             projectUser.setActive(true);
             projectUser.setTokenAuthorization(tokenAuthorization);
             projectUserDao.persist(projectUser);
-            emailBean.sendEmailInviteToUser(token, projectInviteDto.getInvitedUserEmail(), "Project Invited", emailBody, project.getId());
-//            notificationBean.sendNotification(sessionBean.getUserByToken(token).getEmail(), projectInviteDto.getInvitedUserEmail(), "You have been invited to join the project " + project.getName(),NotificationType.INVITE, project.getId());
         }
 
+        // Enviar o email de convite
+        emailBean.sendEmailInviteToUser(token, invitedUserEmail, "Project Invitation", emailBody, project.getId());
 
+        // Registrar o log da ação de convite
+        logBean.addNewUser(project.getId(), sessionBean.getUserByToken(token).getId(), invitedUser.getId());
+
+        LoggerUtil.logInfo("Inviting user to project", "User invited successfully", sessionBean.getUserByToken(token).getEmail(), token);
     }
 
+
+
+    /**
+     * Respond to project invite, accept or reject
+     * @param tokenAuthorization - token to respond to the invite
+     * @param token - user token
+     * @param accept - accept or reject the invite
+     */
     public void respondToInvite(String tokenAuthorization, String token, boolean accept) {
         String log = "Responding to project invite";
 
@@ -834,6 +943,11 @@ public class ProjectBean {
             if(projectUser == null) {
                 LoggerUtil.logError(log, "Invalid authorization token", null, tokenAuthorization);
                 throw new IllegalArgumentException("Invalid authorization token");
+            }
+
+            long participants = projectUserDao.countActiveUsersByProjectId(projectUser.getProject().getId());
+            if (participants >= projectUser.getProject().getMaxParticipants()) {
+                throw new IllegalArgumentException("Project has reached the maximum number of participants");
             }
 
             SessionEntity session = sessionDao.findSessionByToken(token);
@@ -849,7 +963,9 @@ public class ProjectBean {
 
             if(accept) {
                 acceptInvite(projectUser, log, tokenAuthorization);
+                LoggerUtil.logInfo(log, "Project invite accepted", projectUser.getUser().getEmail(), tokenAuthorization);
             } else {
+                LoggerUtil.logInfo(log, "Project invite rejected", projectUser.getUser().getEmail(), tokenAuthorization);
                 rejectInvite(projectUser, log, tokenAuthorization);
             }
         } catch (IllegalArgumentException e) {
@@ -857,6 +973,12 @@ public class ProjectBean {
         }
     }
 
+    /**
+     * Accept project invite
+     * @param projectUser - project user entity
+     * @param log - log message
+     * @param tokenAuthorization - token authorization
+     */
     private void acceptInvite(ProjectUserEntity projectUser, String log, String tokenAuthorization) {
         LoggerUtil.logInfo(log, "Project invite accepted", projectUser.getUser().getEmail(), tokenAuthorization);
         projectUser.setRole(UserType.NORMAL);
@@ -864,6 +986,12 @@ public class ProjectBean {
         projectUserDao.merge(projectUser);
     }
 
+    /**
+     * Reject project invite
+     * @param projectUser - project user entity
+     * @param log - log message
+     * @param tokenAuthorization - token authorization
+     */
     private void rejectInvite(ProjectUserEntity projectUser, String log, String tokenAuthorization) {
         LoggerUtil.logInfo(log, "Project invite rejected", projectUser.getUser().getEmail(), tokenAuthorization);
         projectUser.setTokenAuthorization(null);
@@ -871,23 +999,33 @@ public class ProjectBean {
         projectUserDao.merge(projectUser);
     }
 
+    /**
+     * Get projects that can be invited to
+     * @param token - user token
+     * @param email - email of the user to invite
+     * @return - list of projects that can be invited to
+     */
     public List<IdNameDto> getProjectsForInvitation(String token, String email) {
-
+        String log = "Getting projects for invitation";
         SessionEntity session = sessionDao.findSessionByToken(token);
         if(session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
 
         if(email == null || email.isEmpty()) {
+            LoggerUtil.logError(log, "Email is required", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("Email is required");
         }
 
         if(!UserValidator.validateEmail(email)) {
+            LoggerUtil.logError(log, "Invalid email", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("Invalid email");
         }
 
         UserEntity user = userDao.findUserByEmail(email);
         if(user == null) {
+            LoggerUtil.logError(log, "User not found", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User not found");
         }
 
@@ -899,28 +1037,39 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get the project messages
+     * @param token - user token
+     * @param id - id of the project
+     * @return - list of messages
+     */
     public Object getProjectMessages(String token, Long id) {
-
+        String log = "Getting project messages";
         SessionEntity su = sessionDao.findSessionByToken(token);
         if(su == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
         UserEntity user = userDao.findUserByEmail(su.getUser().getEmail());
         if(user == null) {
+            LoggerUtil.logError(log, "User not found", su.getUser().getEmail(), token);
             throw new IllegalArgumentException("Invalid token");
         }
 
         ProjectEntity project = projectDao.findProjectById(id);
         if(project == null) {
+            LoggerUtil.logError(log, "Project not found", user.getEmail(), token);
             throw new IllegalArgumentException("Project not found");
         }
 
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
         if(projectUser == null) {
+            LoggerUtil.logError(log, "User is not a participant in the project", user.getEmail(), token);
             throw new IllegalArgumentException("User is not a participant in the project");
         }
 
         if(!projectUser.isActive()) {
+            LoggerUtil.logError(log, "User is not a participant in the project", user.getEmail(), token);
             throw new IllegalArgumentException("User is not a participant in the project");
         }
 
@@ -933,7 +1082,11 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
-    public void createFinalTaskForProject(ProjectEntity project) {
+    /**
+     * Create the final task for the project
+     * @param project - project entity
+     */
+    private void createFinalTaskForProject(ProjectEntity project) {
         try {
             // Verificar se já existe uma tarefa com o título "Presentation of the project"
             List<TaskEntity> existingTasks = taskDao.findTasksByProjectIdAndTitle(project.getId(), "Presentation of the project");
@@ -975,7 +1128,12 @@ public class ProjectBean {
         }
     }
 
-
+    /**
+     * Get the project by id, to get info for manage the role, or kick the user from project
+     * @param token - user token
+     * @param projectId - id of the project
+     * @return - project dto
+     */
     public List<UserToChangeRoleKickDto> getUsersByProject(String token, Long projectId) {
         // Validar sessão e projeto
         SessionEntity session = sessionDao.findSessionByToken(token);
@@ -994,7 +1152,11 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Convert project user entity to user to change role kick dto
+     * @param projectUser - project user entity
+     * @return - user to change role kick dto
+     */
     private UserToChangeRoleKickDto toUserToChangeRoleKickDto(ProjectUserEntity projectUser) {
         UserToChangeRoleKickDto dto = new UserToChangeRoleKickDto();
         dto.setId(projectUser.getUser().getId());
@@ -1007,6 +1169,11 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Get the project by id, to get info for manage the role, or kick the user from project
+     * @param projectUser - project user entity
+     * @return - user to change role kick dto
+     */
     private UserInviteDto toUserInviteDto (ProjectUserEntity projectUser){
         UserInviteDto dto = new UserInviteDto();
         dto.setId(projectUser.getUser().getId());
@@ -1019,52 +1186,88 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Change the role of a user in a project, only the project manager can do this
+     * @param token - user token
+     * @param userId - user id
+     * @param userChangeRoleDto - user change role dto
+     * @return - user to change role kick dto
+     */
     public UserToChangeRoleKickDto changeUserRole(String token, Long userId, UserChangeRoleDto userChangeRoleDto) {
         // Validar sessão e projeto
+        String log = "Changing user role";
         SessionEntity session = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(userChangeRoleDto.getProjectId());
         if (session == null || project == null) {
+            LoggerUtil.logError(log, "Token or project invalid", null, token);
             throw new IllegalArgumentException("Token or project invalid");
         }
         // Verificar se o user é gerente do projeto
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(userChangeRoleDto.getProjectId(), session.getUser().getId());
         if (projectUser == null || projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log, "User isnt a manager of the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User isnt a manager of the project");
         }
         // Verificar se o usuário a ser alterado é participante do projeto
         ProjectUserEntity userToChange = projectUserDao.findProjectUserByProjectIdAndUserId(userChangeRoleDto.getProjectId(), userId);
         if (userToChange == null) {
+            LoggerUtil.logError(log, "User isnt a participant of the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User isnt a participant of the project");
         }
+        UserType oldType = userToChange.getRole();
         // Alterar o papel do usuário
         userToChange.setRole(UserType.fromValue(userChangeRoleDto.getRole()));
         projectUserDao.merge(userToChange);
-
+        notificationBean.sendNotification(session.getUser().getEmail(), userToChange.getUser().getEmail(), "Your role in the project " + project.getName() + " has been changed to " + userChangeRoleDto.getRole(), NotificationType.PROJECT_ROLE_CHANGED, userChangeRoleDto.getProjectId());
+        logBean.addNewUserChange(project.getId(), session.getUser().getId(), userToChange.getUser().getId() ,oldType, UserType.fromValue(userChangeRoleDto.getRole()));
         return toUserToChangeRoleKickDto(userToChange);
     }
 
+    /**
+     * Kick a user from a project, only the project manager can do this
+     * @param token - user token
+     * @param userId - user id
+     * @param projectId - project id
+     */
     public void kickUser(String token, Long userId, Long projectId) {
         // Validar sessão e projeto
+        String log = "Kicking user from project";
         SessionEntity session = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
         if (session == null || project == null) {
+            LoggerUtil.logError(log, "Token or project invalid", null, token);
             throw new IllegalArgumentException("Token or project invalid");
         }
         // Verificar se o user é gerente do projeto
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
         if (projectUser == null || projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log, "User isnt a manager of the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User isnt a manager of the project");
         }
         // Verificar se o user a ser alterado é participante do projeto
         ProjectUserEntity userToChange = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, userId);
         if (userToChange == null) {
+            LoggerUtil.logError(log, "User isnt a participant of the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User isnt a participant of the project");
         }
         // Remover o user do projeto
+        userToChange.setRole(UserType.KICKED);
         userToChange.setActive(false);
+        project.getProjectUsers().remove(userToChange);
+        projectDao.merge(project    );
         projectUserDao.merge(userToChange);
+//        notificationBean.sendNotification(session.getUser().getEmail(), userToChange.getUser().getEmail(), "You have been kicked from the project " + project.getName(), NotificationType.PROJECT_KICKED, projectId);
+        emailBean.sendMailToUser(token, userToChange.getUser().getEmail(), "You have been kicked from the project " + project.getName(), "You have been kicked from the project " + project.getName() + " by the project manager " + session.getUser().getEmail() + ".");
+        logBean.addNewUserKicked(projectId, session.getUser().getId(), userToChange.getUser().getId());
+        LoggerUtil.logInfo(log, "User kicked from project", session.getUser().getEmail(), token);
     }
 
+    /**
+     * Get invites to a project verify if the user is a manager of the project
+     * @param token - user token
+     * @param projectId - project id
+     * @return - list of proposed users
+     */
     public List<UserInviteDto> getInvites(String token, Long projectId) {
         // Validar sessão e projeto
         SessionEntity session = sessionDao.findSessionByToken(token);
@@ -1085,18 +1288,27 @@ public class ProjectBean {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Propose a project to a user to join
+     * @param token - user token
+     * @param projectId - project id
+     */
     public void proposeProject(String token, Long projectId) {
         // Validar sessão e projeto
+        String log= "Proposing project";
         SessionEntity session = sessionDao.findSessionByToken(token);
         if (session == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
             throw new IllegalArgumentException("Invalid token");
         }
 
         ProjectEntity project = projectDao.findProjectById(projectId);
         if (project == null) {
+            LoggerUtil.logError(log, "Invalid project ID", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("Invalid project ID");
         }
 
+        List<ProjectUserEntity> projectUsers = projectUserDao.findProjectUserByProjectId(projectId);
         // Verificar se o usuário já está associado ao projeto
         ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
         if (projectUser == null) {
@@ -1106,55 +1318,117 @@ public class ProjectBean {
             newProjectUser.setUser(session.getUser());
             newProjectUser.setRole(UserType.PROPOSED);
             newProjectUser.setActive(true);
+
+            for(ProjectUserEntity pu : projectUsers){
+                if(pu.getRole() == UserType.MANAGER){
+                    System.out.println("manager");
+                    notificationBean.sendNotification(session.getUser().getEmail(), pu.getUser().getEmail(), "User proposed to join the project " + project.getName(), NotificationType.INVITE_PROPOSED, projectId);
+                }
+            }
             projectUserDao.persist(newProjectUser);
+//            notificationBean.sendNotification(session.getUser().getEmail(), project.getCreator().getEmail(), "User proposed to join the project " + project.getName(), NotificationType.INVITE_PROPOSED, projectId);
+            LoggerUtil.logInfo(log, "User proposed the project", session.getUser().getEmail(), token);
         } else if (projectUser.isActive() && (projectUser.getRole() == UserType.NORMAL || projectUser.getRole() == UserType.MANAGER)) {
             // Lançar exceção se o usuário já for um participante ativo
+            LoggerUtil.logInfo(log, "User is already a participant in the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User is already a participant in the project");
         } else {
             // Atualizar o papel do usuário existente no projeto para PROPOSED
             projectUser.setActive(true);
             projectUser.setRole(UserType.PROPOSED);
             projectUserDao.merge(projectUser);
+
+            for(ProjectUserEntity pu : projectUsers){
+                if(pu.getRole() == UserType.MANAGER){
+                    System.out.println("manager");
+                    notificationBean.sendNotification(session.getUser().getEmail(), pu.getUser().getEmail(), "User proposed to join the project " + project.getName(), NotificationType.INVITE_PROPOSED, projectId);
+                }
+            }
+            LoggerUtil.logInfo(log, "User proposed the project", session.getUser().getEmail(), token);
         }
     }
 
+    /**
+     * Response to an invite to join a project, accepting or rejecting the invitation
+     * @param token - user token
+     * @param projectId - project id
+     * @param dto - response data
+     */
     public void inviteResponse(String token, Long projectId, ResponseYesNoInviteDto dto) {
         // Validar sessão e projeto
+        String log = "Processing user invite response";
         SessionEntity session = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
         if (session == null || project == null) {
+            LoggerUtil.logError(log, "Invalid token or project", null, token);
             throw new IllegalArgumentException("Invalid token or project");
         }
         if (dto == null) {
+            LoggerUtil.logError(log, "User invite data is required", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User invite data is required");
         }
 
         // Validar se o usuário é gerente do projeto
         ProjectUserEntity projectManager = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, session.getUser().getId());
         if (projectManager == null || projectManager.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log, "User is not a manager of the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User is not a manager of the project");
         }
 
         // Validar se o usuário convidado existe e está na lista de convidados
         ProjectUserEntity invitedUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, dto.getUserId());
         if (invitedUser == null || invitedUser.getRole() != UserType.PROPOSED) {
+            LoggerUtil.logError(log, "User is not invited to the project", session.getUser().getEmail(), token);
             throw new IllegalArgumentException("User is not invited to the project");
         }
 
         // Responder ao convite
         boolean accept = dto.isAccept();
         if (accept) {
+
+            long participants = projectUserDao.countActiveUsersByProjectId(projectId);
+            if(participants >= project.getMaxParticipants()){
+                throw new IllegalArgumentException("Project has reached the maximum number of participants");
+            }
+
             invitedUser.setRole(UserType.NORMAL);
             invitedUser.setActive(true);
+            logBean.addNewUser(projectId, session.getUser().getId(), invitedUser.getUser().getId());
+            notificationBean.sendNotification(session.getUser().getEmail(), invitedUser.getUser().getEmail(), "You have been accepted to join the project " + project.getName(), NotificationType.INVITE_ACCEPTED, projectId);
+            LoggerUtil.logInfo(log, "User accepted the invite from user id:"+dto.getUserId(), session.getUser().getEmail(), token);
         } else {
             invitedUser.setActive(false);
+            LoggerUtil.logInfo(log, "User rejected the invite from user id:"+dto.getUserId(), session.getUser().getEmail(), token);
         }
 
-        // Persistir as mudanças no usuário convidado
         projectUserDao.merge(invitedUser);
-
-        // Logs para depuração (opcional)
-        System.out.println("User invite response processed: " + dto.getUserId() + " accept: " + accept);
     }
 
+    public void leaveProject(String token, Long projectId) {
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+        if(se == null || pe == null) {
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+
+        UserEntity user = se.getUser();
+        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(pue == null) {
+            throw new IllegalArgumentException("User is not a participant in the project");
+        }
+
+        if(se.getUser().equals(pe.getCreator())) {
+            throw new IllegalArgumentException("Project creator cannot leave the project");
+        }
+
+        List<TaskExecutorEntity> taskExecutor = taskExecutorDao.findTaskExecutorByProjectIdAndUserId(projectId, user.getId());
+        List<TaskEntity> tasks = taskDao.findTasksByProjectIdAndUserId(projectId, user.getId());
+        if(taskExecutor != null && !taskExecutor.isEmpty() || tasks != null && !tasks.isEmpty()) {
+            throw new IllegalArgumentException("User is responsible for tasks in the project, cannot leave the project with tasks assigned");
+        }
+
+        pue.setActive(false);
+        pue.setRole(UserType.KICKED);
+        projectUserDao.merge(pue);
+    }
 }

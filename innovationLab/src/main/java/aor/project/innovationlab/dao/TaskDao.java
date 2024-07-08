@@ -108,4 +108,15 @@ public class TaskDao extends AbstractDao<TaskEntity> {
             return null;
         }
     }
+
+    public List<TaskEntity> findTasksByProjectIdAndUserId(Long projectId, Long id) {
+        try {
+            return em.createNamedQuery("Task.findTasksByProjectIdAndUserId").setParameter("projectId", projectId)
+                    .setParameter("userId", id)
+                    .getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 }

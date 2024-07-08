@@ -150,6 +150,30 @@ public class UserDao extends AbstractDao<UserEntity> {
         return users;
     }
 
+    /**
+     * Find all users that are active and have a role of MANAGER or NORMAL in a project
+     * @param projectId - the ID of the project
+     * @return - a list of users that are active and have a role of MANAGER or NORMAL in the project
+     */
+    public List<UserEntity> findUsersByProjectIdActives(Long projectId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
+        Root<ProjectUserEntity> root = cq.from(ProjectUserEntity.class);
+        Join<ProjectUserEntity, UserEntity> userJoin = root.join("user");
+
+        // Adiciona as condições de filtro
+        Predicate projectCondition = cb.equal(root.get("project").get("id"), projectId); // Filtra pelo ID do projeto
+        Predicate activeCondition = cb.isTrue(root.get("active")); // Filtra apenas users ativos
+        Predicate roleCondition = root.get("role").in(UserType.MANAGER, UserType.NORMAL); // Filtra users com função MANAGER ou NORMAL
+
+        // Combina todas as condições
+        cq.where(cb.and(projectCondition, activeCondition, roleCondition));
+        cq.select(userJoin);
+
+        // Executa a consulta e retorna a lista de usuários
+        return em.createQuery(cq).getResultList();
+    }
+
     private Order getOrder(CriteriaBuilder cb, Root<UserEntity> user, String orderField, String orderDirection) {
         List<Order> orders = new ArrayList<>();
 
