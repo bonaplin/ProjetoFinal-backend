@@ -135,6 +135,15 @@ public class ProjectBean {
         return dto;
     }
 
+    private ProjectReadyDto toProjectReadyDto(ProjectEntity entity) {
+        ProjectReadyDto dto = new ProjectReadyDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setLab(entity.getLab().getLocation());
+        dto.setStatus(entity.getStatus().getValue());
+        return dto;
+    }
+
     /**
      * Convert ProjectEntity to ProjectCardDto, is used to show the project in a card
      * @param entity
@@ -1430,5 +1439,51 @@ public class ProjectBean {
         pue.setActive(false);
         pue.setRole(UserType.KICKED);
         projectUserDao.merge(pue);
+    }
+
+    public PaginatedResponse<Object> getReadyProjects(String token, Integer pageNumber, Integer pageSize){
+        String log = "Getting ready projects";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+        UserType role = se.getUser().getRole();
+        if(role != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        PaginatedResponse<ProjectEntity> readyProjects = projectDao.findProjects(null, List.of(ProjectStatus.READY), null, null, null, null, null, null, null, null, pageNumber, pageSize, "createdDate", "desc");
+        List<ProjectEntity> projects = readyProjects.getResults();
+
+        PaginatedResponse<Object> response = new PaginatedResponse<>();
+        response.setTotalPages(readyProjects.getTotalPages());
+        response.setResults(projects.stream()
+                .map(this::toProjectReadyDto)
+                .collect(Collectors.toList()));
+        return response;
+    }
+
+    public void approveProject(String token, Long projectId, ResponseYesNoInviteDto responseYesNoInviteDto) {
+        String log = "Approving/Reject project";
+
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(se == null || project == null) {
+            LoggerUtil.logError(log, "Invalid token or project", null, token);
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+
+        if(se.getUser().getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        ProjectStatus status = responseYesNoInviteDto.isAccept() ? ProjectStatus.APPROVED : ProjectStatus.PLANNING;
+
+        project.setStatus(status);
+        projectDao.merge(project);
     }
 }
