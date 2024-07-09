@@ -5,6 +5,7 @@ import aor.project.innovationlab.bean.SessionBean;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.utils.Color;
+import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -56,6 +57,19 @@ public class InterestService {
         InterestDto interest = interestBean.addInterest(auth, interestDto);
         return Response.status(200).entity(interest).build();
     }
+
+    @POST
+    @Path("create/{projectId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addInterestToProject(@HeaderParam("token") String auth, @PathParam("projectId") Long projectId, InterestDto interestDto) {
+        System.out.println("bateu aqui");
+        System.out.println("InterestDto: " + interestDto.getName() + " " + interestDto.getId());
+//        String token = sessionBean.getTokenFromAuthorizationHeader(auth);
+        InterestDto dto = interestBean.addInterestToProjectDto(auth, projectId, interestDto);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(dto)).build();
+    }
+
 
     @PUT
     @Path("/{projectId}/{interestId}")
