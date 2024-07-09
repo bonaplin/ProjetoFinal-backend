@@ -225,8 +225,8 @@ public class ProjectService {
     @PUT
     @Path("/{projectId}/cancel")
     @Consumes("application/json")
-        public Response cancelProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId) {
-        projectBean.cancelProject(token, projectId);
+        public Response cancelProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, IdNameDto idNameDto) {
+        projectBean.cancelProject(token, projectId,idNameDto);
         return Response.status(200).entity("Project cancelled successfully!").build();
         }
 }

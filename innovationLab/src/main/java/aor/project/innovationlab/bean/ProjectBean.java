@@ -395,7 +395,7 @@ public class ProjectBean {
         project.setCreatedDate(createProjectDto.getStartDate());
 
         project.setCreator(session.getUser());
-        project.setStatus(ProjectStatus.READY);
+//        project.setStatus(ProjectStatus.READY);
         project.setSystemName(taskBean.taskSystemNameGenerator(createProjectDto.getName()));
 
         projectDao.persist(project);
@@ -1613,7 +1613,7 @@ public class ProjectBean {
         userDao.merge(user);
     }
 
-    public void cancelProject(String token, Long projectId) {
+    public void cancelProject(String token, Long projectId, IdNameDto dto) {
         String log = "Cancelling project";
         SessionEntity se = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -1628,6 +1628,7 @@ public class ProjectBean {
         }
 
         project.setStatus(ProjectStatus.CANCELLED);
+        project.setDescription(dto.getName());
         projectDao.merge(project);
     }
 }
