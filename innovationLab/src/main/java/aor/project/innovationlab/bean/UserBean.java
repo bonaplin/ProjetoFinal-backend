@@ -41,6 +41,9 @@ public class UserBean {
     @EJB
     SessionDao sessionDao;
 
+    @EJB
+    ProjectUserDao projectUserDao;
+
     @Inject
     SkillBean skillBean;
 
@@ -640,10 +643,20 @@ public class UserBean {
             LoggerUtil.logError(log,"Session not found.",null,token);
             throw new IllegalArgumentException("Session not found.");
         }
-        List<UserEntity> users = userDao.findUsersByProjectId(id);
+        List<ProjectUserEntity> users = projectUserDao.findProjectUserByProjectId(id);
         return users.stream()
-                .map(this::toDtoUserProject)
+                .filter(ProjectUserEntity::isActive)
+                .map(this::toUserProjectDto)
                 .collect(Collectors.toList());
+    }
+
+    private UserAddToProjectDto toUserProjectDto (ProjectUserEntity projectUserEntity) {
+        UserAddToProjectDto userAddToProjectDto = new UserAddToProjectDto();
+        userAddToProjectDto.setUserId(projectUserEntity.getUser().getId());
+        userAddToProjectDto.setFirstName(projectUserEntity.getUser().getFirstname());
+        userAddToProjectDto.setLastName(projectUserEntity.getUser().getLastname());
+        userAddToProjectDto.setImagePath(projectUserEntity.getUser().getProfileImagePath());
+        return userAddToProjectDto;
     }
 
     private void validateOrderParameters(String orderField, String orderDirection) {

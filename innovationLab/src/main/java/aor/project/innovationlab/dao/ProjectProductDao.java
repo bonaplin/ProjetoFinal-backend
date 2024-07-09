@@ -48,4 +48,15 @@ public class ProjectProductDao extends AbstractDao<ProjectProductEntity> {
 
         return projectProducts;
     }
+
+    public ProjectProductEntity findProductInProjectById (ProjectEntity project, ProductEntity product) {
+        try {
+            return (ProjectProductEntity) em.createNamedQuery("ProjectProduct.findProductInProjectById")
+                    .setParameter("project", project)
+                    .setParameter("product", product)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
