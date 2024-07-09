@@ -221,6 +221,14 @@ public class ProjectService {
         projectBean.leaveProject(token, projectId);
         return Response.status(200).entity("You have left the project successfully!").build();
     }
+
+    @PUT
+    @Path("/{projectId}/cancel")
+    @Consumes("application/json")
+        public Response cancelProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId) {
+        projectBean.cancelProject(token, projectId);
+        return Response.status(200).entity("Project cancelled successfully!").build();
+        }
 }
 
 

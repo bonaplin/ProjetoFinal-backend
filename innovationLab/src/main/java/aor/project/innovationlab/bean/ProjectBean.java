@@ -260,8 +260,7 @@ public class ProjectBean {
     public void createInitialData() {
         createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
         createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
-        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
-        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
+
     }
 
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
@@ -278,8 +277,8 @@ public class ProjectBean {
             projectDao.persist(project);
             createFinalTaskForProject(project);
 
-            // create the entity project - creator
-            addUserToProject(name, creatorEmail, UserType.MANAGER);
+//            // create the entity project - creator
+//            addUserToProject(name, creatorEmail, UserType.MANAGER);
 
             addInterestToProject(name, "Interest1");
             addInterestToProject(name, "Interest2");
@@ -789,18 +788,26 @@ public class ProjectBean {
 
         if (userEmail != null && id != null) {
             UserEntity user = userDao.findUserByEmail(userEmail);
+
             if (user != null) {
                 ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
+
                 if (pue != null) {
+
                     if (pue.isActive()) {
+                        System.out.println("User is active");
                         webSocketBean.openProjectWindow(auth, id);
                         response.setUserType(pue.getRole().getValue());
+
                     } else {
+                        System.out.println("User is not active");
                         response.setUserType(UserType.GUEST.getValue());
                     }
 
                     if (pue.isActive() && (pue.getRole() == UserType.MANAGER || pue.getRole() == UserType.NORMAL)) {
                         response.setUserType(pue.getRole().getValue());
+                        System.out.println("User is manager or normal");
+
                     } else {
                         response.setUserType(UserType.GUEST.getValue());
                     }
@@ -814,10 +821,10 @@ public class ProjectBean {
             response.setUserType(UserType.GUEST.getValue());
         }
 
-        UserEntity admin = userDao.findUserByEmail(userEmail);
-        if (admin.getRole().equals(UserType.ADMIN)) {
-            response.setUserType(UserType.ADMIN.getValue());
-        }
+//        UserEntity admin = userDao.findUserByEmail(userEmail);
+//        if (admin.getRole().equals(UserType.ADMIN)) {
+//            response.setUserType(UserType.ADMIN.getValue());
+//        }
 
 
         switch (dtoType) {
@@ -1577,32 +1584,50 @@ public class ProjectBean {
             LoggerUtil.logError(log, "User not found", se.getUser().getEmail(), token);
             throw new IllegalArgumentException("User not found");
         }
-
-        boolean isCreatorOrResponsible = taskDao.isCreatorOrResponsible(user.getId());
-        System.out.println(Color.YELLOW + "isCreatorOrResponsible: " + isCreatorOrResponsible + Color.RESET);
-        if(isCreatorOrResponsible) {
-            LoggerUtil.logError(log, "User cannot change role due to active task associations", se.getUser().getEmail(), token);
-            throw new IllegalArgumentException("User cannot change role due to active task associations");
-        }
-
-        // Verificar associações ativas com projetos
-        boolean isActiveInProjects = projectUserDao.isActiveInAnyProject(user.getId());
-        System.out.println(Color.PURPLE + "isActiveInProjects: " + isActiveInProjects + Color.RESET);
-        if (isActiveInProjects) {
-            throw new IllegalArgumentException("User cannot change role due to active project associations");
-        }
-
-        // Verificar associações ativas com tarefas
-        boolean isActiveInTasks = taskExecutorDao.isActiveInAnyTask(user.getId());
-        System.out.println(Color.CYAN + "isActiveInTasks: " + isActiveInTasks + Color.RESET);
-        if (isActiveInTasks) {
-            throw new IllegalArgumentException("User cannot change role due to active task associations");
-        }
+//
+//        boolean isCreatorOrResponsible = taskDao.isCreatorOrResponsible(user.getId());
+//        System.out.println(Color.YELLOW + "isCreatorOrResponsible: " + isCreatorOrResponsible + Color.RESET);
+//        if(isCreatorOrResponsible) {
+//            LoggerUtil.logError(log, "User cannot change role due to active task associations", se.getUser().getEmail(), token);
+//            throw new IllegalArgumentException("User cannot change role due to active task associations");
+//        }
+//
+//        // Verificar associações ativas com projetos
+//        boolean isActiveInProjects = projectUserDao.isActiveInAnyProject(user.getId());
+//        System.out.println(Color.PURPLE + "isActiveInProjects: " + isActiveInProjects + Color.RESET);
+//        if (isActiveInProjects) {
+//            throw new IllegalArgumentException("User cannot change role due to active project associations");
+//        }
+//
+//        // Verificar associações ativas com tarefas
+//        boolean isActiveInTasks = taskExecutorDao.isActiveInAnyTask(user.getId());
+//        System.out.println(Color.CYAN + "isActiveInTasks: " + isActiveInTasks + Color.RESET);
+//        if (isActiveInTasks) {
+//            throw new IllegalArgumentException("User cannot change role due to active task associations");
+//        }
 
         long role = dto.getValue();
         int intValue = (int) role;
 
         user.setRole(UserType.fromValue(intValue));
         userDao.merge(user);
+    }
+
+    public void cancelProject(String token, Long projectId) {
+        String log = "Cancelling project";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if(se == null || project == null) {
+            LoggerUtil.logError(log, "Invalid token or project", null, token);
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+
+        if(se.getUser().getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        project.setStatus(ProjectStatus.CANCELLED);
+        projectDao.merge(project);
     }
 }
