@@ -3,6 +3,7 @@ package aor.project.innovationlab.dao;
 import aor.project.innovationlab.entity.LabEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.NoResultException;
+import org.hibernate.stat.Statistics;
 
 import java.util.List;
 

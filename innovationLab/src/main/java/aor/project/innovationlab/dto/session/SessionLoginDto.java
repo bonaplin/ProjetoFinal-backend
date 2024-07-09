@@ -5,6 +5,7 @@ public class SessionLoginDto {
     private String email;
     private long unreadNotifications;
     private long unreadEmails;
+    private int userType;
 
     public SessionLoginDto() {
     }
@@ -43,5 +44,13 @@ public class SessionLoginDto {
 
     public void setUnreadEmails(long unreadEmails) {
         this.unreadEmails = unreadEmails;
+    }
+
+    public int getUserType() {
+        return userType;
+    }
+
+    public void setUserType(int userType) {
+        this.userType = userType;
     }
 }
