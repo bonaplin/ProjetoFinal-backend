@@ -5,6 +5,7 @@ import aor.project.innovationlab.dto.product.ProductsList;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
+import aor.project.innovationlab.utils.Color;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -51,6 +52,7 @@ public class ProductService {
     @Path("/productEdition/{projectId}")
     @Consumes("application/json")
     public Response addProductToProject(@PathParam("projectId") Long projectId, ProductsList productList, @HeaderParam("token") String token) {
+        
         productBean.addProductsToProject(token, projectId, productList);
         return Response.status(200).entity("Project resources updated successfully").build();
     }

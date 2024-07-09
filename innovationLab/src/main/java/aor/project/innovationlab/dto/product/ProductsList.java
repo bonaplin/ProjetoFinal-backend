@@ -6,6 +6,10 @@ public class ProductsList {
 
     private List<ProductToCreateProjectDto> products;
 
+    public void setProducts(List<ProductToCreateProjectDto> products) {
+        this.products = products;
+    }
+
     public ProductsList() {
     }
 

@@ -12,12 +12,14 @@ import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.SupplierEntity;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.ProductStatus;
 import aor.project.innovationlab.enums.ProductType;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -198,7 +200,7 @@ public class ProductBean {
         return response;
 
     }
-
+    
     public void addProductsToProject (String token, long projectId, ProductsList products) {
 
         String log = "Attempting to remove interest from project";
@@ -236,7 +238,9 @@ public class ProductBean {
         }
 
         for(ProductToCreateProjectDto product : products.getProducts()) {
-            ProductEntity productEntity = convertToProductEntity(product, log);
+
+            ProductEntity productEntity = productDao.findProductById(product.getId());
+
             ProjectProductEntity projectProduct = ProjectProductDao.findProductInProjectById(project, productEntity);
 
             if (projectProduct == null) {
@@ -244,6 +248,7 @@ public class ProductBean {
                 projectProductEntity.setProject(project);
                 projectProductEntity.setProduct(productEntity);
                 projectProductEntity.setQuantity(product.getQuantity());
+                projectProductEntity.setStatus(ProductStatus.STOCK);
                 ProjectProductDao.persist(projectProductEntity);
             } else {
                 projectProduct.setQuantity(projectProduct.getQuantity() + product.getQuantity());
