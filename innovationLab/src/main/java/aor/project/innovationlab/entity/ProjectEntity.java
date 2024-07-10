@@ -13,6 +13,7 @@ import java.util.Set;
 @NamedQuery(name = "Project.findProjectByName", query = "SELECT p FROM ProjectEntity p WHERE p.name = :name")
 @NamedQuery(name = "Project.findProjectById", query = "SELECT p FROM ProjectEntity p WHERE p.id = :projectId")
 @NamedQuery(name = "Project.findProjectTasks", query = "SELECT t FROM TaskEntity t WHERE t.project.id = :projectId AND t.active = true")
+@NamedQuery(name = "Project.findUsersByProjectId", query = "SELECT pu.user FROM ProjectUserEntity pu WHERE pu.project.id = :projectId")
 public class ProjectEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

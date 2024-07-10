@@ -15,8 +15,14 @@ public enum NotificationType {
     PROJECT_OPEN(310),
     PROJECT_CLOSE(311),
 
+
+
     PROJECT_KICKED(312),
-    PROJECT_ROLE_CHANGED(313);
+    PROJECT_ROLE_CHANGED(313),
+
+    PROJECT_STATUS_CHANGED(314),
+    PROJECT_CANCELLED(315),
+    PROJECT_APPROVED(316);
 
     private final int value;
 

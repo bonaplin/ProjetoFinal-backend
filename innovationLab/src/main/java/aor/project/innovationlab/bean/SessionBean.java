@@ -101,7 +101,7 @@ public class SessionBean  {
      * If the token is not valid, it throws an exception
      * @param token
      */
-    public void validateUserToken(String token) {
+    public UserEntity validateUserToken(String token) {
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
         if(sessionEntity == null) {
             // Log the event
@@ -123,6 +123,7 @@ public class SessionBean  {
         }else {
             sessionEntity.getUser().setTokenExpiration(Instant.now().plus(Duration.ofMinutes(getDefaultTokenExpirationMinutes())));
         }
+        return sessionEntity.getUser();
     }
 
 //    private void updateTokenExpiration(SessionEntity sessionEntity) {

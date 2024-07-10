@@ -27,4 +27,13 @@ public enum ProjectStatus {
         return null;
     }
 
+    public static boolean isValid(int value) {
+        for (ProjectStatus status : ProjectStatus.values()) {
+            if (status.getValue() == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

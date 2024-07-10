@@ -368,4 +368,11 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         return query.getSingleResult();
     }
 
+    public List<UserEntity> findUsersByProjectId(long id) {
+        try {
+            return em.createNamedQuery("Project.findUsersByProjectId").setParameter("projectId", id).getResultList();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

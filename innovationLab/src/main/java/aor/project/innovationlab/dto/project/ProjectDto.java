@@ -13,6 +13,7 @@ public class ProjectDto {
     private LocalDate endDate;
     private LocalDate finishDate;
     private long lab_id;
+    private String lab_location;
     private boolean active;
 
 
@@ -89,5 +90,13 @@ public class ProjectDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getLab_location() {
+        return lab_location;
+    }
+
+    public void setLab_location(String lab_location) {
+        this.lab_location = lab_location;
     }
 }
