@@ -14,6 +14,7 @@ import java.util.Set;
 @NamedQuery(name = "Product.findProductById", query = "SELECT p FROM ProductEntity p WHERE p.id = :id")
 @NamedQuery(name = "Product.findProductByIdentifier", query = "SELECT p FROM ProductEntity p WHERE p.identifier = :identifier")
 @NamedQuery(name = "Product.findAllBrands", query = "SELECT DISTINCT p.brand FROM ProductEntity p")
+
 public class ProductEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

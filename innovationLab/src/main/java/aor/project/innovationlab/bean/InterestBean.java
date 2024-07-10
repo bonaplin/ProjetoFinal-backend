@@ -136,6 +136,37 @@ public class InterestBean {
         return toDto(interest);
     }
 
+
+    public InterestDto addInterestToProjectDto(String token, long projectId, InterestDto dto) {
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if(se == null || project == null) {
+            throw new IllegalArgumentException("Session or project not found");
+        }
+        InterestEntity interest = interestDao.findInterestById(dto.getId());
+        if(interest == null) {
+            interest = new InterestEntity();
+            interest.setName(dto.getName());
+            interestDao.persist(interest);
+        }
+
+        ProjectInterestEntity projectInterest = projectInterestDao.findInterestInProject(project, interest);
+        if(projectInterest == null) {
+            projectInterest = new ProjectInterestEntity();
+            projectInterest.setProject(project);
+            projectInterest.setInterest(interest);
+            projectInterestDao.persist(projectInterest);
+        }else {
+            projectInterest.setActive(true);
+            projectInterestDao.merge(projectInterest);
+        }
+
+        project.getInterests().add(projectInterest);
+        projectDao.merge(project);
+
+        return toDto(interest);
+    }
+
     public void addInterestToProject(String token, long projectId, long interestId) {
         String log = "Attempting to add interest to project";
 

@@ -1,9 +1,7 @@
 package aor.project.innovationlab.bean;
 
-import aor.project.innovationlab.dao.ProductDao;
-import aor.project.innovationlab.dao.ProjectProductDao;
-import aor.project.innovationlab.dao.SessionDao;
-import aor.project.innovationlab.dao.SupplierDao;
+import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.product.ProductsList;
 import aor.project.innovationlab.dto.response.IdNameDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.product.ProductDto;
@@ -14,11 +12,14 @@ import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.SupplierEntity;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.entity.*;
+import aor.project.innovationlab.enums.ProductStatus;
 import aor.project.innovationlab.enums.ProductType;
+import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,17 @@ public class ProductBean {
 
     @EJB
     SessionDao sessionDao;
+    @EJB
+    ProjectDao projectDao;
+
+    @EJB
+    ProjectUserDao projectUserDao;
 
     @EJB
     ProjectProductDao ProjectProductDao;
+
+    @Inject
+    InterestBean interestBean;
 
     @Inject
     SessionBean sessionBean;
@@ -191,6 +200,72 @@ public class ProductBean {
         return response;
 
     }
+    
+    public void addProductsToProject (String token, long projectId, ProductsList products) {
+
+        String log = "Attempting to remove interest from project";
+
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+
+        if(sessionEntity == null){
+            LoggerUtil.logError(log,"Session not found.",null,token);
+            throw new IllegalArgumentException("Session not found.");
+        }
+
+        ProjectEntity project = projectDao.findProjectById(projectId);
+
+        if(project == null) {
+            LoggerUtil.logError(log,"Project not found",null,token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        UserEntity user = sessionEntity.getUser();
+
+        if (interestBean.checkProjectStatus(project))  {
+            LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
+            throw new IllegalArgumentException("This project is in a status that doesnt allow editions");
+        }
+
+        ProjectUserEntity projectUser = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, user.getId());
+        if(projectUser == null) {
+            LoggerUtil.logError(log,"User not part of the project with id number: " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        if (projectUser.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log,"User dont have permissions to interact with project " + projectId,user.getEmail(),token);
+            throw new IllegalArgumentException("User dont have permissions to interact with this project");
+        }
+
+        for(ProductToCreateProjectDto product : products.getProducts()) {
+
+            ProductEntity productEntity = productDao.findProductById(product.getId());
+
+            ProjectProductEntity projectProduct = ProjectProductDao.findProductInProjectById(project, productEntity);
+
+            if (projectProduct == null) {
+                ProjectProductEntity projectProductEntity = new ProjectProductEntity();
+                projectProductEntity.setProject(project);
+                projectProductEntity.setProduct(productEntity);
+                projectProductEntity.setQuantity(product.getQuantity());
+                projectProductEntity.setStatus(ProductStatus.STOCK);
+                ProjectProductDao.persist(projectProductEntity);
+            } else {
+                projectProduct.setQuantity(projectProduct.getQuantity() + product.getQuantity());
+                ProjectProductDao.merge(projectProduct);
+            }
+        }
+    }
+
+    private ProductEntity convertToProductEntity (ProductToCreateProjectDto product, String log) {
+        ProductEntity productEntity = productDao.findProductById(product.getId());
+        if(productEntity == null) {
+            LoggerUtil.logError(log,"Product not found",null,null);
+            throw new IllegalArgumentException("Product not found");
+        }
+        return productEntity;
+    }
+
 
     public List<ProductToCreateProjectDto> getProjectProducts (String token, long projectId) {
 
@@ -205,7 +280,7 @@ public class ProductBean {
         if(products == null) {
             return new ArrayList<>();
         }
-        return products.stream().map(this::toProjectInfoDto).collect(Collectors.toList());
+        return products.stream().filter(ProjectProductEntity::isActive).map(this::toProjectInfoDto).collect(Collectors.toList());
     }
 
     private void validateOrderParameters(String orderField, String orderDirection, String auth) {

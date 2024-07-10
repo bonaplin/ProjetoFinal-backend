@@ -173,6 +173,36 @@ public class SkillBean {
         LoggerUtil.logInfo(log, "Skill: "+ skillName +"removed from user", email, null);
     }
 
+    public SkillDto addSkillToProjectDto(String token, Long projectId, SkillDto skillDto) {
+        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if(project == null || sessionEntity == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+        SkillEntity skill = skillDao.findSkillByName(skillDto.getName());
+        if(skill == null) {
+            createSkillIfNotExists(skillDto.getName(), SkillType.valueOf(skillDto.getType()));
+        }
+        SkillEntity skillEntity = skillDao.findSkillByName(skillDto.getName());
+
+        ProjectSkillEntity pse = ProjectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skillEntity.getId());
+        ProjectSkillEntity ps1 = ProjectSkillDao.findSkillInProject(project, skillEntity);
+
+        if(pse == null) {
+            pse = new ProjectSkillEntity();
+            pse.setProject(project);
+            pse.setSkill(skillEntity);
+            ProjectSkillDao.persist(pse);
+//            project.getProjectSkills().add(pse);
+//            skill.getProjectSkills().add(pse);
+        } else {
+            pse.setActive(true);
+            ProjectSkillDao.merge(pse);
+        }
+
+        return toDto(skillEntity);
+    }
+
     public void addSkillToProject (String token, long projectId, long skillId) {
 
 
@@ -279,7 +309,7 @@ public class SkillBean {
             LoggerUtil.logError(log,"Skill not found.",null,token);
             throw new IllegalArgumentException("Skill not found.");
         }
-        ProjectSkillEntity projectSkill = ProjectSkillDao.findSkillInProject(project, skill);
+        ProjectSkillEntity projectSkill = ProjectSkillDao.findProjectSkillByProjectIdAndSkillId(project.getId(), skill.getId());
         if(projectSkill == null){
             LoggerUtil.logError(log,"Project doesnt have that skill",null,token);
             throw new IllegalArgumentException("Project doesnt have that skill");
@@ -446,4 +476,6 @@ public class SkillBean {
         List<SkillEntity> skills = skillDao.findSkills(name, type, userEmail, projectName);
         return skills.stream().map(this::toDto).collect(Collectors.toList());
     }
+
+
 }
