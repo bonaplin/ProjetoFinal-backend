@@ -1,12 +1,14 @@
 package aor.project.innovationlab.dao;
 
 import aor.project.innovationlab.dto.response.PaginatedResponse;
+import aor.project.innovationlab.dto.statistics.StatisticsDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
+import org.hibernate.stat.Statistics;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -310,5 +312,60 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
         return em.createQuery(cq).getResultList();
     }
 
+
+    public StatisticsDto getStatisticsByLab(Integer lab) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<StatisticsDto> cq = cb.createQuery(StatisticsDto.class);
+        Root<ProjectEntity> project = cq.from(ProjectEntity.class);
+
+        // Subqueries to count specific project statuses
+        Subquery<Long> readyProjects = cq.subquery(Long.class);
+        Root<ProjectEntity> readyProjectRoot = readyProjects.from(ProjectEntity.class);
+        readyProjects.select(cb.count(readyProjectRoot))
+                .where(cb.equal(readyProjectRoot.get("lab").get("id"), lab),
+                        cb.equal(readyProjectRoot.get("status"), ProjectStatus.READY));
+
+        Subquery<Long> inProgressProjects = cq.subquery(Long.class);
+        Root<ProjectEntity> inProgressProjectRoot = inProgressProjects.from(ProjectEntity.class);
+        inProgressProjects.select(cb.count(inProgressProjectRoot))
+                .where(cb.equal(inProgressProjectRoot.get("lab").get("id"), lab),
+                        cb.equal(inProgressProjectRoot.get("status"), ProjectStatus.IN_PROGRESS));
+
+        Subquery<Long> finishedProjects = cq.subquery(Long.class);
+        Root<ProjectEntity> finishedProjectRoot = finishedProjects.from(ProjectEntity.class);
+        finishedProjects.select(cb.count(finishedProjectRoot))
+                .where(cb.equal(finishedProjectRoot.get("lab").get("id"), lab),
+                        cb.equal(finishedProjectRoot.get("status"), ProjectStatus.FINISHED));
+
+        Subquery<Long> cancelledProjects = cq.subquery(Long.class);
+        Root<ProjectEntity> cancelledProjectRoot = cancelledProjects.from(ProjectEntity.class);
+        cancelledProjects.select(cb.count(cancelledProjectRoot))
+                .where(cb.equal(cancelledProjectRoot.get("lab").get("id"), lab),
+                        cb.equal(cancelledProjectRoot.get("status"), ProjectStatus.CANCELLED));
+
+
+        Expression<Long> daysBetween = cb.function(
+                "DATEDIFF",
+                Long.class,
+                project.get("endDate"),
+                project.get("startDate")
+        );
+        // Main query to fetch general statistics
+        cq.select(cb.construct(StatisticsDto.class,
+                cb.count(project.get("id")), // Total projects
+                cb.avg(project.get("maxParticipants")), // Average participants
+                readyProjects.getSelection(), // Ready projects
+                inProgressProjects.getSelection(), // In progress projects
+                finishedProjects.getSelection(), // Finished projects
+                cancelledProjects.getSelection(), // Cancelled projects
+                cb.avg(cb.diff(daysBetween, 1)) // Average execution time
+        ));
+
+        cq.where(cb.equal(project.get("lab").get("id"), lab));
+
+        TypedQuery<StatisticsDto> query = em.createQuery(cq);
+
+        return query.getSingleResult();
+    }
 
 }

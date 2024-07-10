@@ -1,8 +1,10 @@
 package aor.project.innovationlab.bean;
 
 import aor.project.innovationlab.dao.*;
+import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.LabelValueDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
@@ -10,6 +12,8 @@ import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.dto.response.ResponseYesNoInviteDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
+import aor.project.innovationlab.dto.statistics.StatisticsDto;
+import aor.project.innovationlab.dto.statistics.UserSettingsDto;
 import aor.project.innovationlab.dto.task.TaskDto;
 import aor.project.innovationlab.dto.user.UserAddToProjectDto;
 import aor.project.innovationlab.dto.user.UserImgCardDto;
@@ -28,6 +32,7 @@ import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import org.hibernate.stat.Statistics;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -82,6 +87,9 @@ public class ProjectBean {
 
     @EJB
     private LogDao logDao;
+
+    @EJB
+    private AppConfigDao appConfigDao;
 
     @Inject
     private MessageBean messageBean;
@@ -252,8 +260,7 @@ public class ProjectBean {
     public void createInitialData() {
         createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
         createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
-        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
-        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
+
     }
 
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
@@ -270,8 +277,8 @@ public class ProjectBean {
             projectDao.persist(project);
             createFinalTaskForProject(project);
 
-            // create the entity project - creator
-            addUserToProject(name, creatorEmail, UserType.MANAGER);
+//            // create the entity project - creator
+//            addUserToProject(name, creatorEmail, UserType.MANAGER);
 
             addInterestToProject(name, "Interest1");
             addInterestToProject(name, "Interest2");
@@ -388,7 +395,7 @@ public class ProjectBean {
         project.setCreatedDate(createProjectDto.getStartDate());
 
         project.setCreator(session.getUser());
-        project.setStatus(ProjectStatus.READY);
+//        project.setStatus(ProjectStatus.READY);
         project.setSystemName(taskBean.taskSystemNameGenerator(createProjectDto.getName()));
 
         projectDao.persist(project);
@@ -781,18 +788,26 @@ public class ProjectBean {
 
         if (userEmail != null && id != null) {
             UserEntity user = userDao.findUserByEmail(userEmail);
+
             if (user != null) {
                 ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(id, user.getId());
+
                 if (pue != null) {
+
                     if (pue.isActive()) {
+                        System.out.println("User is active");
                         webSocketBean.openProjectWindow(auth, id);
                         response.setUserType(pue.getRole().getValue());
+
                     } else {
+                        System.out.println("User is not active");
                         response.setUserType(UserType.GUEST.getValue());
                     }
 
                     if (pue.isActive() && (pue.getRole() == UserType.MANAGER || pue.getRole() == UserType.NORMAL)) {
                         response.setUserType(pue.getRole().getValue());
+                        System.out.println("User is manager or normal");
+
                     } else {
                         response.setUserType(UserType.GUEST.getValue());
                     }
@@ -805,6 +820,11 @@ public class ProjectBean {
         } else {
             response.setUserType(UserType.GUEST.getValue());
         }
+
+//        UserEntity admin = userDao.findUserByEmail(userEmail);
+//        if (admin.getRole().equals(UserType.ADMIN)) {
+//            response.setUserType(UserType.ADMIN.getValue());
+//        }
 
 
         switch (dtoType) {
@@ -1484,6 +1504,131 @@ public class ProjectBean {
         ProjectStatus status = responseYesNoInviteDto.isAccept() ? ProjectStatus.APPROVED : ProjectStatus.PLANNING;
 
         project.setStatus(status);
+        projectDao.merge(project);
+    }
+
+    public UserSettingsDto getStatisticsByLab(String token, Integer lab) {
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+
+        UserSettingsDto dto = new UserSettingsDto();
+        dto.setTimeout(appConfigDao.findLastConfig().getTimeOut());
+        List<LabDto> labs = labDao.findAll()
+                .stream().map(laboratory -> new LabDto(laboratory.getId(), laboratory.getLocation()))
+                .collect(Collectors.toList());
+        dto.setLabs(labs);
+
+        if(lab != null) {
+            System.out.println("lab: " + lab);
+            LabEntity le = labDao.findLabById(lab);
+            if(le == null) {
+                System.out.println("lab not found");
+                throw new IllegalArgumentException("Lab not found");
+            }
+            StatisticsDto statisticsDto = new StatisticsDto();
+            try {
+                statisticsDto = projectDao.getStatisticsByLab(lab);
+                if (statisticsDto == null) {
+                    statisticsDto = new StatisticsDto();
+                }
+            }catch (Exception e){
+                statisticsDto = new StatisticsDto();
+            }finally {
+                dto.setStatistics(statisticsDto);
+            }
+        }
+
+        return dto;
+    }
+
+    public void updateTimeout(String token, Integer timeout) {
+        String log = "Updating timeout";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if(se.getUser().getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        AppConfigEntity appConfig = new AppConfigEntity();
+        appConfig.setTimeOut(timeout);
+        appConfig.setUser(se.getUser());
+        appConfig.setMaxUsers(appConfigDao.findLastConfig().getMaxUsers());
+        appConfig.setTimeOutAdmin(appConfigDao.findLastConfig().getTimeOutAdmin());
+        appConfigDao.merge(appConfig);
+        LoggerUtil.logInfo(log, "Timeout updated", se.getUser().getEmail(), token);
+    }
+
+    public void updateRole(String token, LabelValueDto dto) {
+        String log = "Updating role";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        if(se == null) {
+            LoggerUtil.logError(log, "Invalid token", null, token);
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        if(se.getUser().getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        UserEntity user = userDao.findUserByEmail(dto.getLabel());
+        if(user == null) {
+            LoggerUtil.logError(log, "User not found", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User not found");
+        }
+//
+//        boolean isCreatorOrResponsible = taskDao.isCreatorOrResponsible(user.getId());
+//        System.out.println(Color.YELLOW + "isCreatorOrResponsible: " + isCreatorOrResponsible + Color.RESET);
+//        if(isCreatorOrResponsible) {
+//            LoggerUtil.logError(log, "User cannot change role due to active task associations", se.getUser().getEmail(), token);
+//            throw new IllegalArgumentException("User cannot change role due to active task associations");
+//        }
+//
+//        // Verificar associações ativas com projetos
+//        boolean isActiveInProjects = projectUserDao.isActiveInAnyProject(user.getId());
+//        System.out.println(Color.PURPLE + "isActiveInProjects: " + isActiveInProjects + Color.RESET);
+//        if (isActiveInProjects) {
+//            throw new IllegalArgumentException("User cannot change role due to active project associations");
+//        }
+//
+//        // Verificar associações ativas com tarefas
+//        boolean isActiveInTasks = taskExecutorDao.isActiveInAnyTask(user.getId());
+//        System.out.println(Color.CYAN + "isActiveInTasks: " + isActiveInTasks + Color.RESET);
+//        if (isActiveInTasks) {
+//            throw new IllegalArgumentException("User cannot change role due to active task associations");
+//        }
+
+        long role = dto.getValue();
+        int intValue = (int) role;
+
+        user.setRole(UserType.fromValue(intValue));
+        userDao.merge(user);
+    }
+
+    public void cancelProject(String token, Long projectId, IdNameDto dto) {
+        String log = "Cancelling project";
+        SessionEntity se = sessionDao.findSessionByToken(token);
+        ProjectEntity project = projectDao.findProjectById(projectId);
+        if(se == null || project == null) {
+            LoggerUtil.logError(log, "Invalid token or project", null, token);
+            throw new IllegalArgumentException("Invalid token or project");
+        }
+
+        if(se.getUser().getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        project.setStatus(ProjectStatus.CANCELLED);
+        project.setDescription(dto.getName());
         projectDao.merge(project);
     }
 }

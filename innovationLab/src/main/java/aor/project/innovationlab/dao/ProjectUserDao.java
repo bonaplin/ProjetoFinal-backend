@@ -139,6 +139,17 @@ public class ProjectUserDao extends AbstractDao<ProjectUserEntity>{
         }
     }
 
+    public boolean isActiveInAnyProject(long id) {
+        try {
+            Long count = em.createQuery("SELECT COUNT(pu) FROM ProjectUserEntity pu WHERE pu.user.id = :userId AND pu.active = true", Long.class)
+                    .setParameter("userId", id)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 //        try {
 //            return (long) em.createQuery(
 //                            "SELECT COUNT(pu) FROM ProjectUserEntity pu " +

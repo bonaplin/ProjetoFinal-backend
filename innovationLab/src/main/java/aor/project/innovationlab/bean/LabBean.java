@@ -53,7 +53,6 @@ public class LabBean {
     public List<LabDto> findAllLabs() {
         List<LabEntity> labs = labDao.findAllLabs();
         if(labs == null) return new ArrayList<>();
-
         return labs.stream().map(this::toDto).collect(Collectors.toList());
     }
 

@@ -61,4 +61,16 @@ public class TaskExecutorDao extends AbstractDao<TaskExecutorEntity> {
                 return null;
             }
     }
+
+    public boolean isActiveInAnyTask(long id) {
+        try {
+            Long count = em.createQuery("SELECT COUNT(te) FROM TaskExecutorEntity te WHERE te.executor.id = :userId AND te.active = true", Long.class)
+                    .setParameter("userId", id)
+                    .getSingleResult();
+            return count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

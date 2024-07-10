@@ -604,7 +604,7 @@ public class UserBean {
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(usersResponse.getTotalPages());
-
+        response.setUserType(sessionEntity.getUser().getRole().getValue());
         switch (dtoType) {
             case "UserCardDto":
                 response.setResults(users.stream()

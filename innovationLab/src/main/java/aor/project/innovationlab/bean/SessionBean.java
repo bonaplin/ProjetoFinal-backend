@@ -163,6 +163,7 @@ public class SessionBean  {
             sessionLoginDto.setEmail(userEntity.getEmail());
             sessionLoginDto.setUnreadNotifications(0);
             sessionLoginDto.setUnreadEmails(emailBean.getUnreadEmails(userEntity.getEmail()));
+            sessionLoginDto.setUserType(userEntity.getRole().getValue());
             return sessionLoginDto;
         }
         return null;

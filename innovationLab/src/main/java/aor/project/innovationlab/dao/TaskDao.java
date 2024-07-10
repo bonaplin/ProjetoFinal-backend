@@ -119,4 +119,14 @@ public class TaskDao extends AbstractDao<TaskEntity> {
         }
 
     }
+
+    public boolean isCreatorOrResponsible(long id) {
+        try {
+            return em.createQuery("SELECT t FROM TaskEntity t WHERE t.creator.id = :userId OR t.responsible.id = :userId", TaskEntity.class)
+                    .setParameter("userId", id)
+                    .getSingleResult() != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
