@@ -260,6 +260,24 @@ public class ProjectBean {
     public void createInitialData() {
         createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
         createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project5", "Description 5", "admin@admin", "Porto");
+        createProjectIfNotExists("Project6", "Description 6", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project7", "Description 7", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project8", "Description 8", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project9", "Description 9", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project10", "Description 10", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project11", "Description 11", "admin@admin", "Porto");
+        createProjectIfNotExists("Project12", "Description 12", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project13", "Description 13", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project14", "Description 14", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project15", "Description 15", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project16", "Description 16", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project17", "Description 17", "admin@admin", "Porto");
+        createProjectIfNotExists("Project18", "Description 18", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project19", "Description 19", "admin@admin", "Coimbra");
+
 
     }
 
@@ -416,7 +434,7 @@ public class ProjectBean {
             }
         }
 
-        if (createProjectDto.getKeywords() != null) {
+        if (createProjectDto.getKeywords() != null && !createProjectDto.getKeywords().isEmpty()) {
             for (InterestDto keyword : createProjectDto.getKeywords()) {
                 InterestEntity interestEntity = interestDao.findInterestByName(keyword.getName());
                 if (interestEntity != null) {
@@ -1492,7 +1510,7 @@ public class ProjectBean {
             LoggerUtil.logError(log, "Invalid token or project", null, token);
             throw new IllegalArgumentException("Invalid token or project");
         }
-
+        ProjectStatus currentStatus = project.getStatus();
         if(se.getUser().getRole() != UserType.ADMIN) {
             LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
             throw new IllegalArgumentException("User is not authorized to access this resource");
@@ -1509,17 +1527,20 @@ public class ProjectBean {
         }else{
             emails.forEach(email -> notificationBean.sendNotification(se.getUser().getEmail(), email, "Project has been " + status.toString().toLowerCase(), NotificationType.PROJECT_STATUS_CHANGED, projectId));
         }
-        logBean.addNewProjectStateChange(projectId, se.getUser().getId(), ProjectStatus.READY, status);
-
+        logBean.addNewProjectStateChange(projectId, se.getUser().getId(), currentStatus, status);
     }
 
+    /**
+     * Get statistics by lab
+     * @param token
+     * @param lab
+     * @return
+     */
     public UserSettingsDto getStatisticsByLab(String token, Integer lab) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         if(se == null) {
             throw new IllegalArgumentException("Invalid token");
         }
-
-
         UserSettingsDto dto = new UserSettingsDto();
         dto.setTimeout(appConfigDao.findLastConfig().getTimeOut());
         List<LabDto> labs = labDao.findAll()
@@ -1550,6 +1571,11 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Update timeout
+     * @param token - user token
+     * @param timeout - new timeout
+     */
     public void updateTimeout(String token, Integer timeout) {
         String log = "Updating timeout";
         SessionEntity se = sessionDao.findSessionByToken(token);
@@ -1572,6 +1598,11 @@ public class ProjectBean {
         LoggerUtil.logInfo(log, "Timeout updated", se.getUser().getEmail(), token);
     }
 
+    /**
+     * Update the user role in the project
+     * @param token - user token
+     * @param dto - max users dto
+     */
     public void updateRole(String token, LabelValueDto dto) {
         String log = "Updating role";
         SessionEntity se = sessionDao.findSessionByToken(token);
@@ -1598,6 +1629,12 @@ public class ProjectBean {
         userDao.merge(user);
     }
 
+    /**
+     * Method to cancel  a project, just managers in the project can do this.
+     * @param token - user token
+     * @param projectId - project id
+     * @param dto - name of the project
+     */
     public void cancelProject(String token, Long projectId, IdNameDto dto) {
         String log = "Cancelling project";
 
@@ -1625,12 +1662,24 @@ public class ProjectBean {
 //        notificationBean.sendNotification(user.getEmail(), project.getCreator().getEmail(), "Project has been cancelled", NotificationType.PROJECT_CANCELLED, projectId);
     }
 
-    private List<String> getProjectUsersEmails(ProjectEntity project, String currentEmail) {
-        List<UserEntity> users = projectDao.findUsersByProjectId(project.getId());
-        return users.stream()
-                .map(UserEntity::getEmail)
-                .filter(email -> !email.equals(currentEmail)) // Filtra o e-mail do usuário atual
-                .collect(Collectors.toList());
+    /**
+     * Get the project by id, to get info for manage the role, or kick the user from project
+     * @param project
+     * @param currentEmail
+     * @return
+     */
+    public List<String> getProjectUsersEmails(ProjectEntity project, String currentEmail) {
+
+        try {
+            List<UserEntity> users = projectDao.findUsersByProjectId(project.getId());
+            return users.stream()
+                    .map(UserEntity::getEmail)
+                    .filter(email -> !email.equals(currentEmail)) // Filtra o e-mail do usuário atual
+                    .collect(Collectors.toList());
+        }
+        catch (Exception e){
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -1641,7 +1690,8 @@ public class ProjectBean {
      */
     public void changeProjectStatus(String token, Long projectId, LongIdResponseDto dto) {
         String log = "Attempting to change project status";
-        String email = sessionBean.validateUserToken(token).getEmail();
+        UserEntity userEntity = sessionBean.validateUserToken(token);
+        String email = userEntity.getEmail();
 
         ProjectEntity pe = projectDao.findProjectById(projectId);
 
@@ -1692,5 +1742,6 @@ public class ProjectBean {
         getProjectUsersEmails(pe,email).forEach(userEmail -> notificationBean.sendNotification(email, userEmail, "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId));
 //        notificationBean.sendNotification(email, pe.getCreator().getEmail(), "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId);
     }
+
 
 }
