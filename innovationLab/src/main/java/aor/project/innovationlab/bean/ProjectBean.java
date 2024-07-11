@@ -376,7 +376,7 @@ public class ProjectBean {
             throw new IllegalArgumentException("Project start date cannot be after the end date");
         }
 
-        if (!createProjectDto.getEndDate().isAfter(createProjectDto.getStartDate().plusDays(1))) {
+        if (!createProjectDto.getEndDate().atStartOfDay().isAfter(createProjectDto.getStartDate().atStartOfDay())) {
             LoggerUtil.logError(log, "Project end date should be at least one day after the start date", null, null);
             throw new IllegalArgumentException("Project end date should be at least one day after the start date");
         }
@@ -517,19 +517,6 @@ public class ProjectBean {
         return appConfig.getMaxUsers();
     }
 
-
-    /**
-     * Método que faz um get de todos os projetos para serem apresentados na landing page
-     * @return
-     */
-    public List<ProjectsForLandingPage> getProjectsForLandingPage() {
-        List<ProjectEntity> projects = projectDao.getAllProjects();
-        List<ProjectsForLandingPage> projectsForLandingPage = new ArrayList<>();
-        for (ProjectEntity project : projects) {
-            projectsForLandingPage.add(convertToProjectForLandingPage(project));
-        }
-        return projectsForLandingPage;
-    }
 
     /**
      * Converte um projeto na forma entity da base de dados, para um dto a ser usado na landing page
