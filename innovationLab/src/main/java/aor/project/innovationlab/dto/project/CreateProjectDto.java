@@ -14,6 +14,7 @@ public class CreateProjectDto {
 
     private String name;
     private String description;
+    private int groupSize;
     private LocalDate startDate;
     private LocalDate endDate;
     private long lab_id;
@@ -96,5 +97,13 @@ public class CreateProjectDto {
 
     public void setSkills(List<SkillDto> skills) {
         this.skills = skills;
+    }
+
+    public int getGroupSize() {
+        return groupSize;
+    }
+
+    public void setGroupSize(int groupSize) {
+        this.groupSize = groupSize;
     }
 }

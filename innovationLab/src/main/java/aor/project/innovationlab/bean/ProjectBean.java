@@ -140,6 +140,7 @@ public class ProjectBean {
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
         dto.setLab_id(entity.getLab().getId());
+        dto.setMaxParticipants(entity.getMaxParticipants());
         return dto;
     }
 
@@ -375,7 +376,7 @@ public class ProjectBean {
             throw new IllegalArgumentException("Project start date cannot be after the end date");
         }
 
-        if (!createProjectDto.getEndDate().isAfter(createProjectDto.getStartDate().plusDays(1))) {
+        if (!createProjectDto.getEndDate().atStartOfDay().isAfter(createProjectDto.getStartDate().atStartOfDay())) {
             LoggerUtil.logError(log, "Project end date should be at least one day after the start date", null, null);
             throw new IllegalArgumentException("Project end date should be at least one day after the start date");
         }
@@ -401,6 +402,13 @@ public class ProjectBean {
             int labId = (int) createProjectDto.getLab_id();
             project.setLab(labDao.findLabById(labId));
         }
+
+        if (createProjectDto.getGroupSize() <= 0 && createProjectDto.getGroupSize() > getProjectMaxParticipants(token)){
+            LoggerUtil.logError(log, "Project group size value not valid", null, null);
+            throw new IllegalArgumentException("Project group size value not valid");
+        }
+
+        project.setMaxParticipants(createProjectDto.getGroupSize());
 
         project.setCreatedDate(createProjectDto.getStartDate());
 
@@ -475,7 +483,7 @@ public class ProjectBean {
 
         if (createProjectDto.getUsers() != null) {
 
-            if (createProjectDto.getUsers().size() > project.getMaxParticipants()) {
+            if (createProjectDto.getUsers().size() > project.getMaxParticipants() - 1) {
                 throw new IllegalArgumentException("Cannot add more users than the maximum allowed participants for the project");
             }
 
@@ -498,18 +506,17 @@ public class ProjectBean {
         }
     }
 
-    /**
-     * Método que faz um get de todos os projetos para serem apresentados na landing page
-     * @return
-     */
-    public List<ProjectsForLandingPage> getProjectsForLandingPage() {
-        List<ProjectEntity> projects = projectDao.getAllProjects();
-        List<ProjectsForLandingPage> projectsForLandingPage = new ArrayList<>();
-        for (ProjectEntity project : projects) {
-            projectsForLandingPage.add(convertToProjectForLandingPage(project));
+    public int getProjectMaxParticipants(String token) {
+        String log = "Getting project max participants";
+        if (token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
+            throw new IllegalArgumentException("Token is required");
         }
-        return projectsForLandingPage;
+
+        AppConfigEntity appConfig = appConfigDao.getMaxUsersAllowed();
+        return appConfig.getMaxUsers();
     }
+
 
     /**
      * Converte um projeto na forma entity da base de dados, para um dto a ser usado na landing page
