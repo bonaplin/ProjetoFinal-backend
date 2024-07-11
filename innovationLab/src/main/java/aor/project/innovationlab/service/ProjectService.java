@@ -87,6 +87,13 @@ public class ProjectService {
         return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.filterOptions(token))).build();
     }
 
+    @GET
+    @Path("/landing-page")
+    @Produces("application/json")
+    public Response getProjectsForLandingPage() {
+        return Response.ok().entity(JsonUtils.convertObjectToJson(projectBean.getProjectsByDto("ProjectsForLandingPage", null, null, null, null, null, null, null, null, null, null, null, 1, 20, null))).build();
+    }
+
     @POST
     @Path("/invite")
     @Consumes("application/json")

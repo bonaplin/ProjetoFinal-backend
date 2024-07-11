@@ -370,6 +370,16 @@ public class ProjectBean {
             project.setDescription(createProjectDto.getDescription());
         }
 
+        if (createProjectDto.getStartDate().isAfter(createProjectDto.getEndDate())) {
+            LoggerUtil.logError(log, "Project start date cannot be after the end date", null, null);
+            throw new IllegalArgumentException("Project start date cannot be after the end date");
+        }
+
+        if (!createProjectDto.getEndDate().isAfter(createProjectDto.getStartDate().plusDays(1))) {
+            LoggerUtil.logError(log, "Project end date should be at least one day after the start date", null, null);
+            throw new IllegalArgumentException("Project end date should be at least one day after the start date");
+        }
+
         if (createProjectDto.getStartDate() == null) {
             LoggerUtil.logError(log, "Project start date is required", null, null);
             throw new IllegalArgumentException("Project start date is required");
@@ -447,6 +457,14 @@ public class ProjectBean {
         createFinalTaskForProject(project);
     }
 
+    /**
+     * Método que verifica se o projeto ja atingiu o limite de users
+     * e se o user que esta a tentar adicionar ja esta no projeto,
+     * se passar essas verificações adiciona o user ao projeto
+     * @param session
+     * @param project
+     * @param createProjectDto
+     */
     private void addingUsersToCreatedProject(SessionEntity session, ProjectEntity project, CreateProjectDto createProjectDto) {
         ProjectUserEntity projectUserEntity = new ProjectUserEntity();
         projectUserEntity.setProject(project);
@@ -478,6 +496,35 @@ public class ProjectBean {
                 }
             }
         }
+    }
+
+    /**
+     * Método que faz um get de todos os projetos para serem apresentados na landing page
+     * @return
+     */
+    public List<ProjectsForLandingPage> getProjectsForLandingPage() {
+        List<ProjectEntity> projects = projectDao.getAllProjects();
+        List<ProjectsForLandingPage> projectsForLandingPage = new ArrayList<>();
+        for (ProjectEntity project : projects) {
+            projectsForLandingPage.add(convertToProjectForLandingPage(project));
+        }
+        return projectsForLandingPage;
+    }
+
+    /**
+     * Converte um projeto na forma entity da base de dados, para um dto a ser usado na landing page
+     * @param projectEntity
+     * @return
+     */
+    private ProjectsForLandingPage convertToProjectForLandingPage(ProjectEntity projectEntity) {
+        ProjectsForLandingPage projectDto = new ProjectsForLandingPage();
+        projectDto.setId(projectEntity.getId());
+        projectDto.setName(projectEntity.getName());
+        projectDto.setDescription(projectEntity.getDescription());
+        projectDto.setStatus(projectEntity.getStatus().toString());
+        projectDto.setStartDate(projectEntity.getStartDate());
+        projectDto.setEndDate(projectEntity.getEndDate());
+        return projectDto;
     }
 
     /**
@@ -640,7 +687,7 @@ public class ProjectBean {
      * @return - dto with the filter options
      */
     public FilterOptionsDto filterOptions(String token){
-        sessionBean.validateUserToken(token);
+        //sessionBean.validateUserToken(token);
         FilterOptionsDto dto = new FilterOptionsDto();
         List<SkillDto> skills = skillDao.getAllSkills().stream()
                 .map(skillBean::toDto)
@@ -723,9 +770,7 @@ public class ProjectBean {
             if(se != null) {
                 userEmail = se.getUser().getEmail();
             }
-            else{
-               throw new IllegalArgumentException("Sorry, you are not authorized to access this resource.");
-            }
+
         }
 
         if (lab != null && !lab.isEmpty()) {
@@ -841,6 +886,11 @@ public class ProjectBean {
             case "ProjectSideBarDto":
                 response.setResults(projects.stream()
                         .map(this::toSideBarDto)
+                        .collect(Collectors.toList()));
+                break;
+            case "ProjectsForLandingPage":
+                response.setResults(projects.stream()
+                        .map(this::convertToProjectForLandingPage)
                         .collect(Collectors.toList()));
                 break;
             default:
