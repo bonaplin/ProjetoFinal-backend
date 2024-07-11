@@ -10,6 +10,7 @@ import aor.project.innovationlab.dto.user.*;
 import aor.project.innovationlab.dto.user.password.UserChangePasswordDto;
 import aor.project.innovationlab.dto.user.password.UserRecoverPasswordDto;
 import aor.project.innovationlab.dto.user.password.UserVerifyTokenDto;
+import aor.project.innovationlab.entity.UserEntity;
 import aor.project.innovationlab.utils.JsonUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -152,8 +153,9 @@ public class UserService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response verifyToken(@HeaderParam("token") String token) {
+        System.out.println(token);
         try{
-            sessionBean.validateUserToken(token);
+            UserEntity user = sessionBean.validateUserToken(token);
         }
         catch (Exception e){
             return Response.status(401).entity("Invalid token").build();

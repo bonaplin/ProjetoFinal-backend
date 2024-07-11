@@ -3,14 +3,11 @@ package aor.project.innovationlab.bean;
 import aor.project.innovationlab.dao.*;
 import aor.project.innovationlab.dto.lab.LabDto;
 import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
-import aor.project.innovationlab.dto.response.IdNameDto;
-import aor.project.innovationlab.dto.response.LabelValueDto;
-import aor.project.innovationlab.dto.response.PaginatedResponse;
+import aor.project.innovationlab.dto.response.*;
 import aor.project.innovationlab.dto.interests.InterestDto;
 import aor.project.innovationlab.dto.product.ProductToCreateProjectDto;
 import aor.project.innovationlab.dto.project.*;
 import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
-import aor.project.innovationlab.dto.response.ResponseYesNoInviteDto;
 import aor.project.innovationlab.dto.skill.SkillDto;
 import aor.project.innovationlab.dto.statistics.StatisticsDto;
 import aor.project.innovationlab.dto.statistics.UserSettingsDto;
@@ -30,12 +27,14 @@ import aor.project.innovationlab.utils.TokenUtil;
 import aor.project.innovationlab.utils.logs.LoggerUtil;
 import aor.project.innovationlab.validator.UserValidator;
 import jakarta.ejb.EJB;
+import jakarta.ejb.Local;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import org.hibernate.stat.Statistics;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -140,6 +139,7 @@ public class ProjectBean {
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
         dto.setLab_id(entity.getLab().getId());
+        dto.setLab_location(entity.getLab().getLocation());
         dto.setMaxParticipants(entity.getMaxParticipants());
         return dto;
     }
@@ -261,6 +261,24 @@ public class ProjectBean {
     public void createInitialData() {
         createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
         createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project5", "Description 5", "admin@admin", "Porto");
+        createProjectIfNotExists("Project6", "Description 6", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project7", "Description 7", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project8", "Description 8", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project9", "Description 9", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project10", "Description 10", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project11", "Description 11", "admin@admin", "Porto");
+        createProjectIfNotExists("Project12", "Description 12", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project13", "Description 13", "admin@admin", "Coimbra");
+        createProjectIfNotExists("Project14", "Description 14", "ricardo@ricardo", "Porto");
+        createProjectIfNotExists("Project15", "Description 15", "admin@admin", "Lisboa");
+        createProjectIfNotExists("Project16", "Description 16", "ricardo@ricardo", "Coimbra");
+        createProjectIfNotExists("Project17", "Description 17", "admin@admin", "Porto");
+        createProjectIfNotExists("Project18", "Description 18", "ricardo@ricardo", "Lisboa");
+        createProjectIfNotExists("Project19", "Description 19", "admin@admin", "Coimbra");
+
 
     }
 
@@ -278,8 +296,8 @@ public class ProjectBean {
             projectDao.persist(project);
             createFinalTaskForProject(project);
 
-//            // create the entity project - creator
-//            addUserToProject(name, creatorEmail, UserType.MANAGER);
+            // create the entity project - creator
+            addUserToProject(name, creatorEmail, UserType.MANAGER);
 
             addInterestToProject(name, "Interest1");
             addInterestToProject(name, "Interest2");
@@ -434,7 +452,7 @@ public class ProjectBean {
             }
         }
 
-        if (createProjectDto.getKeywords() != null) {
+        if (createProjectDto.getKeywords() != null && !createProjectDto.getKeywords().isEmpty()) {
             for (InterestDto keyword : createProjectDto.getKeywords()) {
                 InterestEntity interestEntity = interestDao.findInterestByName(keyword.getName());
                 if (interestEntity != null) {
@@ -694,7 +712,7 @@ public class ProjectBean {
      * @return - dto with the filter options
      */
     public FilterOptionsDto filterOptions(String token){
-        //sessionBean.validateUserToken(token);
+        sessionBean.validateUserToken(token);
         FilterOptionsDto dto = new FilterOptionsDto();
         List<SkillDto> skills = skillDao.getAllSkills().stream()
                 .map(skillBean::toDto)
@@ -777,7 +795,9 @@ public class ProjectBean {
             if(se != null) {
                 userEmail = se.getUser().getEmail();
             }
-
+            else{
+               throw new IllegalArgumentException("Sorry, you are not authorized to access this resource.");
+            }
         }
 
         if (lab != null && !lab.isEmpty()) {
@@ -1552,7 +1572,7 @@ public class ProjectBean {
             LoggerUtil.logError(log, "Invalid token or project", null, token);
             throw new IllegalArgumentException("Invalid token or project");
         }
-
+        ProjectStatus currentStatus = project.getStatus();
         if(se.getUser().getRole() != UserType.ADMIN) {
             LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
             throw new IllegalArgumentException("User is not authorized to access this resource");
@@ -1562,15 +1582,27 @@ public class ProjectBean {
 
         project.setStatus(status);
         projectDao.merge(project);
+
+        List<String> emails = getProjectUsersEmails(project, se.getUser().getEmail());
+        if(responseYesNoInviteDto.isAccept()) {
+            emails.forEach(email -> notificationBean.sendNotification(se.getUser().getEmail(), email, "Project has been " + status.toString().toLowerCase(), NotificationType.PROJECT_APPROVED, projectId));
+        }else{
+            emails.forEach(email -> notificationBean.sendNotification(se.getUser().getEmail(), email, "Project has been " + status.toString().toLowerCase(), NotificationType.PROJECT_STATUS_CHANGED, projectId));
+        }
+        logBean.addNewProjectStateChange(projectId, se.getUser().getId(), currentStatus, status);
     }
 
+    /**
+     * Get statistics by lab
+     * @param token
+     * @param lab
+     * @return
+     */
     public UserSettingsDto getStatisticsByLab(String token, Integer lab) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         if(se == null) {
             throw new IllegalArgumentException("Invalid token");
         }
-
-
         UserSettingsDto dto = new UserSettingsDto();
         dto.setTimeout(appConfigDao.findLastConfig().getTimeOut());
         List<LabDto> labs = labDao.findAll()
@@ -1601,6 +1633,11 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Update timeout
+     * @param token - user token
+     * @param timeout - new timeout
+     */
     public void updateTimeout(String token, Integer timeout) {
         String log = "Updating timeout";
         SessionEntity se = sessionDao.findSessionByToken(token);
@@ -1623,6 +1660,11 @@ public class ProjectBean {
         LoggerUtil.logInfo(log, "Timeout updated", se.getUser().getEmail(), token);
     }
 
+    /**
+     * Update the user role in the project
+     * @param token - user token
+     * @param dto - max users dto
+     */
     public void updateRole(String token, LabelValueDto dto) {
         String log = "Updating role";
         SessionEntity se = sessionDao.findSessionByToken(token);
@@ -1641,27 +1683,6 @@ public class ProjectBean {
             LoggerUtil.logError(log, "User not found", se.getUser().getEmail(), token);
             throw new IllegalArgumentException("User not found");
         }
-//
-//        boolean isCreatorOrResponsible = taskDao.isCreatorOrResponsible(user.getId());
-//        System.out.println(Color.YELLOW + "isCreatorOrResponsible: " + isCreatorOrResponsible + Color.RESET);
-//        if(isCreatorOrResponsible) {
-//            LoggerUtil.logError(log, "User cannot change role due to active task associations", se.getUser().getEmail(), token);
-//            throw new IllegalArgumentException("User cannot change role due to active task associations");
-//        }
-//
-//        // Verificar associações ativas com projetos
-//        boolean isActiveInProjects = projectUserDao.isActiveInAnyProject(user.getId());
-//        System.out.println(Color.PURPLE + "isActiveInProjects: " + isActiveInProjects + Color.RESET);
-//        if (isActiveInProjects) {
-//            throw new IllegalArgumentException("User cannot change role due to active project associations");
-//        }
-//
-//        // Verificar associações ativas com tarefas
-//        boolean isActiveInTasks = taskExecutorDao.isActiveInAnyTask(user.getId());
-//        System.out.println(Color.CYAN + "isActiveInTasks: " + isActiveInTasks + Color.RESET);
-//        if (isActiveInTasks) {
-//            throw new IllegalArgumentException("User cannot change role due to active task associations");
-//        }
 
         long role = dto.getValue();
         int intValue = (int) role;
@@ -1670,22 +1691,119 @@ public class ProjectBean {
         userDao.merge(user);
     }
 
+    /**
+     * Method to cancel  a project, just managers in the project can do this.
+     * @param token - user token
+     * @param projectId - project id
+     * @param dto - name of the project
+     */
     public void cancelProject(String token, Long projectId, IdNameDto dto) {
         String log = "Cancelling project";
-        SessionEntity se = sessionDao.findSessionByToken(token);
+
+        UserEntity user = sessionBean.validateUserToken(token);
+
+//        SessionEntity se = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
-        if(se == null || project == null) {
-            LoggerUtil.logError(log, "Invalid token or project", null, token);
-            throw new IllegalArgumentException("Invalid token or project");
+        if(project == null) {
+            LoggerUtil.logError(log, "Invalid project", null, token);
+            throw new IllegalArgumentException("Invalid project");
         }
 
-        if(se.getUser().getRole() != UserType.ADMIN) {
-            LoggerUtil.logError(log, "User is not authorized to access this resource", se.getUser().getEmail(), token);
+        if(user.getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to access this resource", user.getEmail(), token);
             throw new IllegalArgumentException("User is not authorized to access this resource");
         }
 
         project.setStatus(ProjectStatus.CANCELLED);
         project.setDescription(dto.getName());
         projectDao.merge(project);
+
+        logBean.addNewProjectStateChange(projectId, user.getId(), ProjectStatus.READY, ProjectStatus.CANCELLED);
+
+        getProjectUsersEmails(project, user.getEmail()).forEach(email -> notificationBean.sendNotification(user.getEmail(),email, "Project has been cancelled", NotificationType.PROJECT_CANCELLED, projectId));
+//        notificationBean.sendNotification(user.getEmail(), project.getCreator().getEmail(), "Project has been cancelled", NotificationType.PROJECT_CANCELLED, projectId);
     }
+
+    /**
+     * Get the project by id, to get info for manage the role, or kick the user from project
+     * @param project
+     * @param currentEmail
+     * @return
+     */
+    public List<String> getProjectUsersEmails(ProjectEntity project, String currentEmail) {
+
+        try {
+            List<UserEntity> users = projectDao.findUsersByProjectId(project.getId());
+            return users.stream()
+                    .map(UserEntity::getEmail)
+                    .filter(email -> !email.equals(currentEmail)) // Filtra o e-mail do usuário atual
+                    .collect(Collectors.toList());
+        }
+        catch (Exception e){
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Change project status to planning, in progress, ready or cancelled, project manager can change to finished
+     * @param token - user token
+     * @param projectId - project id
+     * @param dto - new status
+     */
+    public void changeProjectStatus(String token, Long projectId, LongIdResponseDto dto) {
+        String log = "Attempting to change project status";
+        UserEntity userEntity = sessionBean.validateUserToken(token);
+        String email = userEntity.getEmail();
+
+        ProjectEntity pe = projectDao.findProjectById(projectId);
+
+        if (pe == null) {
+            LoggerUtil.logError(log, "Project not found", email, token);
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        ProjectUserEntity pue = projectDao.findProjectUserByProjectAndUserId(projectId, sessionBean.getUserByToken(token).getId());
+
+        if (pue == null || pue.getRole() != UserType.MANAGER) {
+            LoggerUtil.logError(log, "User is not authorized to change project status", email, token);
+            throw new IllegalArgumentException("User is not authorized to change project status");
+        }
+
+        if (dto == null) {
+            LoggerUtil.logError(log, "Invalid request", email, token);
+            throw new IllegalArgumentException("Invalid request");
+        }
+
+        ProjectStatus currentStatus = pe.getStatus();
+        boolean canBeChanged = currentStatus != ProjectStatus.CANCELLED && currentStatus != ProjectStatus.FINISHED;
+
+        if (!canBeChanged) {
+            LoggerUtil.logError(log, "Project status cannot be changed", email, token);
+            throw new IllegalArgumentException("Project status cannot be changed");
+        }
+
+        if (currentStatus.equals(ProjectStatus.READY) && pue.getRole() != UserType.ADMIN) {
+            LoggerUtil.logError(log, "User is not authorized to change project status", email, token);
+            throw new IllegalArgumentException("User is not authorized to change project status");
+        }
+
+        ProjectStatus newStatus = ProjectStatus.fromValue(dto.getValue());
+        System.out.println(Color.CYAN+ newStatus+ Color.RESET);
+        if (newStatus == ProjectStatus.PLANNING || newStatus == ProjectStatus.IN_PROGRESS || newStatus == ProjectStatus.READY || newStatus == ProjectStatus.CANCELLED) {
+            pe.setStatus(newStatus);
+            projectDao.merge(pe);
+        }else if (newStatus == ProjectStatus.FINISHED) {
+            pe.setStatus(newStatus);
+            projectDao.merge(pe);
+        } else {
+            LoggerUtil.logError(log, "Invalid new status", email, token);
+            throw new IllegalArgumentException("Invalid new status");
+        }
+
+        logBean.addNewProjectStateChange(projectId, sessionBean.getUserByToken(token).getId(), currentStatus, newStatus);
+        getProjectUsersEmails(pe,email).forEach(userEmail -> notificationBean.sendNotification(email, userEmail, "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId));
+//        notificationBean.sendNotification(email, pe.getCreator().getEmail(), "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId);
+    }
+
+
 }

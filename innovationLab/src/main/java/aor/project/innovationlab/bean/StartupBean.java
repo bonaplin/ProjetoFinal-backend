@@ -51,7 +51,7 @@ public class StartupBean {
         skillBean.createInitialData();
         userBean.createInitialData();
         productBean.createInitialData();
-//        projectBean.createInitialData();
+        projectBean.createInitialData();
 //        taskBean.createInitialData();
 //        emailBean.createInitialData();
 //        logBean.createInitialData();

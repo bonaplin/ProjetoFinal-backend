@@ -260,6 +260,10 @@ public class UserEntity implements Serializable {
         this.about = about;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
     @PreUpdate
     @PrePersist
     protected void onCreate() {

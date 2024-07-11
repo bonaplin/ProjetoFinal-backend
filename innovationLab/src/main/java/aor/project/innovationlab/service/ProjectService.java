@@ -4,6 +4,7 @@ import aor.project.innovationlab.bean.*;
 import aor.project.innovationlab.dto.log.LogDto;
 import aor.project.innovationlab.dto.project.notes.NoteIdNoteDto;
 import aor.project.innovationlab.dto.response.IdNameDto;
+import aor.project.innovationlab.dto.response.LongIdResponseDto;
 import aor.project.innovationlab.dto.response.PaginatedResponse;
 import aor.project.innovationlab.dto.project.CreateProjectDto;
 import aor.project.innovationlab.dto.project.ProjectInviteDto;
@@ -243,7 +244,17 @@ public class ProjectService {
         public Response cancelProject(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, IdNameDto idNameDto) {
         projectBean.cancelProject(token, projectId,idNameDto);
         return Response.status(200).entity("Project cancelled successfully!").build();
-        }
+    }
+
+    @PUT
+    @Path("/{projectId}/status")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response changeProjectStatus(@HeaderParam("token") String token, @PathParam("projectId") Long projectId, LongIdResponseDto dto) {
+        projectBean.changeProjectStatus(token, projectId, dto);
+        return Response.status(200).build();
+    }
+
 }
 
 

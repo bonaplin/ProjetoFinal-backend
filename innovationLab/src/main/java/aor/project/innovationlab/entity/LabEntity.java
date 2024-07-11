@@ -48,6 +48,11 @@ public class LabEntity implements Serializable {
 //        this.name = name;
 //    }
 
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getLocation() {
         return location;
     }

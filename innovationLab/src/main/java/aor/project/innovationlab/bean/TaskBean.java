@@ -6,6 +6,7 @@ import aor.project.innovationlab.dto.response.LabelValueDto;
 import aor.project.innovationlab.dto.task.*;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.NotificationType;
+import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.TaskStatus;
 import aor.project.innovationlab.enums.UserType;
 import aor.project.innovationlab.utils.Color;
@@ -1438,6 +1439,11 @@ public class TaskBean {
             LoggerUtil.logInfo(log, "User is not a participant in the project", user.getEmail(), token);
             throw new IllegalArgumentException("User is not a participant in the project");
         }
+//
+//        if(Objects.equals(TaskStatus.fromValue(dto.getStatus()), TaskStatus.PRESENTATION)){
+//            LoggerUtil.logInfo(log, "Task is a presentation task", user.getEmail(), token);
+//            throw new IllegalArgumentException("Task is a presentation task, cannot be updated by user");
+//        }
     }
 
     /**

@@ -551,16 +551,13 @@ public class UserBean {
 
     public PaginatedResponse<Object> getUsers(Long id, String token, String dtoType, String username, String email, String firstname, String lastname, String role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
         String log = "Attempt to get users";
-        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-        if(sessionEntity == null){
-            LoggerUtil.logError(log,"Session not found.",null,token);
-            throw new IllegalArgumentException("Session not found.");
-        }
+        UserEntity user= sessionBean.validateUserToken(token);
 
         if (lab != null && !lab.isEmpty()) {
             for (String name : lab) {
                 LabEntity labEntity = labDao.findLabByName(name.toUpperCase());
                 if (labEntity == null) {
+                    LoggerUtil.logError(log,"Lab not found with name: "+name,user.getEmail(),token);
                     throw new IllegalArgumentException("Lab with id " + name + " does not exist.");
                 }
             }
@@ -573,6 +570,7 @@ public class UserBean {
 
         // Validate email
         if(email != null && !UserValidator.validateEmail(email)){
+            LoggerUtil.logError(log,"Invalid email.",user.getEmail(),token);
             throw new IllegalArgumentException("Invalid email");
         }
 
@@ -592,8 +590,15 @@ public class UserBean {
             validateOrderParameters(orderField, orderDirection);
         }
 
-        String emailUser = sessionEntity.getUser().getEmail();
-        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(id, username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField, orderDirection);
+
+        String emailUser = user.getEmail();
+        Long requestingUserId = user.getId();
+        // Check if the requested email matches the email of the requesting user
+        if (email != null && email.equalsIgnoreCase(emailUser)) {
+            id = requestingUserId; // Override the ID to the requesting user's ID
+        }
+
+        PaginatedResponse<UserEntity> usersResponse = userDao.findUsers(id, requestingUserId,  username, email, firstname, lastname, role,  active, confirmed, privateProfile, lab, skill, interest, pageNumber, pageSize, orderField, orderDirection);
         List<UserEntity> users = usersResponse.getResults();
 
         if(emailUser.equalsIgnoreCase(email)){
@@ -607,7 +612,7 @@ public class UserBean {
 
         PaginatedResponse<Object> response = new PaginatedResponse<>();
         response.setTotalPages(usersResponse.getTotalPages());
-        response.setUserType(sessionEntity.getUser().getRole().getValue());
+        response.setUserType(user.getRole().getValue());
         switch (dtoType) {
             case "UserCardDto":
                 response.setResults(users.stream()

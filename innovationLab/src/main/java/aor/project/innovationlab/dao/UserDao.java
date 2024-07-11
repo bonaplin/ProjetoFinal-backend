@@ -61,6 +61,7 @@ public class UserDao extends AbstractDao<UserEntity> {
     }
 
     public PaginatedResponse<UserEntity> findUsers(Long id,
+                                                   Long requestingUserId,
                                                     String username,
                                                    String email,
                                                    String firstname,
@@ -83,6 +84,11 @@ public class UserDao extends AbstractDao<UserEntity> {
         CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
         Root<UserEntity> user = cq.from(UserEntity.class);
         List<Predicate> predicates = createPredicates(cb, user, username, email, firstname, lastname, role, active, confirmed, privateProfile, labs, skills, interests);
+
+        // Exclude the requesting user
+        if (requestingUserId != null) {
+            predicates.add(cb.notEqual(user.get("id"), requestingUserId));
+        }
 
         cq.where(predicates.toArray(new Predicate[0]));
         Order order = getOrder(cb, user, orderField, orderDirection);
@@ -116,6 +122,11 @@ public class UserDao extends AbstractDao<UserEntity> {
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<UserEntity> countRoot = countQuery.from(UserEntity.class);
         List<Predicate> countPredicates = createPredicates(cb, countRoot, username, email, firstname, lastname, role, active, confirmed, privateProfile, labs, skills, interests);
+
+        // Exclude the requesting user from the count query
+        if (requestingUserId != null && id == null) {
+            countPredicates.add(cb.notEqual(countRoot.get("id"), requestingUserId));
+        }
 
         countQuery.select(cb.count(countRoot));
         countQuery.where(countPredicates.toArray(new Predicate[0]));

@@ -10,7 +10,6 @@ import aor.project.innovationlab.dto.product.filter.FilterOptionsProductDto;
 import aor.project.innovationlab.entity.ProductEntity;
 import aor.project.innovationlab.entity.SessionEntity;
 import aor.project.innovationlab.entity.SupplierEntity;
-import aor.project.innovationlab.dto.project.filter.FilterOptionsDto;
 import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.ProductStatus;
 import aor.project.innovationlab.enums.ProductType;
@@ -19,7 +18,6 @@ import aor.project.innovationlab.utils.logs.LoggerUtil;
 import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +42,7 @@ public class ProductBean {
     ProjectUserDao projectUserDao;
 
     @EJB
-    ProjectProductDao ProjectProductDao;
+    ProjectProductDao projectProductDao;
 
     @Inject
     InterestBean interestBean;
@@ -70,7 +68,7 @@ public class ProductBean {
 
     public ProductToCreateProjectDto toProjectInfoDto(ProjectProductEntity productEntity) {
         ProductToCreateProjectDto productDto = new ProductToCreateProjectDto();
-        productDto.setId(productEntity.getId());
+        productDto.setId(productDao.findProductByName(productEntity.getProduct().getName()).getId());
         productDto.setName(productEntity.getProduct().getName());
         productDto.setQuantity(productEntity.getQuantity());
         return productDto;
@@ -205,13 +203,14 @@ public class ProductBean {
 
         String log = "Attempting to remove interest from project";
 
-        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+//        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
+//
+//        if(sessionEntity == null){
+//            LoggerUtil.logError(log,"Session not found.",null,token);
+//            throw new IllegalArgumentException("Session not found.");
+//        }
 
-        if(sessionEntity == null){
-            LoggerUtil.logError(log,"Session not found.",null,token);
-            throw new IllegalArgumentException("Session not found.");
-        }
-
+        UserEntity user = sessionBean.validateUserToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
 
         if(project == null) {
@@ -219,7 +218,7 @@ public class ProductBean {
             throw new IllegalArgumentException("Project not found");
         }
 
-        UserEntity user = sessionEntity.getUser();
+//        UserEntity user = sessionEntity.getUser();
 
         if (interestBean.checkProjectStatus(project))  {
             LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
@@ -238,21 +237,20 @@ public class ProductBean {
         }
 
         for(ProductToCreateProjectDto product : products.getProducts()) {
-
             ProductEntity productEntity = productDao.findProductById(product.getId());
-
-            ProjectProductEntity projectProduct = ProjectProductDao.findProductInProjectById(project, productEntity);
+            ProjectProductEntity projectProduct = projectProductDao.findProjectProductIds(project.getId(), productEntity.getId());
 
             if (projectProduct == null) {
-                ProjectProductEntity projectProductEntity = new ProjectProductEntity();
-                projectProductEntity.setProject(project);
-                projectProductEntity.setProduct(productEntity);
-                projectProductEntity.setQuantity(product.getQuantity());
-                projectProductEntity.setStatus(ProductStatus.STOCK);
-                ProjectProductDao.persist(projectProductEntity);
+                System.out.println("ProjectProduct is null" + product.getId() + " " + productEntity.getQuantity());
+                projectProduct = new ProjectProductEntity();
+                projectProduct.setProject(project);
+                projectProduct.setProduct(productEntity);
+                projectProduct.setQuantity(product.getQuantity());
+                projectProduct.setStatus(ProductStatus.STOCK);
+                projectProductDao.persist(projectProduct);
             } else {
-                projectProduct.setQuantity(projectProduct.getQuantity() + product.getQuantity());
-                ProjectProductDao.merge(projectProduct);
+                projectProduct.setQuantity(product.getQuantity());
+                projectProductDao.merge(projectProduct);
             }
         }
     }
@@ -276,7 +274,7 @@ public class ProductBean {
             throw new IllegalArgumentException("Session not found.");
         }
 
-        List<ProjectProductEntity> products = ProjectProductDao.findProductsByProjectId(projectId);
+        List<ProjectProductEntity> products = projectProductDao.findProductsByProjectId(projectId);
         if(products == null) {
             return new ArrayList<>();
         }
