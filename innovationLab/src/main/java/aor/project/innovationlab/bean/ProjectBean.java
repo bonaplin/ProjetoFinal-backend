@@ -475,7 +475,7 @@ public class ProjectBean {
 
         if (createProjectDto.getUsers() != null) {
 
-            if (createProjectDto.getUsers().size() > project.getMaxParticipants()) {
+            if (createProjectDto.getUsers().size() > project.getMaxParticipants() - 1) {
                 throw new IllegalArgumentException("Cannot add more users than the maximum allowed participants for the project");
             }
 
@@ -497,6 +497,18 @@ public class ProjectBean {
             }
         }
     }
+
+    public int getProjectMaxParticipants(String token) {
+        String log = "Getting project max participants";
+        if (token == null) {
+            LoggerUtil.logError(log, "Token is required", null, null);
+            throw new IllegalArgumentException("Token is required");
+        }
+
+        AppConfigEntity appConfig = appConfigDao.getMaxUsersAllowed();
+        return appConfig.getMaxUsers();
+    }
+
 
     /**
      * Método que faz um get de todos os projetos para serem apresentados na landing page

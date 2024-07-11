@@ -121,6 +121,14 @@ public class ProjectService {
     }
 
     @GET
+    @Path("/max-participants-allowed")
+    @Produces("application/json")
+    public Response getMaxParticipantsAllowed(@HeaderParam("token") String token) {
+        int maxSize = projectBean.getProjectMaxParticipants(token);
+        return Response.ok().entity(JsonUtils.convertObjectToJson(maxSize)).build();
+    }
+
+    @GET
     @Path("/invite-projects")
     @Produces("application/json")
     @Consumes("application/json")

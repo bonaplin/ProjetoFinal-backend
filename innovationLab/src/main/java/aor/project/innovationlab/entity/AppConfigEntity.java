@@ -9,6 +9,7 @@ import java.time.Instant;
 @Entity
 @Table(name ="app_config")
 @NamedQuery(name = "AppConfig.findLastConfig", query = "SELECT a FROM AppConfigEntity a ORDER BY a.id DESC")
+@NamedQuery(name = "AppConfig.getMaxUsersAllowed", query = "SELECT a FROM AppConfigEntity a")
 public class AppConfigEntity implements Serializable {
 
     @Id
