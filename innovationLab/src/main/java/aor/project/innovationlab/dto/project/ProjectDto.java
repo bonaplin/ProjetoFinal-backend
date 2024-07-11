@@ -14,6 +14,7 @@ public class ProjectDto {
     private LocalDate finishDate;
     private long lab_id;
     private boolean active;
+    private int maxParticipants;
 
 
     public ProjectDto() {
@@ -89,5 +90,13 @@ public class ProjectDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
     }
 }

@@ -140,6 +140,7 @@ public class ProjectBean {
         dto.setFinishDate(entity.getFinishDate());
         dto.setStatus(entity.getStatus().toString());
         dto.setLab_id(entity.getLab().getId());
+        dto.setMaxParticipants(entity.getMaxParticipants());
         return dto;
     }
 
@@ -401,6 +402,13 @@ public class ProjectBean {
             int labId = (int) createProjectDto.getLab_id();
             project.setLab(labDao.findLabById(labId));
         }
+
+        if (createProjectDto.getGroupSize() <= 0 && createProjectDto.getGroupSize() > getProjectMaxParticipants(token)){
+            LoggerUtil.logError(log, "Project group size value not valid", null, null);
+            throw new IllegalArgumentException("Project group size value not valid");
+        }
+
+        project.setMaxParticipants(createProjectDto.getGroupSize());
 
         project.setCreatedDate(createProjectDto.getStartDate());
 
