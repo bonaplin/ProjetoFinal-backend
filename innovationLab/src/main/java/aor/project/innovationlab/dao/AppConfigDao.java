@@ -13,21 +13,30 @@ private static final long serialVersionUID = 1L;
     }
 
     public AppConfigEntity findLastConfig() {
-        return (AppConfigEntity) em.createNamedQuery("AppConfig.findLastConfig")
-                .setMaxResults(1)
-                .getResultList()
-                .stream()
-                .findFirst()
-                .orElse(null);
+        try {
+            return (AppConfigEntity) em.createNamedQuery("AppConfig.findLastConfig")
+                    .setMaxResults(1)
+                    .getResultList()
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            return new AppConfigEntity();
+        }
     }
 
     public AppConfigEntity getMaxUsersAllowed() {
-        return (AppConfigEntity) em.createNamedQuery("AppConfig.getMaxUsersAllowed")
-                .setMaxResults(1)
-                .getResultList()
-                .stream()
-                .findFirst()
-                .orElse(null);
+        try {
+            return (AppConfigEntity) em.createNamedQuery("AppConfig.getMaxUsersAllowed")
+                    .setMaxResults(1)
+                    .getResultList()
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+        }
+        catch (Exception e) {
+            return new AppConfigEntity();
+        }
     }
 
 }

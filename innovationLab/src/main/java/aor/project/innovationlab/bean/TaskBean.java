@@ -796,7 +796,7 @@ public class TaskBean {
     }
 
     /**
-     * Update the presentation task of a project to be the last task
+     * Update the presentation task of a project to be the last task, updating project end Date
      * @param projectId - id of the project
      */
     private void updatePresentationTask(Long projectId) {
@@ -813,6 +813,9 @@ public class TaskBean {
             // Salva as alterações na base de dados
             taskDao.merge(presentationTask);
             // Adiciona um log indicando a mudança da tarefa
+            ProjectEntity project = projectDao.findProjectById(projectId);
+            project.setEndDate(presentationTask.getFinalDate());
+            projectDao.merge(project);
 //            logBean.addNewTaskchange(projectId, presentationTask.getResponsible().getId(), presentationTask.getId());
         }
     }
@@ -1295,6 +1298,8 @@ public class TaskBean {
         addTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
 
         updateDependentTasksDate(task, new HashSet<>());
+        LoggerUtil.logInfo(log, "Task created successfully", user.getEmail(), token);
+        logBean.addNewTask(task.getProject().getId(), user.getId(), task.getId());
         return toGanttDto(task);
     }
 
@@ -1367,15 +1372,12 @@ public class TaskBean {
         updateUsersForTask(task, dto.getUsersIds().stream().filter(id -> !id.equals(dto.getResponsibleId())).collect(Collectors.toList()), dto.getProjectId());
         updateTaskDependencies(task, dto.getDependentTasksIds(), dto.getProjectId());
 
-
-
         updateDependentTasksDate(task, new HashSet<>());
         if (!oldTaskStatus.equals(newTaskStatus)) {
-            logBean.addNewTaskStateChange(task.getProject().getId(), se.getUser().getId(), task.getId(), oldTaskStatus, newTaskStatus);
+            logBean.addNewTaskStateChange(task.getProject().getId(), se.getUser().getId(), task.getId(), newTaskStatus,oldTaskStatus);
             System.out.println("Task status updated successfully");
         }else {
-            logBean.addNewTaskchange(task.getProject().getId(), se.getUser().getId(), task.getId());
-            System.out.println("Task updated successfully");
+            System.out.println("task dont change status");
         }
         return toGanttDto(task);
     }

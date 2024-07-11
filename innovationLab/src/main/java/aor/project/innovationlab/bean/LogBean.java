@@ -161,7 +161,7 @@ public class LogBean {
 
         log.setAffectedUser(affectedUser);
         logDao.persist(log);
-        System.out.println("User joined");
+//        System.out.println("User joined");
         return log;
     }
     public LogEntity addNewUserLeave(Long projectId, Long affectedUserId){

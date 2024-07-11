@@ -255,6 +255,16 @@ public class ProjectService {
         return Response.status(200).build();
     }
 
+    @PUT
+    @Path("/max-participants")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response changeMaxParticipants(@HeaderParam("token") String token, LongIdResponseDto dto) {
+        System.out.println(dto.getValue());
+        LongIdResponseDto response = projectBean.changeMaxParticipants(token, dto);
+        return Response.status(200).entity(JsonUtils.convertObjectToJson(response)).build();
+    }
+
 }
 
 

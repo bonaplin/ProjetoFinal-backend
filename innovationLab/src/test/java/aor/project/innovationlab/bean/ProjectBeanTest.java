@@ -13,7 +13,9 @@ import aor.project.innovationlab.entity.*;
 import aor.project.innovationlab.enums.NotificationType;
 import aor.project.innovationlab.enums.ProjectStatus;
 import aor.project.innovationlab.enums.UserType;
+import aor.project.innovationlab.service.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,6 +62,9 @@ public class ProjectBeanTest {
     @InjectMocks
     private UserBean userBean;
 
+    @InjectMocks
+    private ProjectService projectService;
+
     private SessionEntity validSession;
     private AppConfigEntity appConfig;
     private List<LabEntity> labEntities;
@@ -72,6 +78,13 @@ public class ProjectBeanTest {
     private LongIdResponseDto dto;
     private String token;
     private Long projectId;
+
+    private UserEntity regularUser;
+    private ProjectEntity projectEntity;
+    private AppConfigEntity appConfigEntity;
+    private SessionEntity activeSession;
+    private SessionEntity expiredSession;
+    private SessionEntity inactiveSession;
 
     private SessionEntity adminSession;
     private SessionEntity nonAdminSession;
@@ -100,9 +113,9 @@ public class ProjectBeanTest {
 
         // Set up app config
         appConfig = new AppConfigEntity();
-        appConfig.setTimeOut(30);
+        appConfig.setMaxUsers(10); // Exemplo de configuração válida
         appConfig.setTimeOutAdmin(60);
-        appConfig.setMaxUsers(10);
+        appConfig.setTimeOut(30);
         appConfig.setUser(mockUserAdmin);
 
         // Set up lab entity
@@ -147,7 +160,120 @@ public class ProjectBeanTest {
         targetUser = new UserEntity();
         targetUser.setEmail("target@example.com");
         targetUser.setRole(UserType.NORMAL);
+
+        adminUser = new UserEntity();
+        adminUser.setRole(UserType.ADMIN);
+
+        regularUser = new UserEntity();
+        regularUser.setRole(UserType.NORMAL);
+
+        projectEntity = new ProjectEntity();
+        projectEntity.setId(1L);
+
+        appConfigEntity = new AppConfigEntity();
+        appConfigEntity.setMaxUsers(10);
+
+        adminUser = new UserEntity();
+        adminUser.setRole(UserType.ADMIN);
+
+        regularUser = new UserEntity();
+        regularUser.setRole(UserType.NORMAL);
+
+        activeSession = new SessionEntity();
+        activeSession.setToken("active-token");
+        activeSession.setExpirationDate(Instant.now().plus(Duration.ofHours(1)));
+        activeSession.setActive(true);
+        activeSession.setUser(regularUser);
+
+        expiredSession = new SessionEntity();
+        expiredSession.setToken("expired-token");
+        expiredSession.setExpirationDate(Instant.now().minus(Duration.ofHours(1)));
+        expiredSession.setActive(true);
+        expiredSession.setUser(regularUser);
+
+        inactiveSession = new SessionEntity();
+        inactiveSession.setToken("inactive-token");
+        inactiveSession.setExpirationDate(Instant.now().plus(Duration.ofHours(1)));
+        inactiveSession.setActive(false);
+        inactiveSession.setUser(regularUser);
     }
+
+    @Test
+    public void testValidateUserToken_TokenNotFound() {
+        when(sessionDao.findSessionByToken("invalid-token")).thenReturn(null);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                sessionBean.validateUserToken("invalid-token")
+        );
+
+        assertEquals("Token not found", exception.getMessage());
+    }
+
+    @Test
+    public void testValidateUserToken_TokenExpired() {
+        when(sessionDao.findSessionByToken("expired-token")).thenReturn(expiredSession);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                sessionBean.validateUserToken("expired-token")
+        );
+
+        assertEquals("Token expired", exception.getMessage());
+    }
+
+    @Test
+    public void testValidateUserToken_TokenNotActive() {
+        when(sessionDao.findSessionByToken("inactive-token")).thenReturn(inactiveSession);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                sessionBean.validateUserToken("inactive-token")
+        );
+
+        assertEquals("Token not active", exception.getMessage());
+    }
+
+    @Test
+    @Disabled
+    public void testValidateUserToken_AdminUser() {
+        activeSession.setUser(adminUser); // Define usuário admin na sessão ativa
+        when(sessionDao.findSessionByToken("active-token")).thenReturn(activeSession); // Simula retorno do DAO
+
+        // Simula o retorno válido do AppConfigDao
+        when(appConfigDao.findLastConfig()).thenReturn(appConfig);
+
+        UserEntity user = sessionBean.validateUserToken("active-token"); // Executa método de validação
+
+        assertEquals(adminUser, user); // Verifica se o usuário retornado é o admin
+
+        // Verifica se a expiração do token está dentro do intervalo esperado
+        Instant expectedMinExpiration = Instant.now().plus(Duration.ofMinutes(29));
+        Instant expectedMaxExpiration = Instant.now().plus(Duration.ofMinutes(31));
+        Instant actualExpiration = user.getTokenExpiration();
+
+        assertTrue(actualExpiration.isAfter(expectedMinExpiration) || actualExpiration.equals(expectedMinExpiration));
+        assertTrue(actualExpiration.isBefore(expectedMaxExpiration) || actualExpiration.equals(expectedMaxExpiration));
+    }
+
+    @Test
+    @Disabled
+    public void testValidateUserToken_RegularUser() {
+        when(sessionDao.findSessionByToken("active-token")).thenReturn(activeSession); // Simula retorno do DAO
+
+        // Simula o retorno válido do AppConfigDao
+        when(appConfigDao.findLastConfig()).thenReturn(appConfig);
+
+        UserEntity user = sessionBean.validateUserToken("active-token"); // Executa método de validação
+
+        assertEquals(regularUser, user); // Verifica se o usuário retornado é o regular
+
+        // Verifica se a expiração do token está dentro do intervalo esperado
+        Instant expectedMinExpiration = Instant.now().plus(Duration.ofMinutes(59)); // Regular user expira após 59 minutos
+        Instant expectedMaxExpiration = Instant.now().plus(Duration.ofMinutes(61)); // Regular user expira antes de 61 minutos
+        Instant actualExpiration = user.getTokenExpiration();
+
+        assertTrue(actualExpiration.isAfter(expectedMinExpiration) || actualExpiration.equals(expectedMinExpiration));
+        assertTrue(actualExpiration.isBefore(expectedMaxExpiration) || actualExpiration.equals(expectedMaxExpiration));
+    }
+
 
     @Test
     public void testGetStatisticsByLab_ValidTokenAndLab() {
@@ -465,6 +591,132 @@ public class ProjectBeanTest {
         verify(userDao).merge(targetUser);
     }
 
-    // Other tests...
+//    @Test
+//    public void testChangeMaxParticipants_UserNotAuthorized() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(regularUser);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(5);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("invalid-token", dto)
+//        );
+//
+//        assertEquals("User is not authorized to access this resource", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_InvalidRequest_NullDto() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", null)
+//        );
+//
+//        assertEquals("Invalid request: DTO is null", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_InvalidValue() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(0);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", dto)
+//        );
+//
+//        assertEquals("Invalid value: Value must be greater than zero", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_ProjectNotFound() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//        when(projectDao.findProjectById(anyLong())).thenReturn(null);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(5);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", dto)
+//        );
+//
+//        assertEquals("Project not found", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_MoreParticipantsThanNewLimit() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//        when(projectDao.findProjectById(anyLong())).thenReturn(projectEntity);
+//        when(projectDao.getCountUsersInProject(anyLong())).thenReturn(6);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(5);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", dto)
+//        );
+//
+//        assertEquals("Project has more participants than the new limit", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_AppConfigNotFound() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//        when(projectDao.findProjectById(anyLong())).thenReturn(projectEntity);
+//        when(projectDao.getCountUsersInProject(anyLong())).thenReturn(4);
+//        when(appConfigDao.findLastConfig()).thenReturn(null);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(5);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", dto)
+//        );
+//
+//        assertEquals("App config not found", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_NewLimitGreaterThanCurrentLimit() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//        when(projectDao.findProjectById(anyLong())).thenReturn(projectEntity);
+//        when(projectDao.getCountUsersInProject(anyLong())).thenReturn(4);
+//        when(appConfigDao.findLastConfig()).thenReturn(appConfigEntity);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(15);
+//
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+//                projectService.changeMaxParticipants("admin-token", dto)
+//        );
+//
+//        assertEquals("New limit must be lower than or equal to the current limit", exception.getMessage());
+//    }
+//
+//    @Test
+//    public void testChangeMaxParticipants_Success() {
+//        when(sessionBean.validateUserToken(anyString())).thenReturn(adminUser);
+//        when(projectDao.findProjectById(anyLong())).thenReturn(projectEntity);
+//        when(projectDao.getCountUsersInProject(anyLong())).thenReturn(4);
+//        when(appConfigDao.findLastConfig()).thenReturn(appConfigEntity);
+//
+//        LongIdResponseDto dto = new LongIdResponseDto();
+//        dto.setId(1L);
+//        dto.setValue(5);
+//
+//        projectService.changeMaxParticipants("admin-token", dto);
+//
+//        verify(appConfigDao, times(1)).merge(appConfigEntity);
+//        assertEquals(5, appConfigEntity.getMaxUsers());
+//    }
+
 
 }

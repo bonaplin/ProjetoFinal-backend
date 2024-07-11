@@ -3,6 +3,7 @@ package aor.project.innovationlab.service;
 import aor.project.innovationlab.exception.GlobalExceptionHandler;
 import aor.project.innovationlab.utils.JacksonConfig;
 import aor.project.innovationlab.utils.JsonUtils;
+import aor.project.innovationlab.utils.populator.PopulatorService;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
@@ -31,7 +32,7 @@ public class ApplicationConfig extends Application{
         resources.add(JacksonConfig.class);
         resources.add(ApplicationConfig.class);
         resources.add(AdminService.class);
-
+        resources.add(PopulatorService.class);
         return resources;
     }
 }

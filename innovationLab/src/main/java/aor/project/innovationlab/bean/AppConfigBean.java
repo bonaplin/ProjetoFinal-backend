@@ -93,7 +93,7 @@ public class AppConfigBean {
         if (appConfigDao.findLastConfig() == null) {
             AppConfigEntity appConfigEntity = new AppConfigEntity();
             appConfigEntity.setMaxUsers(10);
-            appConfigEntity.setTimeOut(10);
+            appConfigEntity.setTimeOut(60);
             appConfigEntity.setTimeOutAdmin(60);
 
             UserEntity userEntity = userDao.findUserByEmail("admin@admin");

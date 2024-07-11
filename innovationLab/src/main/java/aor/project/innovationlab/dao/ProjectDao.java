@@ -384,4 +384,15 @@ public class ProjectDao extends AbstractDao<ProjectEntity> {
             return null;
         }
     }
+
+    public int getCountUsersInProject(long id) {
+        try {
+            return em.createQuery("SELECT COUNT(u) FROM ProjectUserEntity u WHERE u.project.id = :projectId AND u.active = true", Long.class)
+                    .setParameter("projectId", id)
+                    .getSingleResult()
+                    .intValue();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }

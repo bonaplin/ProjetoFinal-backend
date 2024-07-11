@@ -289,7 +289,7 @@ public class ProjectBean {
             project.setDescription(description);
             project.setCreator(userDao.findUserByEmail(creatorEmail));
             project.setStartDate(LocalDate.now());
-            project.setEndDate(LocalDate.now().plusDays(20));
+            project.setEndDate(LocalDate.now().plusDays(12));
             project.setFinishDate(LocalDate.now().plusDays(30));
             project.setLab(labDao.findLabByLocation(location));
             project.setSystemName(taskBean.taskSystemNameGenerator(name));
@@ -299,28 +299,23 @@ public class ProjectBean {
             // create the entity project - creator
             addUserToProject(name, creatorEmail, UserType.MANAGER);
 
-            addInterestToProject(name, "Interest1");
-            addInterestToProject(name, "Interest2");
-
-            addResourceToProject(name,"123456788");
-            addResourceToProjectByNames(name, "Product 6");
-            addResourceToProjectByNames(name, "Product 2");
-            addResourceToProjectByNames(name, "Product 3");
+//            addInterestToProject(name, "Interest1");
+//            addInterestToProject(name, "Interest2");
 
             addUserToProject(name, "joao@joao", UserType.NORMAL);
             addSkillToProject(name, "Assembly");
             addSkillToProject(name, "macOS");
             addSkillToProject(name, "IntelIJ");
-            addInterestToProject(name, "Interest3");
-            addInterestToProject(name, "Interest4");
-            addInterestToProject(name, "Interest5");
-            addInterestToProject(name, "Interest6");
+//            addInterestToProject(name, "Interest3");
+//            addInterestToProject(name, "Interest4");
+//            addInterestToProject(name, "Interest5");
+//            addInterestToProject(name, "Interest6");
 //            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
 //            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
             sendrandommessages(project.getId());
-            ProjectEntity pe = projectDao.findProjectByName(name);
-            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
-            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
+//            ProjectEntity pe = projectDao.findProjectByName(name);
+//            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
+//            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
 
             //TESTE - add log ao add user
             logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId());
@@ -1510,6 +1505,11 @@ public class ProjectBean {
         projectUserDao.merge(invitedUser);
     }
 
+    /**
+     * Leave a project, only participants can leave the project and not the creator
+     * @param token - user token
+     * @param projectId - project id
+     */
     public void leaveProject(String token, Long projectId) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         ProjectEntity pe = projectDao.findProjectById(projectId);
@@ -1538,6 +1538,13 @@ public class ProjectBean {
         projectUserDao.merge(pue);
     }
 
+    /**
+     * Get ready projects to be approved by admins
+     * @param token - user token
+     * @param pageNumber - page number
+     * @param pageSize - page size
+     * @return - paginated response with ready projects
+     */
     public PaginatedResponse<Object> getReadyProjects(String token, Integer pageNumber, Integer pageSize){
         String log = "Getting ready projects";
         SessionEntity se = sessionDao.findSessionByToken(token);
@@ -1562,6 +1569,12 @@ public class ProjectBean {
         return response;
     }
 
+    /**
+     * Method to approve or reject a project, just admins can do this.
+     * @param token - user token
+     * @param projectId - project id
+     * @param responseYesNoInviteDto - response dto
+     */
     public void approveProject(String token, Long projectId, ResponseYesNoInviteDto responseYesNoInviteDto) {
         String log = "Approving/Reject project";
 
@@ -1589,7 +1602,7 @@ public class ProjectBean {
         }else{
             emails.forEach(email -> notificationBean.sendNotification(se.getUser().getEmail(), email, "Project has been " + status.toString().toLowerCase(), NotificationType.PROJECT_STATUS_CHANGED, projectId));
         }
-        logBean.addNewProjectStateChange(projectId, se.getUser().getId(), currentStatus, status);
+        logBean.addNewProjectStateChange(projectId, se.getUser().getId(), status ,currentStatus);
     }
 
     /**
@@ -1800,10 +1813,52 @@ public class ProjectBean {
             throw new IllegalArgumentException("Invalid new status");
         }
 
-        logBean.addNewProjectStateChange(projectId, sessionBean.getUserByToken(token).getId(), currentStatus, newStatus);
+        logBean.addNewProjectStateChange(projectId, sessionBean.getUserByToken(token).getId(), newStatus,currentStatus);
         getProjectUsersEmails(pe,email).forEach(userEmail -> notificationBean.sendNotification(email, userEmail, "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId));
 //        notificationBean.sendNotification(email, pe.getCreator().getEmail(), "Project status has been changed to " + newStatus, NotificationType.PROJECT_STATUS_CHANGED, projectId);
     }
 
 
+    public LongIdResponseDto changeMaxParticipants(String token, LongIdResponseDto dto) {
+        UserEntity user = sessionBean.validateUserToken(token);
+
+        if(user.getRole() != UserType.ADMIN) {
+            throw new IllegalArgumentException("User is not authorized to access this resource");
+        }
+
+        if(dto == null) {
+            throw new IllegalArgumentException("Invalid request");
+        }
+
+        if(dto.getValue() < 1) {
+            throw new IllegalArgumentException("Invalid value");
+        }
+
+        ProjectEntity pe = projectDao.findProjectById(dto.getId());
+
+        if(pe == null) {
+            throw new IllegalArgumentException("Project not found");
+        }
+
+        int usersInProject = projectDao.getCountUsersInProject(pe.getId());
+
+        if(usersInProject > dto.getValue()) {
+            throw new IllegalArgumentException("Project has more participants than the new limit");
+        }
+
+        AppConfigEntity ace = appConfigDao.findLastConfig();
+
+        if(ace == null) {
+            throw new IllegalArgumentException("App config not found");
+        }
+
+        if(ace.getMaxUsers() >= dto.getValue()) {
+            pe.setMaxParticipants(dto.getValue());
+            projectDao.merge(pe);
+        } else {
+            throw new IllegalArgumentException("New limit must be lower than the current limit");
+        }
+
+        return dto;
+    }
 }
