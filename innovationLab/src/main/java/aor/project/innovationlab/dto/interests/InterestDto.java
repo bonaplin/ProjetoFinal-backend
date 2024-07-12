@@ -7,6 +7,11 @@ public class InterestDto {
     public InterestDto() {
     }
 
+    public InterestDto(long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public long getId() {
         return id;
     }

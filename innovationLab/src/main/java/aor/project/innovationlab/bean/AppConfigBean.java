@@ -89,6 +89,9 @@ public class AppConfigBean {
         appConfigDao.merge(appConfigEntity);
     }
 
+    /**
+     * Get the app config
+     */
     public void createInitialData() {
         if (appConfigDao.findLastConfig() == null) {
             AppConfigEntity appConfigEntity = new AppConfigEntity();

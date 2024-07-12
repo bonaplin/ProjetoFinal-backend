@@ -114,17 +114,6 @@ public class ImageBean {
         return new ByteArrayInputStream(baos.toByteArray());
     }
 
-//    /**
-//     * Gets the image from the server, given the image path
-//     * @param imagePath
-//     * @return
-//     * @throws IOException
-//     */
-//    public byte[] getImage(String imagePath) throws IOException {
-//        Path path = Paths.get(imagePath);
-//        return Files.readAllBytes(path);
-//    }
-
     /**
      * Gets the file extension of a file
      * @param fileName
@@ -158,23 +147,6 @@ public class ImageBean {
         userDao.merge(userEntity);
         return imagePaths;
     }
-
-
-//    /**
-//     * Gets the image of a user.
-//     * @param token
-//     * @return
-//     * @throws IOException
-//     */
-//    public InputStream getUserImage(String token) throws IOException {
-//        UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
-//        if (userEntity == null) {
-//            throw new IllegalArgumentException("User not found with token: " + token);
-//        }
-//
-//        String imagePath = userEntity.getProfileImagePath();
-//        return new ByteArrayInputStream(getImage(imagePath));
-//    }
 
     /**
      * Gets the image path of a user.

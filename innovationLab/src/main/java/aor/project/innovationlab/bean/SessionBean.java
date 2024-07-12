@@ -41,27 +41,6 @@ public class SessionBean  {
     private EmailBean emailBean;
     @Inject
     private NotificationBean notificationBean;
-//
-//    @EJB
-//    private JwtBean jwtService;
-
-//    public static int DEFAULT_TOKEN_EXPIRATION_MINUTES = 60;
-
-
-//    /**
-//     * Method to set the default expiration time of a token
-//     * It sets the default expiration time of a token in minutes
-//     * @param minutes
-//     * @param token
-//     */
-//    private void setDefaultTokenExpirationMinutes(int minutes, String token){
-//        TokenStatus tokenStatus = isValidUserByToken(token);
-//        if(!tokenStatus.equals(TokenStatus.VALID)) return;
-//
-//        //TODO: verify if the user has permission to change the expiration time
-//
-//        DEFAULT_TOKEN_EXPIRATION_MINUTES = minutes;
-//    }
 
     /**
      * Method to get the default expiration time of a token
@@ -125,11 +104,6 @@ public class SessionBean  {
         }
         return sessionEntity.getUser();
     }
-
-//    private void updateTokenExpiration(SessionEntity sessionEntity) {
-//        sessionEntity.setExpirationDate(generateExpirationDate());
-//        sessionDao.merge(sessionEntity);
-//    }
 
     /**
      * Method to login a user
@@ -201,10 +175,6 @@ public class SessionBean  {
         SessionEntity sessionEntity = new SessionEntity();
         sessionEntity.setUser(userEntity);
 
-//        String token = jwtService.generateToken(userEntity.getEmail(),userEntity.getRole());
-//
-//        Claims claims = jwtService.decodeJWT(token);
-//        Date expirationDate = claims.getExpiration();
         String token = TokenUtil.generateToken();
         sessionEntity.setToken(token);
         sessionEntity.setExpirationDate(generateExpirationDate());
@@ -237,15 +207,6 @@ public class SessionBean  {
         return Instant.now().plus(Duration.ofMinutes(getDefaultTokenExpirationMinutes()));
     }
 
-//    public void generateSessionToken(UserEntity userEntity) {
-//        String newToken = TokenUtil.generateToken();
-//        SessionEntity sessionEntity = new SessionEntity();
-//        sessionEntity.setUser(userEntity);
-//        sessionEntity.setToken(newToken);
-//        sessionEntity.setExpirationDate(generateExpirationDate());
-//        sessionDao.merge(sessionEntity);
-//    }
-
     /**
      * Method to get the user of a session
      * It returns the user of the session with the token
@@ -259,6 +220,11 @@ public class SessionBean  {
         return sessionEntity.getUser();
     }
 
+    /**
+     * Method to get the token from the authorization header
+     * @param auth - authorization header
+     * @return - token
+     */
     public String getTokenFromAuthorizationHeader(String auth) {
         if (auth == null || !auth.startsWith("Bearer ")) {
             throw new IllegalArgumentException("Invalid authorization header");
@@ -266,6 +232,10 @@ public class SessionBean  {
         return auth.substring("Bearer".length()).trim();
     }
 
+    /**
+     * Method to check if a user is an admin
+     * @param token - token of the user
+     */
     public void isAdmin(String token) {
         UserEntity user = getUserByToken(token);
         if (user == null) {

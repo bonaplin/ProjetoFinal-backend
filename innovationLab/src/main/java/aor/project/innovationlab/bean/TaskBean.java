@@ -331,7 +331,13 @@ public class TaskBean {
         }
     }
 
-    private TaskPrerequisiteEntity findPrerequisiteTaskEntityByPrerequisite(TaskEntity task, TaskEntity prerequisite) {
+    /**
+     * Find a TaskPrerequisiteEntity by the prerequisite task.
+     * @param task - task
+     * @param prerequisite - prerequisite task
+     * @return - TaskPrerequisiteEntity
+     */
+    public TaskPrerequisiteEntity findPrerequisiteTaskEntityByPrerequisite(TaskEntity task, TaskEntity prerequisite) {
         for (TaskPrerequisiteEntity taskPrerequisiteEntity : task.getPrerequisites()) {
             if (taskPrerequisiteEntity.getPrerequisite().equals(prerequisite) && taskPrerequisiteEntity.isActive()) {
                 return taskPrerequisiteEntity;
@@ -349,6 +355,10 @@ public class TaskBean {
         String log = "Attempting to add executor to task";
         TaskEntity task = taskDao.findTaskById(taskId);
         UserEntity executor = userDao.findUserByEmail(executorEmail);
+        if(task == null || executor == null) {
+            LoggerUtil.logInfo(log, "Task or executor not found", executorEmail, null);
+            return;
+        }
         if (task != null && executor != null) {
             TaskExecutorEntity taskExecutor = new TaskExecutorEntity();
             taskExecutor.setTask(task);
@@ -568,7 +578,7 @@ public class TaskBean {
      * @param taskEntity - task entity
      * @return - tasks gantt dto
      */
-    private TaskGanttDto toGanttDto(TaskEntity taskEntity) {
+    TaskGanttDto toGanttDto(TaskEntity taskEntity) {
 
         TaskGanttDto taskGanttDto = new TaskGanttDto();
         taskGanttDto.setId(taskEntity.getId());
@@ -785,7 +795,7 @@ public class TaskBean {
      * @param taskId - id of the task
      * @return - set of dependent tasks
      */
-    private Set<TaskEntity> getDependentTasks(Long taskId) {
+    public Set<TaskEntity> getDependentTasks(Long taskId) {
         TaskEntity taskEntity = taskDao.findTaskById(taskId);
         if (taskEntity == null) {
             return Collections.emptySet();
@@ -799,7 +809,7 @@ public class TaskBean {
      * Update the presentation task of a project to be the last task, updating project end Date
      * @param projectId - id of the project
      */
-    private void updatePresentationTask(Long projectId) {
+    void updatePresentationTask(Long projectId) {
         // Procura a tarefa de apresentação pelo projeto e status
         TaskEntity presentationTask = taskDao.findTaskByProjectIdAndStatus(projectId, TaskStatus.PRESENTATION);
         if (presentationTask != null) {
@@ -826,7 +836,7 @@ public class TaskBean {
      * @param excludeTaskId - id of the task to exclude
      * @return - latest final date
      */
-    private LocalDate getLatestFinalDate(Long projectId, Long excludeTaskId) {
+    LocalDate getLatestFinalDate(Long projectId, Long excludeTaskId) {
         List<TaskEntity> tasks = taskDao.findTasksByProjectId(projectId);
         LocalDate latestFinalDate = LocalDate.MIN; // Inicializa com a data mínima
 
@@ -847,7 +857,7 @@ public class TaskBean {
      * @param visitedTaskIds - set of visited task ids to prevent infinite recursion
      * @return - updated latest final date
      */
-    private LocalDate updateLatestFinalDate(TaskEntity task, LocalDate latestFinalDate, Set<Long> visitedTaskIds) {
+    LocalDate updateLatestFinalDate(TaskEntity task, LocalDate latestFinalDate, Set<Long> visitedTaskIds) {
         String log = "Attempting to update latest final date";
         if (visitedTaskIds.contains(task.getId())) {
             // Evita ciclos infinitos retornando a data atual
@@ -878,7 +888,7 @@ public class TaskBean {
      * @param task - tarefa
      * @param additionalExecutorsNames - lista de nomes dos executores adicionais
      */
-    private void addAdditionalExecutorsToTask(TaskEntity task, List<String> additionalExecutorsNames, String token) {
+    void addAdditionalExecutorsToTask(TaskEntity task, List<String> additionalExecutorsNames, String token) {
         String log = "Attempting to add additional executors to task";
         if (additionalExecutorsNames != null) {
             for (String additionalExecutorName : additionalExecutorsNames) {
@@ -1190,7 +1200,7 @@ public class TaskBean {
      * @param potentialPrerequisite
      * @return
      */
-    private boolean createsDependencyCycle(TaskEntity task, TaskEntity potentialPrerequisite) {
+    boolean createsDependencyCycle(TaskEntity task, TaskEntity potentialPrerequisite) {
         Set<TaskEntity> visitedTasks = new HashSet<>();
         Deque<TaskEntity> stack = new ArrayDeque<>();
         stack.push(potentialPrerequisite);
@@ -1387,7 +1397,7 @@ public class TaskBean {
      * @param dependentTaskIds - list of dependent task IDs
      * @return the maximum final date, or null if there are no dependencies
      */
-    private LocalDate findMaxDependentFinalDate(List<Long> dependentTaskIds) {
+    LocalDate findMaxDependentFinalDate(List<Long> dependentTaskIds) {
         if (dependentTaskIds == null || dependentTaskIds.isEmpty()) {
             return null;
         }
@@ -1411,7 +1421,7 @@ public class TaskBean {
      * @param user - user creating the task
      * @param token - user token
      */
-    private void validateTaskCreateDto(TaskCreateDto dto, UserEntity user, String token){
+    void validateTaskCreateDto(TaskCreateDto dto, UserEntity user, String token){
         String log= "Attempting to create/update task";
         if(dto == null || dto.getProjectId() == null || dto.getTitle() == null || dto.getInitialDate() == null || dto.getFinalDate() == null || dto.getResponsibleId() == null) {
             LoggerUtil.logInfo(log, "Invalid dto", user.getEmail(), token);

@@ -16,7 +16,12 @@ public class EmailSender {
     private static final String registrationLink = "https://localhost:3000/confirm-account/";
     private static final String resetPasswordLink = "https://localhost:3000/change-password/";
 
-
+    /**
+     * Send an email to the specified email address
+     * @param to - email address
+     * @param subject - email subject
+     * @param content - email content
+     */
     public static void sendEmail(String to, String subject, String content) {
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
@@ -56,6 +61,12 @@ public class EmailSender {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Send an email to verify the user's account
+     * @param to - email address
+     * @param token - verification token
+     */
     public static void sendVerificationEmail(String to, String token) {
         String subject = "Account Verification";
         String content = "<div style=\"font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; padding: 20px; border-radius: 10px;\">" +
@@ -73,6 +84,11 @@ public class EmailSender {
         sendEmail(to, subject, content);
     }
 
+    /**
+     * Send an email to reset the user's password
+     * @param to - email address
+     * @param token - password reset token
+     */
     public static void sendPasswordResetEmail(String to, String token) {
         String subject = "Password Reset";
         String content = "<div style=\"font-family: Arial, sans-serif; color: #333; border: 1px solid #ddd; padding: 20px; border-radius: 10px;\">" +

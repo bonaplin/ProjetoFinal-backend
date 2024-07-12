@@ -50,6 +50,11 @@ public class ProductBean {
     @Inject
     SessionBean sessionBean;
 
+    /**
+     * Converts a ProductEntity to a ProductDto
+     * @param productEntity - ProductEntity
+     * @return - ProductDto
+     */
     public ProductDto toDto(ProductEntity productEntity) {
         ProductDto productDto = new ProductDto();
         productDto.setId(productEntity.getId());
@@ -66,6 +71,11 @@ public class ProductBean {
         return productDto;
     }
 
+    /**
+     * Converts a ProjectProductEntity to a ProductToCreateProjectDto
+     * @param productEntity - ProjectProductEntity
+     * @return - ProductToCreateProjectDto
+     */
     public ProductToCreateProjectDto toProjectInfoDto(ProjectProductEntity productEntity) {
         ProductToCreateProjectDto productDto = new ProductToCreateProjectDto();
         productDto.setId(productDao.findProductByName(productEntity.getProduct().getName()).getId());
@@ -74,6 +84,11 @@ public class ProductBean {
         return productDto;
     }
 
+    /**
+     * Converts a ProductDto to a ProductEntity
+     * @param productDto - ProductDto
+     * @return - ProductEntity
+     */
     public ProductEntity toentity(ProductDto productDto) {
         ProductEntity productEntity = new ProductEntity();
         productEntity.setName(productDto.getName());
@@ -87,6 +102,9 @@ public class ProductBean {
         return productEntity;
     }
 
+    /**
+     * Creates initial data for the products
+     */
     public void createInitialData() {
         createProductIfNotExists("Product 1", ProductType.COMPONENT, "Supplier 1","123456789");
         createProductIfNotExists("Product 2", ProductType.COMPONENT, "Supplier 2","987654321");
@@ -97,6 +115,13 @@ public class ProductBean {
         createProductIfNotExists("Product 7", ProductType.COMPONENT, "Supplier 6", "123456784");
     }
 
+    /**
+     * Creates a product if it does not exist
+     * @param name - Product name
+     * @param type - Product type
+     * @param supplierName - Supplier name
+     * @param identifier - Product identifier
+     */
     public void createProductIfNotExists(String name, ProductType type, String supplierName, String identifier) {
         if(productDao.findProductByName(name) == null) {
             ProductEntity productEntity = new ProductEntity();
@@ -112,6 +137,11 @@ public class ProductBean {
 
     }
 
+    /**
+     * Returns the filter options for the products
+     * @param token - User token
+     * @return - FilterOptionsProductDto
+     */
     public FilterOptionsProductDto filterOptions(String token) {
         sessionBean.validateUserToken(token);
         FilterOptionsProductDto filterOptionsDto = new FilterOptionsProductDto();
@@ -131,7 +161,22 @@ public class ProductBean {
         return filterOptionsDto;
     }
 
-
+    /**
+     * Returns the products
+     * @param auth - User token
+     * @param dtoType - Dto type
+     * @param name - Product name
+     * @param types - Product types
+     * @param brands - Product brands
+     * @param supplierName - Supplier name
+     * @param identifier - Product identifier
+     * @param pageNumber - Page number
+     * @param pageSize - Page size
+     * @param orderField - Order field
+     * @param orderDirection - Order direction
+     * @param id - Product id
+     * @return - PaginatedResponse<Object>
+     */
     public PaginatedResponse<Object> getProducts(String auth, String dtoType, String name, List<String> types, List<String> brands, String supplierName, String identifier, Integer pageNumber, Integer pageSize, String orderField, String orderDirection, Long id){
         String log = "Attempt to get products";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(auth);
@@ -198,17 +243,16 @@ public class ProductBean {
         return response;
 
     }
-    
+
+    /**
+     * Adds products to a project
+     * @param token - User token
+     * @param projectId - Project id
+     * @param products - ProductsList
+     */
     public void addProductsToProject (String token, long projectId, ProductsList products) {
 
         String log = "Attempting to remove interest from project";
-
-//        SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
-//
-//        if(sessionEntity == null){
-//            LoggerUtil.logError(log,"Session not found.",null,token);
-//            throw new IllegalArgumentException("Session not found.");
-//        }
 
         UserEntity user = sessionBean.validateUserToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -217,8 +261,6 @@ public class ProductBean {
             LoggerUtil.logError(log,"Project not found",null,token);
             throw new IllegalArgumentException("Project not found");
         }
-
-//        UserEntity user = sessionEntity.getUser();
 
         if (interestBean.checkProjectStatus(project))  {
             LoggerUtil.logError(log,"Current project status doesnt allow editions",null,token);
@@ -255,6 +297,12 @@ public class ProductBean {
         }
     }
 
+    /**
+     * Converts a ProductToCreateProjectDto to a ProductEntity
+     * @param product - ProductToCreateProjectDto
+     * @param log - Log message
+     * @return - ProductEntity
+     */
     private ProductEntity convertToProductEntity (ProductToCreateProjectDto product, String log) {
         ProductEntity productEntity = productDao.findProductById(product.getId());
         if(productEntity == null) {
@@ -265,6 +313,12 @@ public class ProductBean {
     }
 
 
+    /**
+     * Get products for project by id
+     * @param token - User token
+     * @param projectId - Project id
+     * @return - List<ProductToCreateProjectDto>
+     */
     public List<ProductToCreateProjectDto> getProjectProducts (String token, long projectId) {
 
         String log = "Attempt to get products for project info";
@@ -281,6 +335,12 @@ public class ProductBean {
         return products.stream().filter(ProjectProductEntity::isActive).map(this::toProjectInfoDto).collect(Collectors.toList());
     }
 
+    /**
+     * Validates the order parameters
+     * @param orderField - Order field
+     * @param orderDirection - Order direction
+     * @param auth - User token
+     */
     private void validateOrderParameters(String orderField, String orderDirection, String auth) {
         String log= "Attempt to get products";
         List<String> allowedFields = List.of("name", "brand", "type", "supplier", "identifier" );
@@ -296,7 +356,13 @@ public class ProductBean {
         }
     }
 
-
+    /**
+     * Update product method by id
+     * @param id - Product id
+     * @param dto - ProductDto
+     * @param token - User token
+     * @return - Object
+     */
     public Object updateProduct(Long id, ProductDto dto, String token) {
         String log = "Attempt to update product";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
@@ -338,6 +404,12 @@ public class ProductBean {
 
     }
 
+    /**
+     * Remove product method by id
+     * @param id - Product id
+     * @param token - User token
+     * @return - Object
+     */
     public Object disableProduct(Long id, String token) {
         String log = "Attempt to disable product";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
@@ -361,6 +433,12 @@ public class ProductBean {
         return toDto(productEntity);
     }
 
+    /**
+     * Create product method
+     * @param dto - ProductDto
+     * @param token - User token
+     * @return - Object
+     */
     public Object createProduct(ProductDto dto, String token) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         if(se == null) {

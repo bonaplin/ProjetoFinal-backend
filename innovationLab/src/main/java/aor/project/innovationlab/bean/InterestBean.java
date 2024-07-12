@@ -56,18 +56,21 @@ public class InterestBean {
         return interestDto;
     }
 
-    public void createInitialData() {
-        addInterestToUser("admin@admin","New Interest");
-        addInterestToUser("ricardo@ricardo", "Another Interest");
-        addInterestToUser("joao@ajoao","Fallowing Interest");
-        addInterestToUser("admin@admin","Interest");
-        addInterestToUser("ricardo@ricardo","Bob Interest");
-        addInterestToProject("Project 1", "Interest 1 project");
-        addInterestToProject("Project 2", "Interest 2 project");
-    }
+//    public void createInitialData() {
+//        addInterestToUser("admin@admin","New Interest");
+//        addInterestToUser("ricardo@ricardo", "Another Interest");
+//        addInterestToUser("joao@ajoao","Fallowing Interest");
+//        addInterestToUser("admin@admin","Interest");
+//        addInterestToUser("ricardo@ricardo","Bob Interest");
+//        addInterestToProject("Project 1", "Interest 1 project");
+//        addInterestToProject("Project 2", "Interest 2 project");
+//    }
 
+    /**
+     * Cria um interesse se ele não existir
+     * @param interestName - nome do interesse
+     */
     public void createInterestIfNotExists(String interestName) {
-
         InterestEntity interest = interestDao.findInterestByName(interestName);
         if(interest == null) {
             interest = new InterestEntity();
@@ -76,6 +79,10 @@ public class InterestBean {
         }
     }
 
+    /**
+     * Persiste um interesse
+     * @param interest - interesse a ser persistido
+     */
     private void persistInterest(InterestEntity interest) {
         String log = "Attempting to persist interest";
         try {
@@ -137,6 +144,13 @@ public class InterestBean {
     }
 
 
+    /**
+     * Adiciona um interesse a um projeto
+     * @param token - token do usuário
+     * @param projectId - id do projeto
+     * @param dto - dto do interesse
+     * @return - dto do interesse
+     */
     public InterestDto addInterestToProjectDto(String token, long projectId, InterestDto dto) {
         SessionEntity se = sessionDao.findSessionByToken(token);
         ProjectEntity project = projectDao.findProjectById(projectId);

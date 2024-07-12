@@ -312,7 +312,7 @@ public class ProjectBean {
 //            addInterestToProject(name, "Interest6");
 //            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
 //            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
-            sendrandommessages(project.getId());
+//            sendrandommessages(project.getId());
 //            ProjectEntity pe = projectDao.findProjectByName(name);
 //            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
 //            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
@@ -322,28 +322,28 @@ public class ProjectBean {
         }
     }
 
-    public void sendrandommessages (long id){
-        ProjectEntity project = projectDao.findProjectById(id);
-        Set<ProjectUserEntity> pu = project.getProjectUsers();
-
-        List<ProjectUserEntity> userList = new ArrayList<>(pu);
-
-        Random r = new Random();
-
-        int numMessages = r.nextInt(userList.size()) + 20;
-
-        for (int i = 0; i < numMessages; i++) {
-            // Selecione um usuário aleatório
-            UserEntity randomUser = userList.get(r.nextInt(userList.size())).getUser();
-
-            // Gere uma mensagem aleatória
-            String randomMessage = "Hello, this is a random message for user " + randomUser.getEmail();
-
-            // Envie a mensagem
-            messageBean.sendMessage(randomUser.getEmail(), id, randomMessage);
-        }
-
-    }
+//    public void sendrandommessages (long id){
+//        ProjectEntity project = projectDao.findProjectById(id);
+//        Set<ProjectUserEntity> pu = project.getProjectUsers();
+//
+//        List<ProjectUserEntity> userList = new ArrayList<>(pu);
+//
+//        Random r = new Random();
+//
+//        int numMessages = r.nextInt(userList.size()) + 20;
+//
+//        for (int i = 0; i < numMessages; i++) {
+//            // Selecione um usuário aleatório
+//            UserEntity randomUser = userList.get(r.nextInt(userList.size())).getUser();
+//
+//            // Gere uma mensagem aleatória
+//            String randomMessage = "Hello, this is a random message for user " + randomUser.getEmail();
+//
+//            // Envie a mensagem
+//            messageBean.sendMessage(randomUser.getEmail(), id, randomMessage);
+//        }
+//
+//    }
 
     /**
      * Cria um novo projeto
@@ -790,9 +790,7 @@ public class ProjectBean {
             if(se != null) {
                 userEmail = se.getUser().getEmail();
             }
-            else{
-               throw new IllegalArgumentException("Sorry, you are not authorized to access this resource.");
-            }
+
         }
 
         if (lab != null && !lab.isEmpty()) {

@@ -47,6 +47,13 @@ public class LogBean {
     public LogBean() {
     }
 
+    /**
+     * Add a new task log to the project
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @return - LogEntity
+     */
     public LogEntity addNewTask(Long projectId, Long userId, Long taskId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -66,6 +73,16 @@ public class LogBean {
         System.out.println("Task created");
         return log;
     }
+
+    /**
+     * Add a new task change log to the project
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @param oldStatus - old status
+     * @param newStatus - new status
+     * @return - LogEntity
+     */
     public LogEntity addNewTaskStateChange(Long projectId, Long userId, Long taskId, TaskStatus oldStatus, TaskStatus newStatus){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -87,6 +104,14 @@ public class LogBean {
         logDao.persist(log);
         return log;
     }
+
+    /**
+     * Add a new task change log to the project
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @return - LogEntity
+     */
     public LogEntity addNewTaskchange(Long projectId, Long userId, Long taskId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -105,6 +130,14 @@ public class LogBean {
         logDao.persist(log);
         return log;
     }
+
+    /**
+     * Add a new task delete log to the project
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @return - LogEntity
+     */
     public LogEntity addNewTaskDelete(Long projectId, Long userId, Long taskId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -124,6 +157,14 @@ public class LogBean {
         System.out.println("Task deleted");
         return log;
     }
+
+    /**
+     * Add a new task completed log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @return - LogEntity
+     */
     public LogEntity addNewTaskCompleted(Long projectId, Long userId, Long taskId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -144,7 +185,13 @@ public class LogBean {
         return log;
     }
 
-
+    /**
+     * Add a new user join log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param affectedUserId - affected user id
+     * @return - LogEntity
+     */
     public LogEntity addNewUser(Long projectId, Long userId, Long affectedUserId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -164,6 +211,13 @@ public class LogBean {
 //        System.out.println("User joined");
         return log;
     }
+
+    /**
+     * Add a new user leave log
+     * @param projectId - project id
+     * @param affectedUserId - affected user id
+     * @return - LogEntity
+     */
     public LogEntity addNewUserLeave(Long projectId, Long affectedUserId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -182,6 +236,16 @@ public class LogBean {
         System.out.println("User left");
         return log;
     }
+
+    /**
+     * Add a new user change log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param affectedUserId - affected user id
+     * @param oldType - old type
+     * @param newType - new type
+     * @return - LogEntity
+     */
     public LogEntity addNewUserChange(Long projectId, Long userId, Long affectedUserId, UserType oldType, UserType newType){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -203,6 +267,14 @@ public class LogBean {
         System.out.println("User changed");
         return log;
     }
+
+    /**
+     * Add a new user kicked log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param affectedUserId - affected user id
+     * @return - LogEntity
+     */
     public LogEntity addNewUserKicked(Long projectId, Long userId, Long affectedUserId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -223,6 +295,12 @@ public class LogBean {
         return log;
     }
 
+    /**
+     * Add a new project change log
+     * @param projectId - project id
+     * @param userId - user id
+     * @return - LogEntity
+     */
     public LogEntity addNewProjectChange(Long projectId, Long userId){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -240,6 +318,15 @@ public class LogBean {
         System.out.println("Project changed");
         return log;
     }
+
+    /**
+     * Add a new project state change log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param oldStatus - old status
+     * @param newStatus - new status
+     * @return - LogEntity
+     */
     public LogEntity addNewProjectStateChange(Long projectId, Long userId, ProjectStatus oldStatus, ProjectStatus newStatus){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -260,6 +347,13 @@ public class LogBean {
         return log;
     }
 
+    /**
+     * Add a note to a project log
+     * @param projectId - project id
+     * @param userId - user id
+     * @param note - note
+     * @return - LogEntity
+     */
     public LogEntity addNewNote(Long projectId, Long userId, String note){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -278,6 +372,15 @@ public class LogBean {
         System.out.println("Note added");
         return log;
     }
+
+    /**
+     * Add a note to a task in a project
+     * @param projectId - project id
+     * @param userId - user id
+     * @param taskId - task id
+     * @param note - note
+     * @return - LogEntity
+     */
     public LogEntity addNewNoteTask(Long projectId, Long userId, Long taskId, String note){
         LogEntity log = new LogEntity();
         ProjectEntity project = projectDao.findProjectById(projectId);
@@ -299,7 +402,14 @@ public class LogBean {
         return log;
     }
 
-
+    /**
+     * Get logs for a project with pagination
+     * @param token - session token
+     * @param id - project id
+     * @param pageNumber - page number
+     * @param pageSize - page size
+     * @return - PaginatedResponse
+     */
     public PaginatedResponse<Object> getProjectLogs(String token, Long id, Integer pageNumber, Integer pageSize) {
         String log = "Attempting to get logs for project with id: " + id;
         String msg = "";
@@ -351,6 +461,11 @@ public class LogBean {
         return response;
     }
 
+    /**
+     * Convert LogEntity to LogDto
+     * @param entity - LogEntity
+     * @return - LogDto
+     */
     public LogDto toDto(LogEntity entity){
         LogDto dto = new LogDto();
         dto.setId(entity.getId());

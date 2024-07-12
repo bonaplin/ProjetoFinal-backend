@@ -40,6 +40,11 @@ public class MessageBean {
     public MessageBean() {
     }
 
+    /**
+     * Convert MessageEntity to MessageDto
+     * @param me - MessageEntity
+     * @return - MessageDto
+     */
     public MessageDto toDto(MessageEntity me){
         MessageDto dto = new MessageDto();
         dto.setId(me.getId());
@@ -51,7 +56,11 @@ public class MessageBean {
         return dto;
     }
 
-
+    /**
+     * Convert MessageDto to MessageEntity
+     * @param dto - MessageDto
+     * @return - MessageEntity
+     */
     public MessageEntity toEntity(MessageDto dto) {
         MessageEntity message = new MessageEntity();
         UserEntity sender = userDao.findUserByEmail(dto.getUserEmail());
@@ -65,6 +74,12 @@ public class MessageBean {
         return message;
     }
 
+    /**
+     * Send message to project
+     * @param senderEmail - email of sender
+     * @param id - project id
+     * @param content - content of message
+     */
     public void sendMessage(String senderEmail, long id, String content) {
         MessageEntity message = new MessageEntity();
         UserEntity sender = userDao.findUserByEmail(senderEmail);
@@ -78,6 +93,14 @@ public class MessageBean {
         messageDao.persist(message);
     }
 
+    /**
+     * Get messages for project
+     * @param token - session token
+     * @param id - project id
+     * @param pageNumber - page number
+     * @param pageSize - page size
+     * @return - PaginatedResponse
+     */
     public PaginatedResponse<Object> getProjectMessages(String token, Long id, Integer pageNumber, Integer pageSize) {
         String log = "Attempting to get messages for project with id: " + id;
         String msg="";
