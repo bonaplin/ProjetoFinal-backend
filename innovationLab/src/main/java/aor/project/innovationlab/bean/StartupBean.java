@@ -44,6 +44,9 @@ public class StartupBean {
     @Inject
     private LogBean logBean;
 
+    /**
+     * Start the server
+     */
     @PostConstruct
     public void init() {
         labBean.createInitialData();
@@ -52,10 +55,6 @@ public class StartupBean {
         userBean.createInitialData();
         productBean.createInitialData();
         projectBean.createInitialData();
-//        taskBean.createInitialData();
-//        emailBean.createInitialData();
-//        logBean.createInitialData();
         appConfigBean.createInitialData();
-
     }
 }

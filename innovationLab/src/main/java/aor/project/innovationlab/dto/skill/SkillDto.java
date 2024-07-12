@@ -13,6 +13,12 @@ public class SkillDto {
         this.type = type;
     }
 
+    public SkillDto(int id, String type, String name) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+    }
+
     public int getId() {
         return id;
     }

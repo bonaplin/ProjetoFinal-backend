@@ -21,6 +21,9 @@ public class SupplierBean {
     @Inject
     private SessionBean sessionBean;
 
+    /**
+     * Create initial data for the supplier table
+     */
     public void createInitialData() {
         createSupplierIfNotExists("Supplier 1", "123456789");
         createSupplierIfNotExists("Supplier 2", "987654321");
@@ -34,6 +37,11 @@ public class SupplierBean {
         createSupplierIfNotExists("Supplier 10", "987654321");
     }
 
+    /**
+     * Create supplier if not exists
+     * @param name - supplier name
+     * @param phone - supplier phone
+     */
     public void createSupplierIfNotExists(String name, String phone) {
         if(supplierDao.findSupplierByName(name) == null) {
             SupplierEntity supplierEntity = new SupplierEntity();
@@ -43,6 +51,11 @@ public class SupplierBean {
         }
     }
 
+    /**
+     * Convert SupplierDto to SupplierEntity
+     * @param supplierEntity - supplier entity
+     * @return - supplier dto
+     */
     public SupplierDto toDto( SupplierEntity supplierEntity) {
         SupplierDto supplierDto = new SupplierDto();
         supplierDto.setId(supplierEntity.getId());

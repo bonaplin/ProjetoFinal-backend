@@ -362,7 +362,7 @@ public class UserBean {
      * Generates a new verification token for the user
      * @param userEntity - the user to generate the token for
      */
-    private String generateVerificationToken(UserEntity userEntity) {
+    String generateVerificationToken(UserEntity userEntity) {
         String log = "Attempt to generate verification token";
         String newToken = TokenUtil.generateToken();
         userEntity.setTokenVerification(newToken);
@@ -436,7 +436,7 @@ public class UserBean {
      * Cleans the token and the expiration date from the user
      * @param userEntity
      */
-    private void cleanToken(UserEntity userEntity) {
+    void cleanToken(UserEntity userEntity) {
         String log = "Attempt to clean token";
         userEntity.setTokenVerification(null);
         userEntity.setTokenExpiration(null);
@@ -454,6 +454,11 @@ public class UserBean {
         }
     }
 
+    /**
+     * Confirms the account of the user
+     * @param token - the token to confirm the account
+     * @param dto - the dto with the first name, last name and lab id
+     */
     public void confirmAccount(String token, UserConfirmAccountDto dto) {
         String log = "Attempt to confirm account";
         UserEntity userToConfirm = userDao.findUserByToken(token);
@@ -495,6 +500,11 @@ public class UserBean {
         cleanToken(userToConfirm);
     }
 
+    /**
+     * Login with the given email and password
+     * @param userLogInDto - the dto with the email and password
+     * @return - the session login dto with the token
+     */
     public SessionLoginDto loginWithValidation(UserLogInDto userLogInDto) {
         String log = "Attempt to login";
         if(userLogInDto == null){
@@ -514,6 +524,11 @@ public class UserBean {
         return sessionLoginDto;
     }
 
+    /**
+     * Recover the password of the user
+     * @param token - the token to recover the password
+     * @param dto - the dto with the new password and confirm password
+     */
     public void updateUser(String token, UserOwnerProfileDto dto) {
         String log = "Attempt to update user";
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
@@ -549,6 +564,11 @@ public class UserBean {
         LoggerUtil.logInfo(log,"User updated",userEntity.getEmail(),token);
     }
 
+    /**
+     * Recover the password of the user
+     * @param token - the token to recover the password
+     * @param dtoType - the dto with the new password and confirm password
+     */
     public PaginatedResponse<Object> getUsers(Long id, String token, String dtoType, String username, String email, String firstname, String lastname, String role, Boolean active, Boolean confirmed, Boolean privateProfile, List<String> lab, List<String> skill, List<String> interest, Integer pageNumber, Integer pageSize, String orderField, String orderDirection) {
         String log = "Attempt to get users";
         UserEntity user= sessionBean.validateUserToken(token);
@@ -641,6 +661,12 @@ public class UserBean {
         return response;
     }
 
+    /**
+     * Get the user with the given id and token and return the dto
+     * @param token - the token to get the user
+     * @param id - the id of the user
+     * @return - the dto with the user
+     */
     public List<UserAddToProjectDto> getUsersForInfo(String token, long id) {
         String log = "Attempt to get users for info";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);
@@ -655,6 +681,11 @@ public class UserBean {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Convert the ProjectUserEntity to the UserAddToProjectDto
+     * @param projectUserEntity - the entity to convert
+     * @return - the dto
+     */
     private UserAddToProjectDto toUserProjectDto (ProjectUserEntity projectUserEntity) {
         UserAddToProjectDto userAddToProjectDto = new UserAddToProjectDto();
         userAddToProjectDto.setUserId(projectUserEntity.getUser().getId());
@@ -664,6 +695,11 @@ public class UserBean {
         return userAddToProjectDto;
     }
 
+    /**
+     * Validate the order parameters
+     * @param orderField - the field to order
+     * @param orderDirection - the direction to order
+     */
     private void validateOrderParameters(String orderField, String orderDirection) {
         List<String> allowedFields = Arrays.asList("username", "email", "firstname", "privateProfile");
         List<String> allowedDirections = Arrays.asList("asc", "desc");
@@ -676,7 +712,11 @@ public class UserBean {
         }
     }
 
-
+    /**
+     * Update the password of the user
+     * @param token - the token to update the password
+     * @param dto - the dto with the current password, new password and confirm password
+     */
     public void updatePassword(String token, UserChangePasswordDto dto) {
         sessionBean.validateUserToken(token);
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
@@ -695,6 +735,11 @@ public class UserBean {
         userDao.merge(userEntity);
     }
 
+    /**
+     * Change the visibility of the user
+     * @param token - the token to change the visibility
+     * @param dto - the dto with the visibility
+     */
     public void changeVisiblity(String token, UserChangeVisibilityDto dto) {
         sessionBean.validateUserToken(token);
         UserEntity userEntity = sessionDao.findSessionByToken(token).getUser();
@@ -702,6 +747,12 @@ public class UserBean {
         userDao.merge(userEntity);
     }
 
+    /**
+     * Get the user with the given id and return the dto
+     * @param token - the token to get the user
+     * @param projectId - the id of the project
+     * @return - the dto with the user
+     */
     public List<LabelValueDto> getUsersToTask(String token, Long projectId) {
         String log = "Attempt to get users to task";
         SessionEntity sessionEntity = sessionDao.findSessionByToken(token);

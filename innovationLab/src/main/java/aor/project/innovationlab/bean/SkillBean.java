@@ -86,7 +86,12 @@ public class SkillBean {
         createSkillIfNotExists("IntelIJ", SkillType.TOOLS);
     }
 
-    private void createSkillIfNotExists(String name, SkillType type) {
+    /**
+     * Create a skill if not exists
+     * @param name - skill name
+     * @param type - skill type
+     */
+    void createSkillIfNotExists(String name, SkillType type) {
         if(skillDao.findSkillByName(name) == null) {
             SkillDto dto = new SkillDto();
             dto.setName(name);
@@ -203,6 +208,12 @@ public class SkillBean {
         return toDto(skillEntity);
     }
 
+    /**
+     * Adiciona uma habilidade a um projeto
+     * @param token - token do usuário
+     * @param projectId - id do projeto
+     * @param skillId - id da habilidade
+     */
     public void addSkillToProject (String token, long projectId, long skillId) {
 
 
@@ -269,6 +280,12 @@ public class SkillBean {
         LoggerUtil.logInfo(log, "Skill: "+ skill.getName() +"added to project", sessionEntity.getUser().getEmail(), token);
     }
 
+    /**
+     * Remove a skill from a project
+     * @param token - token do usuário
+     * @param projectId - id do projeto
+     * @param skillId - id da habilidade
+     */
     public void removeSkillFromProject (String token, long projectId, long skillId) {
         String log = "Attempting to remove skill from project";
 
@@ -341,6 +358,11 @@ public class SkillBean {
         return products.stream().filter(ProjectSkillEntity::isActive).map(this::toDtoFromProjectSkill).collect(Collectors.toList());
     }
 
+    /**
+     * Convert project skill entity to dto
+     * @param entity - project skill entity
+     * @return - skill dto
+     */
     private SkillDto toDtoFromProjectSkill(ProjectSkillEntity entity) {
         SkillDto dto = new SkillDto();
         dto.setId(entity.getSkill().getId());
@@ -420,8 +442,8 @@ public class SkillBean {
 
     /**
      * Return all skill types
-     * @param token
-     * @return
+     * @param token - user token
+     * @return - list of skill types
      */
     public List<String> getAllSkillType(String token) {
         sessionBean.validateUserToken(token);
@@ -430,8 +452,8 @@ public class SkillBean {
 
     /**
      * Return all skills
-     * @param token
-     * @return
+     * @param token - user token
+     * @return - list of skills
      */
     public Object getAllSkills(String token, String skillType) {
         if(token == null) {

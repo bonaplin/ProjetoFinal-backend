@@ -103,6 +103,13 @@ public class NotificationBean {
         webSocketBean.sendToUser(receiverEmail, notificationJson);
     }
 
+    /**
+     * Get all notifications for user
+     * @param token - token of user
+     * @param pageNumber - page number
+     * @param pageSize - page size
+     * @return PagAndUnreadResponse<Object>
+     */
     public PagAndUnreadResponse<Object> getAllNotifications(String token, Integer pageNumber, Integer pageSize) {
         SessionEntity session = sessionDao.findSessionByToken(token);
 
@@ -127,6 +134,12 @@ public class NotificationBean {
         return response;
     }
 
+    /**
+     * Mark notification as read
+     * @param token - token of user
+     * @param id - id of notification
+     * @return - ContentUnreadResponse
+     */
     public ContentUnreadResponse markNotificationAsRead(String token, long id) {
         SessionEntity session = sessionDao.findSessionByToken(token);
 

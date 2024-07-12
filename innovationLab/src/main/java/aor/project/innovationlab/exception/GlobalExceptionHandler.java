@@ -8,6 +8,9 @@ import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
 
+/**
+ * Global exception handler for the application.
+ */
 @Provider
 public class GlobalExceptionHandler implements ExceptionMapper<Exception> {
 

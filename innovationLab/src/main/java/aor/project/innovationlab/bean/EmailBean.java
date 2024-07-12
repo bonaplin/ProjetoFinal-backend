@@ -152,7 +152,7 @@ public class EmailBean {
         dto.setId(emailEntity.getId());
         return dto;
     }
-    private EmailEntity responseToEntity(EmailResponseDto emailResponseDto) {
+    public EmailEntity responseToEntity(EmailResponseDto emailResponseDto) {
         EmailEntity entity = new EmailEntity();
         entity.setSender(userDao.findUserByEmail(emailResponseDto.getFrom()));
         entity.setReceiver(userDao.findUserByEmail(emailResponseDto.getTo()));

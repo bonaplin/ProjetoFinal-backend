@@ -7,6 +7,11 @@ public class ResponseYesNoInviteDto {
     public ResponseYesNoInviteDto() {
     }
 
+    public ResponseYesNoInviteDto(boolean accept, Long userId) {
+        this.accept = accept;
+        this.userId = userId;
+    }
+
     public boolean isAccept() {
         return accept;
     }

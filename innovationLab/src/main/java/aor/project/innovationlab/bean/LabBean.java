@@ -34,6 +34,9 @@ public class LabBean {
         return dto;
     }
 
+    /**
+     * Create initial data for labs
+     */
     public void createInitialData() {
         createLabIfNotExists("Coimbra");
         createLabIfNotExists("Leiria");
@@ -41,6 +44,10 @@ public class LabBean {
         createLabIfNotExists("Lisboa");
     }
 
+    /**
+     * Create lab if it does not exist
+     * @param location
+     */
     private void createLabIfNotExists(String location) {
         if (labDao.findLabByLocation(location) == null) {
             LabDto dto = new LabDto();
@@ -50,6 +57,10 @@ public class LabBean {
         }
     }
 
+    /**
+     * Find all labs
+     * @return - List of LabDto
+     */
     public List<LabDto> findAllLabs() {
         List<LabEntity> labs = labDao.findAllLabs();
         if(labs == null) return new ArrayList<>();
