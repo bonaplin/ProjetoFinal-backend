@@ -144,6 +144,11 @@ public class ProjectBean {
         return dto;
     }
 
+    /**
+     * Convert ProjectEntity to ProjectDto
+     * @param entity - entidade do projeto
+     * @return - dto do projeto
+     */
     private ProjectReadyDto toProjectReadyDto(ProjectEntity entity) {
         ProjectReadyDto dto = new ProjectReadyDto();
         dto.setId(entity.getId());
@@ -207,7 +212,7 @@ public class ProjectBean {
     }
 
     /**
-     * Adiciona um interesse a um projeto
+     * Add a new interest to the project
      * @param projectName - nome do projeto
      * @param interestName - nome do interesse
      */
@@ -233,7 +238,7 @@ public class ProjectBean {
     }
 
     /**
-     * Remove um interesse de um projeto
+     * Remove one interest from a project
      * @param projectName - nome do projeto
      * @param interestName - nome do interesse
      */
@@ -258,30 +263,20 @@ public class ProjectBean {
         projectDao.merge(project);
     }
 
+    /**
+     * Create first project example
+     */
     public void createInitialData() {
         createProjectIfNotExists("Project1", "Description 1", "admin@admin", "Coimbra");
-        createProjectIfNotExists("Project2", "Description 2", "ricardo@ricardo", "Porto");
-        createProjectIfNotExists("Project3", "Description 3", "admin@admin", "Lisboa");
-        createProjectIfNotExists("Project4", "Description 4", "ricardo@ricardo", "Coimbra");
-        createProjectIfNotExists("Project5", "Description 5", "admin@admin", "Porto");
-        createProjectIfNotExists("Project6", "Description 6", "ricardo@ricardo", "Lisboa");
-        createProjectIfNotExists("Project7", "Description 7", "admin@admin", "Coimbra");
-        createProjectIfNotExists("Project8", "Description 8", "ricardo@ricardo", "Porto");
-        createProjectIfNotExists("Project9", "Description 9", "admin@admin", "Lisboa");
-        createProjectIfNotExists("Project10", "Description 10", "ricardo@ricardo", "Coimbra");
-        createProjectIfNotExists("Project11", "Description 11", "admin@admin", "Porto");
-        createProjectIfNotExists("Project12", "Description 12", "ricardo@ricardo", "Lisboa");
-        createProjectIfNotExists("Project13", "Description 13", "admin@admin", "Coimbra");
-        createProjectIfNotExists("Project14", "Description 14", "ricardo@ricardo", "Porto");
-        createProjectIfNotExists("Project15", "Description 15", "admin@admin", "Lisboa");
-        createProjectIfNotExists("Project16", "Description 16", "ricardo@ricardo", "Coimbra");
-        createProjectIfNotExists("Project17", "Description 17", "admin@admin", "Porto");
-        createProjectIfNotExists("Project18", "Description 18", "ricardo@ricardo", "Lisboa");
-        createProjectIfNotExists("Project19", "Description 19", "admin@admin", "Coimbra");
-
-
     }
 
+    /**
+     * Method to create a project if it does not exist
+     * @param name - name of the project
+     * @param description - description of the project
+     * @param creatorEmail - email of the creator
+     * @param location - location of the lab
+     */
     public void createProjectIfNotExists(String name, String description, String creatorEmail, String location){
         if (projectDao.findProjectByName(name) == null) {
             ProjectEntity project = new ProjectEntity();
@@ -298,57 +293,18 @@ public class ProjectBean {
 
             // create the entity project - creator
             addUserToProject(name, creatorEmail, UserType.MANAGER);
-
-//            addInterestToProject(name, "Interest1");
-//            addInterestToProject(name, "Interest2");
-
             addUserToProject(name, "joao@joao", UserType.NORMAL);
             addSkillToProject(name, "Assembly");
             addSkillToProject(name, "macOS");
             addSkillToProject(name, "IntelIJ");
-//            addInterestToProject(name, "Interest3");
-//            addInterestToProject(name, "Interest4");
-//            addInterestToProject(name, "Interest5");
-//            addInterestToProject(name, "Interest6");
-//            messageBean.sendMessage("admin@admin", name, "Hello, this is a message by Admin");
-//            messageBean.sendMessage("ricardo@ricardo", name, "Hello, this is a message by Ricardo");
-//            sendrandommessages(project.getId());
-//            ProjectEntity pe = projectDao.findProjectByName(name);
-//            notificationBean.sendNotification("admin@admin", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
-//            notificationBean.sendNotification("joao@joao", "ricardo@ricardo", "Invite to "+pe.getName(), NotificationType.INVITE, pe.getId());
 
-            //TESTE - add log ao add user
-            logBean.addNewUser(project.getId(), userDao.findUserByEmail("admin@admin").getId(), userDao.findUserByEmail("ricardo@ricardo").getId());
         }
     }
 
-//    public void sendrandommessages (long id){
-//        ProjectEntity project = projectDao.findProjectById(id);
-//        Set<ProjectUserEntity> pu = project.getProjectUsers();
-//
-//        List<ProjectUserEntity> userList = new ArrayList<>(pu);
-//
-//        Random r = new Random();
-//
-//        int numMessages = r.nextInt(userList.size()) + 20;
-//
-//        for (int i = 0; i < numMessages; i++) {
-//            // Selecione um usuário aleatório
-//            UserEntity randomUser = userList.get(r.nextInt(userList.size())).getUser();
-//
-//            // Gere uma mensagem aleatória
-//            String randomMessage = "Hello, this is a random message for user " + randomUser.getEmail();
-//
-//            // Envie a mensagem
-//            messageBean.sendMessage(randomUser.getEmail(), id, randomMessage);
-//        }
-//
-//    }
-
     /**
-     * Cria um novo projeto
-     * @param token
-     * @param createProjectDto
+     * Create project method
+     * @param token - user token
+     * @param createProjectDto - dto with the project data
      */
     public void createProject(String token, CreateProjectDto createProjectDto) {
         String log = "Creating new project";
@@ -479,12 +435,10 @@ public class ProjectBean {
     }
 
     /**
-     * Método que verifica se o projeto ja atingiu o limite de users
-     * e se o user que esta a tentar adicionar ja esta no projeto,
-     * se passar essas verificações adiciona o user ao projeto
-     * @param session
-     * @param project
-     * @param createProjectDto
+     * Method to add users to the created project
+     * @param session - session user
+     * @param project - project entity
+     * @param createProjectDto - dto com os dados do projeto
      */
     private void addingUsersToCreatedProject(SessionEntity session, ProjectEntity project, CreateProjectDto createProjectDto) {
         ProjectUserEntity projectUserEntity = new ProjectUserEntity();
@@ -519,6 +473,11 @@ public class ProjectBean {
         }
     }
 
+    /**
+     * Method to get max participants allowed in a project
+     * @param token -
+     * @return
+     */
     public int getProjectMaxParticipants(String token) {
         String log = "Getting project max participants";
         if (token == null) {
@@ -532,9 +491,9 @@ public class ProjectBean {
 
 
     /**
-     * Converte um projeto na forma entity da base de dados, para um dto a ser usado na landing page
-     * @param projectEntity
-     * @return
+     * Converte the project entity to a project for the landing page
+     * @param projectEntity - entity of the project
+     * @return - dto of the project
      */
     private ProjectsForLandingPage convertToProjectForLandingPage(ProjectEntity projectEntity) {
         ProjectsForLandingPage projectDto = new ProjectsForLandingPage();
@@ -548,7 +507,7 @@ public class ProjectBean {
     }
 
     /**
-     * Adiciona um recurso a um projeto
+     * Add a new resource to a project
      * @param projectName - nome do projeto
      * @param productIdentifier - identificador do recurso
      */
@@ -573,6 +532,11 @@ public class ProjectBean {
         projectDao.merge(project);
     }
 
+    /**
+     * Add a new resource to a project by names
+     * @param projectName - nome do projeto
+     * @param productName - nome do recurso
+     */
     public void addResourceToProjectByNames(String projectName, String productName) {
         ProjectEntity project = projectDao.findProjectByName(projectName);
         if(project == null) {
@@ -595,7 +559,7 @@ public class ProjectBean {
     }
 
     /**
-     * Remove um recurso de um projeto
+     * Remove a recurse from a project
      * @param projectName - nome do projeto
      * @param productIdentifier - identificador do recurso
      */
@@ -680,6 +644,11 @@ public class ProjectBean {
         projectSkillDao.merge(projectSkill); // Adicione esta linha
     }
 
+    /**
+     * Remove skill from project
+     * @param projectName - name of the project
+     * @param skillName - name of the skill
+     */
     public void removeSkillFromProject(String projectName, String skillName) {
         ProjectEntity project = projectDao.findProjectByName(projectName);
         if(project == null) {
@@ -731,30 +700,6 @@ public class ProjectBean {
 
         return dto;
     }
-
-
-//    public void alertWsProjectIsOpen(String token, Long projectId) {
-//        System.out.println("Alerting WS that project is open");
-//        SessionEntity se = sessionDao.findSessionByToken(token);
-//        if(se == null) {
-//            return;
-//        }
-//
-//        ProjectEntity project = projectDao.findProjectById(projectId);
-//        if (project == null) {
-//            return;
-//        }
-//
-//        ProjectUserEntity pue = projectUserDao.findProjectUserByProjectIdAndUserId(projectId, se.getUser().getId());
-//
-//        if (pue == null) {
-//            return;
-//        }
-//
-//        String userEmail = se.getUser().getEmail();
-//
-//        webSocketBean.isProjectWindowOpen(userEmail, projectId);
-//    }
 
     /**
      * Method to get the projects by a specific dto
@@ -1016,8 +961,8 @@ public class ProjectBean {
         // Enviar o email de convite
         emailBean.sendEmailInviteToUser(token, invitedUserEmail, "Project Invitation", emailBody, project.getId());
 
-        // Registrar o log da ação de convite
-        logBean.addNewUser(project.getId(), sessionBean.getUserByToken(token).getId(), invitedUser.getId());
+//        // Registrar o log da ação de convite
+//        logBean.addNewUser(project.getId(), sessionBean.getUserByToken(token).getId(), invitedUser.getId());
 
         LoggerUtil.logInfo("Inviting user to project", "User invited successfully", sessionBean.getUserByToken(token).getEmail(), token);
     }
